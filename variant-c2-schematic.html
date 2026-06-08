@@ -1,0 +1,509 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>NYSGPT — Circuit · one architecture, eight products</title>
+<meta name="description" content="NYSGPT builds domain-specific AI applications for complex, legacy, and regulatory systems — eight products wired to one shared architecture." />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Chivo+Mono:wght@300;400;500;600&family=Space+Grotesk:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=Archivo:wght@500;600;700;800&display=swap" rel="stylesheet" />
+<script>
+  (function(){ try{ if(localStorage.getItem('nysgpt-theme-c2')==='light') document.documentElement.setAttribute('data-theme','light'); }catch(e){} })();
+</script>
+<style>
+  :root{
+    /* ---- DARK: PCB / wiring board ---- */
+    --bg:#071318;             /* board substrate */
+    --bg-2:#0a1c22;
+    --ink:#e6f4f1;
+    --ink-dim:#84b3b0;
+    --ink-faint:#4d7572;
+    --line:#143038;
+    --line-soft:#0f242b;
+    --trace:#1c4a52;          /* copper trace (dim) */
+    --accent:#28e0b0;         /* solder/signal green-cyan */
+    --accent-2:#46c8ff;       /* annotation cyan */
+    --hot:#ffb347;            /* live signal amber */
+    --good:#28e0b0;
+    --plate-bg:rgba(10,28,34,.72);
+    --grid:rgba(40,224,176,.05);
+    --shadow:rgba(0,0,0,.45);
+    --pad-glow:rgba(40,224,176,.5);
+    --font-mono:"Chivo Mono", ui-monospace, monospace;
+    --font-display:"Space Grotesk", system-ui, sans-serif;
+    --font-sans:"IBM Plex Sans", system-ui, sans-serif;
+    --maxw:1200px;
+    --radius:1; --wght:0; --density:1;
+  }
+  :root[data-theme="light"]{
+    --bg:#eef3f1;
+    --bg-2:#f7faf8;
+    --ink:#0c2a2a;
+    --ink-dim:#3d6663;
+    --ink-faint:#7ba09c;
+    --line:#c4d6d2;
+    --line-soft:#d9e6e2;
+    --trace:#a9cdc6;
+    --accent:#079e78;
+    --accent-2:#1186c4;
+    --hot:#c8761a;
+    --good:#079e78;
+    --plate-bg:rgba(247,250,248,.8);
+    --grid:rgba(7,158,120,.07);
+    --shadow:rgba(20,60,55,.12);
+    --pad-glow:rgba(7,158,120,.35);
+  }
+  :root{color-scheme:dark} :root[data-theme="light"]{color-scheme:light}
+
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth;-webkit-text-size-adjust:100%}
+  body{background:var(--bg);color:var(--ink);font-family:var(--font-sans);font-size:15px;line-height:1.55;
+    -webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility;overflow-x:hidden;transition:background .4s,color .4s}
+  /* perfboard dot grid */
+  body::before{content:"";position:fixed;inset:0;z-index:0;pointer-events:none;
+    background-image:radial-gradient(var(--grid) 1.2px,transparent 1.3px);background-size:26px 26px}
+  body::after{content:"";position:fixed;inset:0;z-index:0;pointer-events:none;
+    background:radial-gradient(130% 90% at 50% 0%,transparent 55%,var(--bg) 100%)}
+
+  .wrap{position:relative;z-index:1;max-width:var(--maxw);margin:0 auto;padding:0 32px}
+  a{color:inherit;text-decoration:none}
+  .mono{font-family:var(--font-mono)} .tnum{font-variant-numeric:tabular-nums}
+
+  /* ===== HEADER (board edge) ===== */
+  header{position:sticky;top:0;z-index:50;background:var(--plate-bg);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+  header .wrap{display:flex;align-items:center;justify-content:space-between;height:60px}
+  .brand{display:flex;align-items:center;gap:12px}
+  .brand .chip{width:30px;height:30px;border:1.5px solid var(--accent);border-radius:calc(3px * var(--radius));display:grid;place-items:center;
+    font-family:var(--font-display);font-weight:700;font-size:13px;color:var(--accent);position:relative}
+  .brand .chip::before,.brand .chip::after{content:"";position:absolute;width:4px;height:1.5px;background:var(--accent)}
+  .brand .chip::before{left:-4px;top:9px;box-shadow:0 6px 0 var(--accent)}
+  .brand .chip::after{right:-4px;top:9px;box-shadow:0 6px 0 var(--accent)}
+  .brand .bn{font-family:var(--font-mono);font-size:13px;letter-spacing:.16em;font-weight:500}
+  .brand .bn b{color:var(--accent);font-weight:600}
+  nav{display:flex;align-items:center;gap:24px}
+  nav a.nl{font-family:var(--font-mono);font-size:11.5px;letter-spacing:.06em;color:var(--ink-dim);transition:.2s}
+  nav a.nl:hover{color:var(--accent)}
+  .theme-toggle{width:34px;height:34px;border:1px solid var(--line);background:transparent;display:grid;place-items:center;cursor:pointer;
+    color:var(--ink-dim);transition:.2s;border-radius:calc(3px * var(--radius));flex-shrink:0}
+  .theme-toggle:hover{border-color:var(--accent);color:var(--ink)}
+  .theme-toggle svg{width:15px;height:15px}.theme-toggle .moon{display:none}
+  :root[data-theme="light"] .theme-toggle .sun{display:none}:root[data-theme="light"] .theme-toggle .moon{display:block}
+  .nav-cta{font-family:var(--font-mono);font-size:11.5px;letter-spacing:.04em;border:1px solid var(--accent);color:var(--accent);
+    padding:8px 14px;border-radius:calc(3px * var(--radius));transition:.2s}
+  .nav-cta:hover{background:var(--accent);color:var(--bg);box-shadow:0 0 16px var(--pad-glow)}
+  @media(max-width:780px){nav a.nl{display:none}}
+
+  /* ===== HERO ===== */
+  .hero{padding:calc(74px * var(--density)) 0 calc(48px * var(--density))}
+  .hero .meta{display:flex;justify-content:space-between;border-bottom:1px solid var(--line-soft);padding-bottom:12px;margin-bottom:38px}
+  .hero .meta span{font-family:var(--font-mono);font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-faint)}
+  .hero h1{font-family:var(--font-display);font-weight:calc(700 + var(--wght));font-size:clamp(40px,7vw,84px);line-height:1;letter-spacing:-.025em;max-width:16ch}
+  .hero h1 .hl{color:var(--accent);text-shadow:0 0 28px var(--pad-glow)}
+  .hero .deck{margin-top:26px;max-width:56ch;font-size:17.5px;line-height:1.6;color:var(--ink-dim)}
+  .hero .deck b{color:var(--ink);font-weight:600}
+  .hero .cta-row{display:flex;gap:14px;flex-wrap:wrap;margin-top:34px}
+  .btn{font-family:var(--font-mono);font-size:12.5px;letter-spacing:.04em;padding:13px 22px;border-radius:calc(3px * var(--radius));
+    display:inline-flex;align-items:center;gap:9px;cursor:pointer;border:1px solid transparent;transition:.2s}
+  .btn .arr{transition:transform .25s}.btn:hover .arr{transform:translateX(4px)}
+  .btn-primary{background:var(--accent);color:var(--bg);font-weight:600}
+  .btn-primary:hover{box-shadow:0 0 22px var(--pad-glow);transform:translateY(-2px)}
+  .btn-ghost{border-color:var(--line);color:var(--ink)}.btn-ghost:hover{border-color:var(--accent-2);color:var(--accent-2)}
+
+  .readout{margin-top:50px;display:grid;grid-template-columns:repeat(4,1fr);border:1px solid var(--line);background:var(--plate-bg)}
+  .readout .r{padding:18px 20px;border-right:1px solid var(--line-soft)}.readout .r:last-child{border-right:none}
+  .readout .lab{font-family:var(--font-mono);font-size:9.5px;letter-spacing:.13em;text-transform:uppercase;color:var(--ink-faint);margin-bottom:8px}
+  .readout .val{font-family:var(--font-display);font-weight:calc(700 + var(--wght));font-size:32px;line-height:1}
+  .readout .val .u{color:var(--accent);font-size:17px}
+  @media(max-width:780px){.readout{grid-template-columns:repeat(2,1fr)}.readout .r:nth-child(2n){border-right:none}}
+
+  /* ===== SECTION HEADS ===== */
+  .shead{display:flex;align-items:baseline;gap:14px;margin-bottom:6px}
+  .shead .tag{font-family:var(--font-mono);font-size:11px;letter-spacing:.1em;color:var(--accent);border:1px solid var(--accent);padding:3px 8px;border-radius:calc(3px * var(--radius))}
+  .shead h2{font-family:var(--font-display);font-weight:calc(700 + var(--wght));font-size:clamp(22px,3vw,32px);letter-spacing:-.015em}
+  .ssub{font-family:var(--font-mono);font-size:11.5px;color:var(--ink-faint);margin-bottom:30px}
+
+  /* ===== THESIS ===== */
+  .thesis{padding:calc(58px * var(--density)) 0;border-top:1px solid var(--line)}
+  .thesis .grid{display:grid;grid-template-columns:.9fr 1.1fr;gap:54px;align-items:start}
+  .thesis .body{display:grid;gap:16px;color:var(--ink-dim);font-size:15.5px;line-height:1.7}
+  .thesis .body b{color:var(--ink);font-weight:600}
+  @media(max-width:860px){.thesis .grid{grid-template-columns:1fr;gap:30px}}
+
+  /* ===== THE SCHEMATIC (centerpiece) ===== */
+  .board{padding:calc(58px * var(--density)) 0 calc(40px * var(--density));border-top:1px solid var(--line)}
+  .schematic-wrap{position:relative;border:1px solid var(--line);background:
+    linear-gradient(var(--line-soft) 1px,transparent 1px) 0 0/100% 44px,
+    var(--plate-bg);padding:0;overflow:hidden}
+  .schematic-wrap .corner{position:absolute;width:14px;height:14px;border:1.5px solid var(--accent-2);opacity:.5}
+  .schematic-wrap .corner.tl{top:10px;left:10px;border-right:none;border-bottom:none}
+  .schematic-wrap .corner.tr{top:10px;right:10px;border-left:none;border-bottom:none}
+  .schematic-wrap .corner.bl{bottom:10px;left:10px;border-right:none;border-top:none}
+  .schematic-wrap .corner.br{bottom:10px;right:10px;border-left:none;border-top:none}
+
+  .svg-stage{display:block;width:100%;height:auto}
+  /* traces */
+  .trace{fill:none;stroke:var(--trace);stroke-width:1.4;transition:stroke .25s}
+  .trace.lit{stroke:var(--accent)}
+  .pulse{fill:none;stroke:var(--accent);stroke-width:1.8;stroke-linecap:round;
+    stroke-dasharray:6 220;filter:drop-shadow(0 0 4px var(--accent));}
+  .core-node rect{fill:var(--bg);stroke:var(--accent);stroke-width:1.6}
+  .core-node text{fill:var(--accent);font-family:var(--font-mono);font-weight:600}
+  .pad{fill:var(--bg-2);stroke:var(--line);stroke-width:1.2;transition:stroke .25s,fill .25s}
+  .gnode{cursor:pointer}
+  .gnode:hover .pad{stroke:var(--accent-2);fill:var(--bg)}
+  .gnode .pname{fill:var(--ink);font-family:var(--font-display);font-weight:600}
+  .gnode .pdesc{fill:var(--ink-faint);font-family:var(--font-mono)}
+  .gnode .ppin{fill:var(--accent-2);font-family:var(--font-mono)}
+  .gnode:hover .pname{fill:var(--accent)}
+  .led{stroke:none}
+  .led.live{fill:var(--good)}
+  .led.sh{fill:var(--ink-faint)}
+  .led-ring{fill:none;stroke:var(--good);stroke-width:1}
+
+  .legend{display:flex;gap:24px;flex-wrap:wrap;margin-top:20px;font-family:var(--font-mono);font-size:10.5px;color:var(--ink-faint);letter-spacing:.04em}
+  .legend .lg{display:inline-flex;align-items:center;gap:8px}
+  .legend .sw{width:9px;height:9px;border-radius:50%}
+  .legend .sw.live{background:var(--good);box-shadow:0 0 6px var(--good)}
+  .legend .sw.sh{background:var(--ink-faint)}
+  .legend .sw.tr{width:14px;height:2px;border-radius:0;background:var(--accent)}
+
+  /* ===== METHOD (as signal path) ===== */
+  .method{padding:calc(58px * var(--density)) 0;border-top:1px solid var(--line)}
+  .signal{display:grid;grid-template-columns:1fr auto 1fr auto 1fr;align-items:stretch;gap:0}
+  .sstage{border:1px solid var(--line);background:var(--plate-bg);padding:26px 22px;border-radius:calc(3px * var(--radius));transition:.25s}
+  .sstage:hover{border-color:var(--accent)}
+  .sstage .mn{font-family:var(--font-mono);font-size:11px;color:var(--accent);letter-spacing:.1em;margin-bottom:14px}
+  .sstage h3{font-family:var(--font-display);font-weight:600;font-size:18px;letter-spacing:-.01em;margin-bottom:9px}
+  .sstage p{color:var(--ink-dim);font-size:13.5px;line-height:1.6}
+  .sarrow{display:grid;place-items:center;width:48px;color:var(--accent-2);font-family:var(--font-mono);font-size:18px}
+  @media(max-width:820px){.signal{grid-template-columns:1fr}.sarrow{width:auto;height:30px;transform:rotate(90deg)}}
+
+  /* ===== CTA ===== */
+  .cta{padding:calc(78px * var(--density)) 0}
+  .cta .panel{border:1px solid var(--line);background:var(--plate-bg);display:grid;grid-template-columns:1fr 1fr;position:relative}
+  .cta .panel::before{content:"";position:absolute;top:-1px;left:30px;right:30px;height:2px;background:var(--accent);box-shadow:0 0 14px var(--pad-glow)}
+  .cta .left{padding:46px 40px;border-right:1px solid var(--line)}
+  .cta .left .tag{font-family:var(--font-mono);font-size:11px;letter-spacing:.1em;color:var(--accent);margin-bottom:18px;display:block}
+  .cta .left h2{font-family:var(--font-display);font-weight:calc(700 + var(--wght));font-size:clamp(26px,3.4vw,40px);line-height:1.05;letter-spacing:-.015em}
+  .cta .left h2 .hl{color:var(--accent)}
+  .cta .left p{margin-top:18px;color:var(--ink-dim);font-size:15px;line-height:1.6;max-width:40ch}
+  .cta .direct{margin-top:26px;display:grid;gap:12px}
+  .cta .direct a{display:inline-flex;align-items:center;gap:11px;font-family:var(--font-mono);font-size:13px;color:var(--ink);transition:.2s;width:fit-content}
+  .cta .direct a:hover{color:var(--accent)}
+  .cta .direct .ic{width:32px;height:32px;border:1px solid var(--line);display:grid;place-items:center;color:var(--accent);border-radius:calc(3px * var(--radius))}
+  form.brief{padding:46px 40px;display:grid;gap:15px}
+  form.brief .fld{display:grid;gap:6px}
+  form.brief label{font-family:var(--font-mono);font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-faint)}
+  form.brief input,form.brief textarea,form.brief select{background:var(--bg);border:1px solid var(--line);border-radius:calc(3px * var(--radius));
+    padding:11px 13px;color:var(--ink);font-family:var(--font-sans);font-size:14px;transition:border-color .2s}
+  form.brief input:focus,form.brief textarea:focus,form.brief select:focus{outline:none;border-color:var(--accent)}
+  form.brief textarea{resize:vertical;min-height:78px}
+  form.brief .row2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  form.brief button{margin-top:2px;width:100%;justify-content:center}
+  form.brief .note{font-family:var(--font-mono);font-size:10px;color:var(--ink-faint);text-align:center}
+  @media(max-width:860px){.cta .panel{grid-template-columns:1fr}.cta .left{border-right:none;border-bottom:1px solid var(--line);padding:36px 26px}form.brief{padding:36px 26px}}
+
+  footer{border-top:1px solid var(--line);padding:30px 0}
+  footer .wrap{display:flex;justify-content:space-between;flex-wrap:wrap;gap:14px;font-family:var(--font-mono);font-size:11px;color:var(--ink-faint);letter-spacing:.04em}
+  footer b{color:var(--ink-dim);font-weight:500}footer a:hover{color:var(--accent)}
+
+  /* ===== PLAYGROUND ===== */
+  .pg-launch{position:fixed;right:22px;bottom:22px;z-index:90;width:48px;height:48px;border-radius:calc(4px * var(--radius));
+    background:var(--bg-2);border:1px solid var(--accent);color:var(--accent);cursor:pointer;display:grid;place-items:center;box-shadow:0 8px 24px var(--shadow);transition:.25s}
+  .pg-launch:hover{transform:translateY(-3px);box-shadow:0 0 20px var(--pad-glow)}
+  .pg-launch svg{width:20px;height:20px}
+  .pg-panel{position:fixed;right:22px;bottom:80px;z-index:91;width:312px;background:var(--bg-2);border:1px solid var(--line);
+    border-radius:calc(5px * var(--radius));box-shadow:0 24px 56px var(--shadow);padding:20px;opacity:0;transform:translateY(12px) scale(.97);
+    pointer-events:none;transform-origin:bottom right;transition:opacity .26s,transform .26s;max-height:80vh;overflow-y:auto}
+  .pg-panel.open{opacity:1;transform:none;pointer-events:auto}
+  .pg-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;border-bottom:1px solid var(--line-soft);padding-bottom:12px}
+  .pg-title{font-family:var(--font-mono);font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--accent)}
+  .pg-reset{font-family:var(--font-mono);font-size:9.5px;color:var(--accent-2);background:none;border:none;cursor:pointer;text-transform:uppercase}
+  .pg-reset:hover{text-decoration:underline}
+  .pg-grp{margin-bottom:18px}.pg-grp:last-child{margin-bottom:2px}
+  .pg-grp>label{display:block;font-family:var(--font-mono);font-size:9.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-dim);margin-bottom:10px}
+  .pg-grp>label .v{color:var(--ink-faint);float:right;letter-spacing:0}
+  .pg-swatches{display:flex;gap:8px;flex-wrap:wrap}
+  .pg-sw{width:26px;height:26px;border-radius:calc(3px * var(--radius));cursor:pointer;border:2px solid transparent;transition:.15s;position:relative}
+  .pg-sw:hover{transform:scale(1.12)}.pg-sw.on{border-color:var(--ink)}
+  .pg-sw.custom{display:grid;place-items:center;background:var(--bg);border:1px solid var(--line);color:var(--ink-faint);overflow:hidden}
+  .pg-sw.custom input{position:absolute;inset:0;opacity:0;cursor:pointer}
+  .pg-fonts{display:grid;grid-template-columns:1fr 1fr;gap:7px}
+  .pg-font{font-family:inherit;font-size:12.5px;padding:8px 9px;border-radius:calc(3px * var(--radius));border:1px solid var(--line);background:var(--bg);color:var(--ink-dim);cursor:pointer;transition:.15s;text-align:left;line-height:1.1}
+  .pg-font:hover{border-color:var(--ink-faint);color:var(--ink)}.pg-font.on{border-color:var(--accent);color:var(--ink)}
+  .pg-font .pf{font-size:8.5px;font-family:var(--font-mono);color:var(--ink-faint);display:block;margin-top:3px}
+  input[type=range].pg-range{-webkit-appearance:none;appearance:none;width:100%;height:2px;background:var(--line);outline:none;cursor:pointer}
+  input[type=range].pg-range::-webkit-slider-thumb{-webkit-appearance:none;width:14px;height:14px;border-radius:50%;background:var(--accent);cursor:pointer}
+  input[type=range].pg-range::-moz-range-thumb{width:12px;height:12px;border-radius:50%;background:var(--accent);cursor:pointer;border:none}
+  @media(max-width:560px){.pg-panel{width:calc(100vw - 44px)}}
+
+  .reveal{opacity:0;transform:translateY(20px);transition:opacity .65s cubic-bezier(.16,1,.3,1),transform .65s cubic-bezier(.16,1,.3,1)}
+  .reveal.in{opacity:1;transform:none}
+  @media(prefers-reduced-motion:reduce){*{animation:none!important}.pulse{display:none}.reveal{opacity:1;transform:none;transition:none}}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap">
+    <a href="#top" class="brand"><span class="chip">N</span><span class="bn">NYS<b>GPT</b></span></a>
+    <nav>
+      <a class="nl" href="#thesis">// thesis</a>
+      <a class="nl" href="#board">// board</a>
+      <a class="nl" href="#method">// path</a>
+      <button class="theme-toggle" id="themeToggle" type="button" aria-label="Toggle theme" title="Toggle theme">
+        <svg class="sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>
+        <svg class="moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+      </button>
+      <a class="nav-cta" href="#contact">[ BOOK SESSION ]</a>
+    </nav>
+  </div>
+</header>
+
+<main id="top">
+  <section class="hero">
+    <div class="wrap">
+      <div class="meta"><span>NYSGPT / AI-FIRST SOFTWARE CO.</span><span>BOARD REV 2026.06 · 8-CHANNEL · LONG ISLAND NY</span></div>
+      <h1>One architecture.<br /><span class="hl">Eight</span> products.</h1>
+      <p class="deck">NYSGPT builds domain-specific AI applications for the complex, legacy, and regulatory systems ordinary software won't touch. <b>Every product is wired to the same board</b> — ingest the primary record, ground the answer, ship to production.</p>
+      <div class="cta-row">
+        <a href="#contact" class="btn btn-primary">Book a working session <span class="arr">→</span></a>
+        <a href="#board" class="btn btn-ghost">Trace the board <span class="arr">→</span></a>
+      </div>
+      <div class="readout">
+        <div class="r"><div class="lab">Channels / products</div><div class="val tnum">8</div></div>
+        <div class="r"><div class="lab">Records / navigable</div><div class="val tnum">350<span class="u">K+</span></div></div>
+        <div class="r"><div class="lab">Powered / live</div><div class="val tnum">5</div></div>
+        <div class="r"><div class="lab">Designer / full-stack</div><div class="val tnum">1</div></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="thesis" id="thesis">
+    <div class="wrap">
+      <div class="grid">
+        <div><div class="shead"><span class="tag">NET 0</span><h2>The signal</h2></div><p class="ssub">// why these systems stay dark</p></div>
+        <div class="body reveal">
+          <p>The most consequential systems run on the worst software. Legislative records, customs rulings, energy filings, licensing registries, nuclear references — public, authoritative, and locked behind portals built two decades ago for nobody in particular.</p>
+          <p><b>NYSGPT closes that gap.</b> We don't bolt a chatbot onto the problem. We ingest the primary record, ground every answer in a verifiable source, and rebuild the interface from the data up — so the person who needs the answer gets one, not a 40-page PDF. The same three-stage board, re-laid for each domain.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== THE SCHEMATIC ===== -->
+  <section class="board" id="board">
+    <div class="wrap">
+      <div class="shead"><span class="tag">NET 1</span><h2>The board</h2></div>
+      <p class="ssub">// CORE bus → 8 product channels · hover a channel to trace · signal runs live</p>
+
+      <div class="schematic-wrap reveal">
+        <span class="corner tl"></span><span class="corner tr"></span><span class="corner bl"></span><span class="corner br"></span>
+        <svg class="svg-stage" viewBox="0 0 1000 520" role="img" aria-label="NYSGPT architecture schematic">
+          <!-- traces: core (500,70) to each node -->
+          <g id="traces">
+            <path class="trace" data-ch="0" d="M500,92 L500,150 L150,150 L150,210"/>
+            <path class="trace" data-ch="1" d="M500,92 L500,150 L380,150 L380,210"/>
+            <path class="trace" data-ch="2" d="M500,92 L500,150 L620,150 L620,210"/>
+            <path class="trace" data-ch="3" d="M500,92 L500,150 L850,150 L850,210"/>
+            <path class="trace" data-ch="4" d="M500,92 L500,360 L150,360 L150,330"/>
+            <path class="trace" data-ch="5" d="M500,92 L500,360 L380,360 L380,330"/>
+            <path class="trace" data-ch="6" d="M500,92 L500,360 L620,360 L620,330"/>
+            <path class="trace" data-ch="7" d="M500,92 L500,360 L850,360 L850,330"/>
+          </g>
+          <!-- animated pulses (same paths) -->
+          <g id="pulses"></g>
+
+          <!-- CORE -->
+          <g class="core-node">
+            <rect x="392" y="40" width="216" height="52" rx="4"/>
+            <text x="500" y="63" text-anchor="middle" font-size="14">◇ NYSGPT CORE</text>
+            <text x="500" y="81" text-anchor="middle" font-size="9" fill="var(--ink-faint)">INGEST · GROUND · SHIP</text>
+          </g>
+
+          <!-- nodes rendered by JS into #nodes -->
+          <g id="nodes"></g>
+        </svg>
+      </div>
+      <div class="legend">
+        <span class="lg"><span class="sw tr"></span> copper trace = shared architecture</span>
+        <span class="lg"><span class="sw live"></span> powered = live in production</span>
+        <span class="lg"><span class="sw sh"></span> assembled = shipped</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== METHOD (signal path) ===== -->
+  <section class="method" id="method">
+    <div class="wrap">
+      <div class="shead"><span class="tag">NET 2</span><h2>The signal path</h2></div>
+      <p class="ssub">// the three stages every channel runs through</p>
+      <div class="signal">
+        <div class="sstage reveal"><div class="mn">STAGE 01 · INGEST</div><h3>Tame the record</h3><p>Crawl, dedupe, and structure the authoritative source — even with no bulk export, no API, or a pagination wall — into clean, queryable Postgres.</p></div>
+        <div class="sarrow">▸</div>
+        <div class="sstage reveal"><div class="mn">STAGE 02 · GROUND</div><h3>Make AI accountable</h3><p>Retrieval over the real corpus, structured output, and a visible chain back to the source. Every answer can be checked.</p></div>
+        <div class="sarrow">▸</div>
+        <div class="sstage reveal"><div class="mn">STAGE 03 · SHIP</div><h3>Rebuild the surface</h3><p>Search, structure, maps, and AI on one surface — built for the human who needs the answer, shipped to production.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== CTA ===== -->
+  <section class="cta" id="contact">
+    <div class="wrap">
+      <div class="panel">
+        <div class="left">
+          <span class="tag">NET 3 — REQUEST</span>
+          <h2>Need a new channel on the <span class="hl">board?</span></h2>
+          <p>If your system is too complex for ordinary software, that's the board we wire. Book a working session, or file a short brief and we'll come back with a concrete read.</p>
+          <div class="direct">
+            <a href="mailto:Brendan@nysgpt.com?subject=Working%20session%20—%20NYSGPT"><span class="ic">✉</span> Brendan@nysgpt.com</a>
+            <a href="mailto:Brendan@nysgpt.com?subject=Book%20a%20working%20session"><span class="ic">↗</span> Book a working session</a>
+          </div>
+        </div>
+        <form class="brief" onsubmit="return submitBrief(event)">
+          <div class="fld"><label for="n">Name</label><input id="n" name="name" required placeholder="Jane Rivera" /></div>
+          <div class="row2">
+            <div class="fld"><label for="e">Email</label><input id="e" name="email" type="email" required placeholder="jane@org.gov" /></div>
+            <div class="fld"><label for="o">Organization</label><input id="o" name="org" placeholder="Agency / company" /></div>
+          </div>
+          <div class="fld"><label for="d">System / domain</label>
+            <select id="d" name="domain"><option>Government / legislative</option><option>Trade / customs</option><option>Energy / utilities</option><option>Social services</option><option>Insurance / regulatory</option><option>Scientific / technical reference</option><option>Other legacy system</option></select>
+          </div>
+          <div class="fld"><label for="b">What's locked up in it?</label><textarea id="b" name="brief" placeholder="The data, who needs it, and why it's hard to use today…"></textarea></div>
+          <button type="submit" class="btn btn-primary">File the brief <span class="arr">→</span></button>
+          <div class="note">Routes straight to Brendan@nysgpt.com — no funnel, no sales bot.</div>
+        </form>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <div><b>NYSGPT</b> — AI-first software for legacy systems · Long Island NY</div>
+    <div><a href="mailto:Brendan@nysgpt.com">Brendan@nysgpt.com</a> · <a href="https://github.com/nyd-user-1" target="_blank" rel="noopener">GitHub</a></div>
+    <div>BOARD 01/01 · © 2026</div>
+  </div>
+</footer>
+
+<!-- PLAYGROUND -->
+<button class="pg-launch" id="pgLaunch" type="button" aria-label="Open the design playground" title="Play with the design">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="13.5" cy="6.5" r="2.5"/><circle cx="6" cy="11" r="2.5"/><circle cx="17.5" cy="13" r="2.5"/><circle cx="9" cy="18" r="2.5"/><path d="M13.5 9v3M8 12.5l2.5 1M15 15l-3 1.7"/></svg>
+</button>
+<div class="pg-panel" id="pgPanel" role="dialog" aria-label="Design playground">
+  <div class="pg-head"><span class="pg-title">◇ Design playground</span><button class="pg-reset" id="pgReset" type="button">Reset</button></div>
+  <div class="pg-grp"><label>Accent</label><div class="pg-swatches" id="pgAccent">
+    <span class="pg-sw on" data-c="#28e0b0" style="background:#28e0b0"></span>
+    <span class="pg-sw" data-c="#46c8ff" style="background:#46c8ff"></span>
+    <span class="pg-sw" data-c="#9d7bff" style="background:#9d7bff"></span>
+    <span class="pg-sw" data-c="#ffb347" style="background:#ffb347"></span>
+    <span class="pg-sw" data-c="#ff5a3c" style="background:#ff5a3c"></span>
+    <span class="pg-sw" data-c="#ff5fa2" style="background:#ff5fa2"></span>
+    <label class="pg-sw custom" title="Custom">+<input type="color" id="pgAccentCustom" value="#28e0b0" /></label>
+  </div></div>
+  <div class="pg-grp"><label>Display font</label><div class="pg-fonts" id="pgDisplay">
+    <button class="pg-font on" data-f='"Space Grotesk", sans-serif' style='font-family:"Space Grotesk",sans-serif'>Space G.<span class="pf">grotesk</span></button>
+    <button class="pg-font" data-f='"Archivo", sans-serif' style='font-family:"Archivo",sans-serif'>Archivo<span class="pf">grotesk</span></button>
+    <button class="pg-font" data-f='"Chivo Mono", monospace' style='font-family:"Chivo Mono",monospace'>Chivo M.<span class="pf">mono</span></button>
+    <button class="pg-font" data-f='"IBM Plex Sans", sans-serif' style='font-family:"IBM Plex Sans",sans-serif'>Plex<span class="pf">sans</span></button>
+  </div></div>
+  <div class="pg-grp"><label>Body font</label><div class="pg-fonts" id="pgBody">
+    <button class="pg-font on" data-f='"IBM Plex Sans", sans-serif' style='font-family:"IBM Plex Sans",sans-serif'>Plex<span class="pf">sans</span></button>
+    <button class="pg-font" data-f='"Chivo Mono", monospace' style='font-family:"Chivo Mono",monospace'>Chivo M.<span class="pf">mono</span></button>
+    <button class="pg-font" data-f='"Space Grotesk", sans-serif' style='font-family:"Space Grotesk",sans-serif'>Space G.<span class="pf">grotesk</span></button>
+    <button class="pg-font" data-f='"Archivo", sans-serif' style='font-family:"Archivo",sans-serif'>Archivo<span class="pf">grotesk</span></button>
+  </div></div>
+  <div class="pg-grp"><label>Corner rounding <span class="v" id="pgRadVal">1.0×</span></label><input type="range" class="pg-range" id="pgRadius" min="0" max="4" step="0.2" value="1" /></div>
+  <div class="pg-grp"><label>Heading weight <span class="v" id="pgWghtVal">0</span></label><input type="range" class="pg-range" id="pgWght" min="-200" max="100" step="10" value="0" /></div>
+  <div class="pg-grp"><label>Density <span class="v" id="pgDensVal">1.0×</span></label><input type="range" class="pg-range" id="pgDensity" min="0.8" max="1.25" step="0.05" value="1" /></div>
+</div>
+
+<script>
+  // ---- node data + render into the SVG ----
+  const NODES=[
+    {x:150,y:210,pin:'U01',nm:'44B',gpt:'',d:'AI registry · 44-B',live:1,href:'https://44b.nysgpt.com'},
+    {x:380,y:210,pin:'U02',nm:'Tariffs',gpt:'GPT',d:'refund engine',live:1,href:'https://tariffs.nysgpt.com'},
+    {x:620,y:210,pin:'U03',nm:'Childcare',gpt:'GPT',d:'NY childcare intel',live:1,href:'https://childcare.nysgpt.com/console'},
+    {x:850,y:210,pin:'U04',nm:'Solar',gpt:'GPT',d:'clean-energy intel',live:1,href:'https://solar.nysgpt.com/map/plants-2'},
+    {x:150,y:330,pin:'U05',nm:'Policy',gpt:'GPT',d:'NYS legislative',live:0,href:''},
+    {x:380,y:330,pin:'U06',nm:'NSR',gpt:'gpt',d:'nuclear ref RAG',live:0,href:''},
+    {x:620,y:330,pin:'U07',nm:'Insurance',gpt:'GPT',d:'auto-insurance',live:0,href:''},
+    {x:850,y:330,pin:'U08',nm:'Sports',gpt:'GPT',d:'HS sports intel',live:0,href:''},
+  ];
+  const SVGNS='http://www.w3.org/2000/svg';
+  const nodesG=document.getElementById('nodes');
+  const W=170,H=58;
+  NODES.forEach((n,i)=>{
+    const g=document.createElementNS(SVGNS,n.href?'a':'g');
+    g.setAttribute('class','gnode'); g.setAttribute('data-ch',i);
+    if(n.href){g.setAttribute('href',n.href);g.setAttribute('target','_blank');g.setAttribute('rel','noopener');}
+    const ny=n.y; // box top y
+    g.innerHTML=`
+      <rect class="pad" x="${n.x-W/2}" y="${ny}" width="${W}" height="${H}" rx="4"></rect>
+      <circle class="led-ring ${n.live?'':'hide'}" cx="${n.x-W/2+13}" cy="${ny+15}" r="6" ${n.live?'':'style="display:none"'}></circle>
+      <circle class="led ${n.live?'live':'sh'}" cx="${n.x-W/2+13}" cy="${ny+15}" r="3.5"></circle>
+      <text class="ppin" x="${n.x+W/2-12}" y="${ny+18}" text-anchor="end" font-size="9">${n.pin}</text>
+      <text class="pname" x="${n.x-W/2+26}" y="${ny+20}" font-size="14">${n.nm}<tspan fill="var(--ink-faint)" font-weight="500">${n.gpt}</tspan></text>
+      <text class="pdesc" x="${n.x-W/2+14}" y="${ny+40}" font-size="9.5">${n.d}</text>`;
+    nodesG.appendChild(g);
+  });
+
+  // ---- hover-to-trace ----
+  const traces=[...document.querySelectorAll('.trace')];
+  document.querySelectorAll('.gnode').forEach(node=>{
+    const ch=node.getAttribute('data-ch');
+    node.addEventListener('mouseenter',()=>{ const t=traces.find(t=>t.dataset.ch===ch); if(t)t.classList.add('lit'); });
+    node.addEventListener('mouseleave',()=>{ traces.forEach(t=>t.classList.remove('lit')); });
+  });
+
+  // ---- animated signal pulses traveling each trace ----
+  (function(){
+    if(matchMedia('(prefers-reduced-motion:reduce)').matches) return;
+    const pg=document.getElementById('pulses');
+    traces.forEach((t,i)=>{
+      const p=document.createElementNS(SVGNS,'path');
+      p.setAttribute('class','pulse'); p.setAttribute('d',t.getAttribute('d'));
+      const len=t.getTotalLength();
+      p.style.strokeDasharray=`5 ${len}`;
+      const anim=document.createElementNS(SVGNS,'animate');
+      anim.setAttribute('attributeName','stroke-dashoffset');
+      anim.setAttribute('from',len); anim.setAttribute('to','0');
+      anim.setAttribute('dur',(2.4+i*0.18)+'s');
+      anim.setAttribute('repeatCount','indefinite');
+      p.appendChild(anim); pg.appendChild(p);
+    });
+  })();
+
+  // ---- theme toggle ----
+  (function(){
+    const root=document.documentElement, btn=document.getElementById('themeToggle');
+    btn.addEventListener('click',()=>{const l=root.getAttribute('data-theme')==='light';if(l)root.removeAttribute('data-theme');else root.setAttribute('data-theme','light');try{localStorage.setItem('nysgpt-theme-c2',l?'dark':'light')}catch(e){}});
+  })();
+
+  // ---- playground ----
+  (function(){
+    const root=document.documentElement, rs=root.style;
+    const panel=document.getElementById('pgPanel'), launch=document.getElementById('pgLaunch');
+    launch.addEventListener('click',e=>{e.stopPropagation();panel.classList.toggle('open')});
+    document.addEventListener('click',e=>{if(!panel.contains(e.target)&&e.target!==launch&&!launch.contains(e.target))panel.classList.remove('open')});
+    const acc=document.getElementById('pgAccent');
+    acc.querySelectorAll('.pg-sw[data-c]').forEach(sw=>sw.addEventListener('click',()=>{acc.querySelectorAll('.pg-sw').forEach(s=>s.classList.remove('on'));sw.classList.add('on');rs.setProperty('--accent',sw.dataset.c)}));
+    document.getElementById('pgAccentCustom').addEventListener('input',e=>{acc.querySelectorAll('.pg-sw').forEach(s=>s.classList.remove('on'));e.target.closest('.pg-sw').classList.add('on');rs.setProperty('--accent',e.target.value)});
+    function fg(id,v){const w=document.getElementById(id);w.querySelectorAll('.pg-font').forEach(b=>b.addEventListener('click',()=>{w.querySelectorAll('.pg-font').forEach(x=>x.classList.remove('on'));b.classList.add('on');rs.setProperty(v,b.dataset.f)}))}
+    fg('pgDisplay','--font-display');fg('pgBody','--font-sans');
+    const rad=document.getElementById('pgRadius'),rv=document.getElementById('pgRadVal');rad.addEventListener('input',()=>{rs.setProperty('--radius',rad.value);rv.textContent=parseFloat(rad.value).toFixed(1)+'×'});
+    const wg=document.getElementById('pgWght'),wv=document.getElementById('pgWghtVal');wg.addEventListener('input',()=>{rs.setProperty('--wght',wg.value);wv.textContent=(wg.value>0?'+':'')+wg.value});
+    const de=document.getElementById('pgDensity'),dv=document.getElementById('pgDensVal');de.addEventListener('input',()=>{rs.setProperty('--density',de.value);dv.textContent=parseFloat(de.value).toFixed(2)+'×'});
+    document.getElementById('pgReset').addEventListener('click',()=>{['--accent','--font-display','--font-sans','--radius','--wght','--density'].forEach(v=>rs.removeProperty(v));acc.querySelectorAll('.pg-sw').forEach((s,i)=>s.classList.toggle('on',i===0));['pgDisplay','pgBody'].forEach(id=>document.getElementById(id).querySelectorAll('.pg-font').forEach((b,i)=>b.classList.toggle('on',i===0)));rad.value=1;rv.textContent='1.0×';wg.value=0;wv.textContent='0';de.value=1;dv.textContent='1.0×';document.getElementById('pgAccentCustom').value='#28e0b0'});
+  })();
+
+  // reveal
+  const io=new IntersectionObserver((es)=>{es.forEach(e=>{if(e.isIntersecting){e.target.classList.add('in');io.unobserve(e.target)}})},{threshold:.1,rootMargin:'0px 0px -6% 0px'});
+  document.querySelectorAll('.reveal').forEach((el,i)=>{el.style.transitionDelay=(i%3*60)+'ms';io.observe(el)});
+
+  function submitBrief(e){e.preventDefault();const f=e.target;const body=encodeURIComponent(`Name: ${f.name.value}\nEmail: ${f.email.value}\nOrg: ${f.org.value}\nDomain: ${f.domain.value}\n\nBrief:\n${f.brief.value}`);window.location.href=`mailto:Brendan@nysgpt.com?subject=${encodeURIComponent('Project brief — '+(f.org.value||f.name.value))}&body=${body}`;return false}
+</script>
+</body>
+</html>

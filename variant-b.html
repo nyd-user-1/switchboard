@@ -1,0 +1,663 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>NYSGPT — AI for complex, legacy systems</title>
+<meta name="description" content="NYSGPT is an AI-first software company building domain-specific applications for complex, legacy, and regulatory systems. Eight shipped products turning impenetrable data into navigable software." />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,300..800&family=Familjen+Grotesk:ital,wght@0,400..600;1,400&family=JetBrains+Mono:wght@400;500&family=Space+Grotesk:wght@400;500;600;700&family=Instrument+Serif:ital@0;1&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&family=Sora:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<script>
+  // dark is the design default; go light only when explicitly chosen before.
+  (function(){ try{ if(localStorage.getItem('nysgpt-theme-b')==='light') document.documentElement.setAttribute('data-theme','light'); }catch(e){} })();
+</script>
+<style>
+  :root{
+    /* ---- DARK (default): luminous deep-space ---- */
+    --bg:#06070d;             /* deep space */
+    --bg-2:#0b0e17;
+    --panel:rgba(255,255,255,.028);
+    --panel-brd:rgba(255,255,255,.08);
+    --panel-glass:rgba(11,14,23,.92);  /* playground panel */
+    --text:#eef1f7;
+    --text-dim:#9aa0b2;
+    --text-faint:#5b6076;
+    --text-hover:#ffffff;
+    --ink-on-accent:#06070d;  /* text sitting on the gradient */
+    --cyan:#46e3d0;           /* glowing primary */
+    --violet:#8b7bff;         /* secondary glow */
+    --pink:#ff6ea9;
+    --grad:linear-gradient(110deg,var(--cyan),var(--violet) 55%,var(--pink));
+    --mesh-blend:screen;      --mesh-op:.62;
+    --veil:radial-gradient(120% 80% at 50% -10%,transparent,rgba(6,7,13,.55) 60%,rgba(6,7,13,.9));
+    --grain-op:.05;
+    --header-bg:rgba(6,7,13,.5);
+    --rule-faint:rgba(255,255,255,.06);
+    --card-hover:rgba(255,255,255,.045);
+    --input-bg:rgba(255,255,255,.03);
+    --font-display:"Bricolage Grotesque", system-ui, sans-serif;
+    --font-body:"Familjen Grotesk", system-ui, sans-serif;
+    --font-mono:"JetBrains Mono", ui-monospace, monospace;
+    --maxw:1180px;
+    /* ---- playground knobs (live-tunable) ---- */
+    --radius:1;              /* corner-rounding scale for cards/panels/inputs */
+    --wght:0;                /* heading weight offset */
+    --density:1;             /* spacing scale */
+  }
+
+  /* ---- LIGHT: luminous on warm daylight ---- */
+  :root[data-theme="light"]{
+    --bg:#f5f3ef;             /* warm daylight canvas */
+    --bg-2:#fbfaf7;
+    --panel:rgba(20,22,36,.025);
+    --panel-brd:rgba(20,22,40,.12);
+    --panel-glass:rgba(251,250,247,.94);
+    --text:#15151c;
+    --text-dim:#56586a;
+    --text-faint:#8d8fa0;
+    --text-hover:#000000;
+    --ink-on-accent:#0a0b12;  /* dark text on the (now-vivid) gradient buttons */
+    --cyan:#10b9a6;           /* deepened so the gradient reads on light */
+    --violet:#6f5cf0;
+    --pink:#e54e8e;
+    --mesh-blend:multiply;    --mesh-op:.34;   /* blobs tint the paper, not glow */
+    --veil:radial-gradient(120% 80% at 50% -10%,transparent,rgba(245,243,239,.4) 58%,rgba(245,243,239,.82));
+    --grain-op:.03;
+    --header-bg:rgba(245,243,239,.62);
+    --rule-faint:rgba(20,22,40,.08);
+    --card-hover:rgba(20,22,40,.035);
+    --input-bg:rgba(20,22,40,.025);
+  }
+  :root{color-scheme:dark} :root[data-theme="light"]{color-scheme:light}
+  html,body{transition:background .4s ease,color .4s ease}
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth;-webkit-text-size-adjust:100%}
+  body{
+    background:var(--bg);color:var(--text);font-family:var(--font-body);
+    font-size:16px;line-height:1.55;-webkit-font-smoothing:antialiased;
+    text-rendering:optimizeLegibility;overflow-x:hidden;
+  }
+
+  /* ====== living gradient-mesh background ====== */
+  .mesh{position:fixed;inset:-30vh -30vw;z-index:0;pointer-events:none;filter:blur(70px) saturate(135%);opacity:var(--mesh-op)}
+  .mesh .blob{position:absolute;border-radius:50%;mix-blend-mode:var(--mesh-blend);will-change:transform}
+  .blob.b1{width:52vw;height:52vw;left:-6vw;top:-8vh;background:radial-gradient(circle at 30% 30%,rgba(70,227,208,.55),transparent 62%);animation:drift1 22s ease-in-out infinite}
+  .blob.b2{width:46vw;height:46vw;right:-4vw;top:2vh;background:radial-gradient(circle at 60% 40%,rgba(139,123,255,.55),transparent 62%);animation:drift2 26s ease-in-out infinite}
+  .blob.b3{width:40vw;height:40vw;left:24vw;top:36vh;background:radial-gradient(circle at 50% 50%,rgba(255,110,169,.42),transparent 60%);animation:drift3 30s ease-in-out infinite}
+  @keyframes drift1{0%,100%{transform:translate(0,0) scale(1)}50%{transform:translate(7vw,9vh) scale(1.12)}}
+  @keyframes drift2{0%,100%{transform:translate(0,0) scale(1.05)}50%{transform:translate(-8vw,6vh) scale(.92)}}
+  @keyframes drift3{0%,100%{transform:translate(0,0) scale(1)}50%{transform:translate(4vw,-7vh) scale(1.1)}}
+  /* grain + fade so content stays legible */
+  .grain{position:fixed;inset:0;z-index:1;pointer-events:none;opacity:var(--grain-op);
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")}
+  .veil{position:fixed;inset:0;z-index:1;pointer-events:none;
+    background:var(--veil)}
+
+  .wrap{position:relative;z-index:2;max-width:var(--maxw);margin:0 auto;padding:0 28px}
+  a{color:inherit;text-decoration:none}
+  .mono{font-family:var(--font-mono)}
+  .tnum{font-variant-numeric:tabular-nums}
+  .grad-text{background:var(--grad);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+
+  .kicker{font-family:var(--font-mono);font-size:11px;letter-spacing:.24em;text-transform:uppercase;color:var(--cyan)}
+
+  /* ====== NAV ====== */
+  header{position:sticky;top:0;z-index:50;backdrop-filter:blur(16px);background:var(--header-bg);border-bottom:1px solid var(--rule-faint)}
+  header .wrap{display:flex;align-items:center;justify-content:space-between;height:68px}
+  .brand{display:flex;align-items:center;gap:11px;font-family:var(--font-display);font-weight:600;font-size:18px;letter-spacing:-.01em}
+  .brand .orb{width:24px;height:24px;border-radius:50%;background:var(--grad);box-shadow:0 0 18px rgba(70,227,208,.6)}
+  nav{display:flex;align-items:center;gap:30px}
+  nav a{font-family:var(--font-mono);font-size:12px;letter-spacing:.06em;color:var(--text-dim);transition:color .2s}
+  nav a:hover{color:var(--text)}
+  .pill{padding:9px 18px;border-radius:100px;background:var(--text);color:var(--ink-on-accent) !important;font-weight:600 !important;font-family:var(--font-body) !important;transition:transform .2s,box-shadow .2s}
+  .pill:hover{transform:translateY(-1px);box-shadow:0 8px 30px rgba(70,227,208,.25)}
+  .theme-toggle{width:36px;height:36px;border:1px solid var(--panel-brd);border-radius:50%;background:var(--panel);
+    display:grid;place-items:center;cursor:pointer;color:var(--text-dim);transition:border-color .2s,color .2s;flex-shrink:0}
+  .theme-toggle:hover{border-color:var(--cyan);color:var(--text)}
+  .theme-toggle svg{width:15px;height:15px;display:block}
+  .theme-toggle .moon{display:none}
+  :root[data-theme="light"] .theme-toggle .sun{display:none}
+  :root[data-theme="light"] .theme-toggle .moon{display:block}
+  @media(max-width:760px){nav a:not(.pill){display:none}}
+
+  /* ====== HERO ====== */
+  .hero{padding:calc(120px * var(--density)) 0 calc(96px * var(--density));text-align:center}
+  .hero .badge{display:inline-flex;align-items:center;gap:9px;border:1px solid var(--panel-brd);background:var(--panel);
+    padding:7px 16px;border-radius:100px;font-family:var(--font-mono);font-size:11.5px;letter-spacing:.08em;color:var(--text-dim);
+    margin-bottom:34px;animation:pop .7s cubic-bezier(.16,1,.3,1) both}
+  .hero .badge .live{width:7px;height:7px;border-radius:50%;background:var(--cyan);box-shadow:0 0 0 0 rgba(70,227,208,.6);animation:pulse 2.2s infinite}
+  @keyframes pulse{0%{box-shadow:0 0 0 0 rgba(70,227,208,.55)}70%{box-shadow:0 0 0 7px rgba(70,227,208,0)}100%{box-shadow:0 0 0 0 rgba(70,227,208,0)}}
+  .hero h1{font-family:var(--font-display);font-weight:calc(600 + var(--wght));font-size:clamp(44px,8.2vw,108px);line-height:.95;letter-spacing:-.035em;max-width:16ch;margin:0 auto}
+  .hero h1 span{display:inline-block;animation:pop .85s cubic-bezier(.16,1,.3,1) both}
+  .hero h1 .l1{animation-delay:.05s}
+  .hero h1 .l2{animation-delay:.13s}
+  .hero h1 .l3{animation-delay:.21s}
+  @keyframes pop{from{opacity:0;transform:translateY(26px)}to{opacity:1;transform:none}}
+  .hero p.deck{margin:32px auto 0;max-width:60ch;font-size:19px;line-height:1.6;color:var(--text-dim);animation:pop .8s ease .4s both}
+  .hero p.deck b{color:var(--text);font-weight:600}
+  .hero .cta{margin-top:42px;display:flex;gap:15px;justify-content:center;flex-wrap:wrap;animation:pop .8s ease .55s both}
+  .btn{font-family:var(--font-body);font-weight:600;font-size:15px;padding:15px 28px;border-radius:100px;display:inline-flex;align-items:center;gap:10px;transition:transform .2s,box-shadow .2s,background .2s,border-color .2s;cursor:pointer;border:1px solid transparent}
+  .btn .arr{transition:transform .25s}.btn:hover .arr{transform:translateX(4px)}
+  .btn-glow{background:var(--grad);color:var(--ink-on-accent);position:relative;box-shadow:0 6px 34px rgba(70,227,208,.32)}
+  .btn-glow:hover{transform:translateY(-2px);box-shadow:0 10px 44px rgba(139,123,255,.42)}
+  .btn-line{border-color:var(--panel-brd);background:var(--panel);color:var(--text)}
+  .btn-line:hover{border-color:var(--cyan);color:var(--text-hover)}
+
+  .hero .stats{margin-top:78px;display:flex;justify-content:center;gap:0;flex-wrap:wrap;animation:pop .9s ease .7s both}
+  .hero .stats .s{padding:0 38px;text-align:center;border-right:1px solid var(--rule-faint)}
+  .hero .stats .s:last-child{border-right:none}
+  .hero .stats .n{font-family:var(--font-display);font-weight:600;font-size:44px;letter-spacing:-.02em;line-height:1}
+  .hero .stats .n .u{font-size:22px}
+  .hero .stats .l{font-family:var(--font-mono);font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--text-faint);margin-top:11px}
+  @media(max-width:680px){.hero .stats .s{padding:14px 26px;border-right:none}}
+
+  /* ====== THESIS ====== */
+  .thesis{padding:calc(90px * var(--density)) 0}
+  .thesis .inner{max-width:880px;margin:0 auto;text-align:center}
+  .thesis .kicker{margin-bottom:22px}
+  .thesis h2{font-family:var(--font-display);font-weight:calc(500 + var(--wght));font-size:clamp(28px,4.4vw,48px);line-height:1.1;letter-spacing:-.022em}
+  .thesis h2 .grad-text{font-weight:600}
+  .thesis p{margin:28px auto 0;max-width:62ch;color:var(--text-dim);font-size:17.5px;line-height:1.7}
+  .thesis p b{color:var(--text);font-weight:600}
+
+  /* ====== PRODUCT CARDS ====== */
+  .work{padding:calc(70px * var(--density)) 0 calc(90px * var(--density))}
+  .work .head{text-align:center;margin-bottom:52px}
+  .work .head .kicker{margin-bottom:16px}
+  .work .head h2{font-family:var(--font-display);font-weight:calc(600 + var(--wght));font-size:clamp(30px,5vw,58px);letter-spacing:-.03em;line-height:1}
+  .work .head p{margin-top:16px;color:var(--text-dim);font-size:16px}
+  .grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}
+  .grid .card{
+    grid-column:span 1;position:relative;border:1px solid var(--panel-brd);border-radius:calc(18px * var(--radius));
+    background:var(--panel);padding:24px;overflow:hidden;transition:transform .3s cubic-bezier(.16,1,.3,1),border-color .3s,background .3s;
+    display:flex;flex-direction:column;min-height:212px;
+  }
+  /* feature the two flagship live products bigger */
+  .grid .card.feat{grid-column:span 2;min-height:212px}
+  .grid .card::after{content:"";position:absolute;inset:0;border-radius:calc(18px * var(--radius));padding:1px;background:var(--grad);
+    -webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask-composite:exclude;
+    opacity:0;transition:opacity .3s}
+  .grid .card:hover{transform:translateY(-5px);background:var(--card-hover)}
+  .grid .card:hover::after{opacity:.9}
+  .grid .card .glow{position:absolute;width:150px;height:150px;border-radius:50%;filter:blur(50px);opacity:0;transition:opacity .35s;top:-40px;right:-40px;background:var(--cyan)}
+  .grid .card:hover .glow{opacity:.4}
+  .card .top{display:flex;align-items:center;justify-content:space-between;margin-bottom:auto}
+  .card .idx{font-family:var(--font-mono);font-size:11px;color:var(--text-faint)}
+  .card .status{font-family:var(--font-mono);font-size:9.5px;letter-spacing:.12em;display:inline-flex;align-items:center;gap:6px;padding:4px 9px;border-radius:100px;border:1px solid var(--panel-brd)}
+  .card .status.live{color:var(--cyan)}
+  .card .status.live .d{width:5px;height:5px;border-radius:50%;background:var(--cyan)}
+  .card .status.shipped{color:var(--text-faint)}
+  .card .status.shipped .d{width:5px;height:5px;border-radius:50%;background:var(--text-faint)}
+  .card h3{font-family:var(--font-display);font-weight:calc(600 + var(--wght));font-size:23px;letter-spacing:-.015em;margin:18px 0 8px}
+  .card h3 .gpt{color:var(--text-dim);font-weight:400}
+  .card .dsc{color:var(--text-dim);font-size:13.5px;line-height:1.5}
+  .card.feat .dsc{font-size:14.5px;max-width:46ch}
+  .card .metric{margin-top:16px;font-family:var(--font-mono);font-size:12px;color:var(--text);display:flex;gap:8px;align-items:center}
+  .card .metric .sep{color:var(--text-faint)}
+  .card.link:hover h3{color:var(--text-hover)}
+  .card.link h3::after{content:"↗";font-size:14px;margin-left:7px;color:var(--cyan);opacity:0;transition:opacity .2s}
+  .card.link:hover h3::after{opacity:1}
+  @media(max-width:960px){.grid{grid-template-columns:repeat(2,1fr)} .grid .card.feat{grid-column:span 2}}
+  @media(max-width:560px){.grid{grid-template-columns:1fr} .grid .card,.grid .card.feat{grid-column:span 1}}
+
+  /* ====== METHOD ====== */
+  .method{padding:calc(80px * var(--density)) 0}
+  .method .head{text-align:center;margin-bottom:48px}
+  .method .head .kicker{margin-bottom:14px}
+  .method .head h2{font-family:var(--font-display);font-weight:calc(600 + var(--wght));font-size:clamp(28px,4.4vw,48px);letter-spacing:-.025em}
+  .msteps{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
+  .mstep{border:1px solid var(--panel-brd);background:var(--panel);border-radius:calc(18px * var(--radius));padding:30px 26px;position:relative;overflow:hidden;transition:transform .3s,background .3s}
+  .mstep:hover{transform:translateY(-4px);background:var(--card-hover)}
+  .mstep .num{font-family:var(--font-display);font-weight:700;font-size:48px;line-height:1;letter-spacing:-.03em;background:var(--grad);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;opacity:.92;margin-bottom:18px}
+  .mstep h3{font-family:var(--font-display);font-weight:600;font-size:20px;margin-bottom:10px}
+  .mstep p{color:var(--text-dim);font-size:14px;line-height:1.6}
+  @media(max-width:820px){.msteps{grid-template-columns:1fr}}
+
+  /* ====== DOMAINS marquee ====== */
+  .domains{padding:46px 0;border-top:1px solid var(--rule-faint);border-bottom:1px solid var(--rule-faint);overflow:hidden}
+  .marquee{display:flex;gap:42px;white-space:nowrap;animation:scroll 32s linear infinite;width:max-content}
+  .marquee:hover{animation-play-state:paused}
+  .marquee span{font-family:var(--font-display);font-weight:500;font-size:22px;color:var(--text-faint);display:inline-flex;align-items:center;gap:42px}
+  .marquee span::after{content:"✦";color:var(--cyan);font-size:13px}
+  @keyframes scroll{to{transform:translateX(-50%)}}
+
+  /* ====== CTA ====== */
+  .cta{padding:calc(96px * var(--density)) 0}
+  .cta .panel{position:relative;border:1px solid var(--panel-brd);border-radius:calc(26px * var(--radius));overflow:hidden;background:var(--bg-2);
+    display:grid;grid-template-columns:1.02fr .98fr}
+  .cta .panel::before{content:"";position:absolute;inset:0;background:radial-gradient(80% 120% at 0% 0%,rgba(70,227,208,.16),transparent 50%),radial-gradient(80% 120% at 100% 100%,rgba(139,123,255,.16),transparent 50%);pointer-events:none}
+  .cta .left{position:relative;padding:54px 48px;border-right:1px solid var(--panel-brd)}
+  .cta .left .kicker{margin-bottom:20px}
+  .cta .left h2{font-family:var(--font-display);font-weight:600;font-size:clamp(30px,3.8vw,46px);line-height:1.04;letter-spacing:-.025em}
+  .cta .left p{margin-top:20px;color:var(--text-dim);font-size:16px;line-height:1.65;max-width:42ch}
+  .cta .direct{margin-top:32px;display:grid;gap:13px}
+  .cta .direct a{display:inline-flex;align-items:center;gap:12px;font-family:var(--font-mono);font-size:13.5px;color:var(--text);transition:color .2s;width:fit-content}
+  .cta .direct a:hover{color:var(--cyan)}
+  .cta .direct .ico{width:34px;height:34px;border-radius:calc(9px * var(--radius));border:1px solid var(--panel-brd);display:grid;place-items:center;color:var(--cyan)}
+  form.brief{position:relative;padding:54px 48px;display:grid;gap:17px}
+  form.brief .fld{display:grid;gap:7px}
+  form.brief label{font-family:var(--font-mono);font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--text-faint)}
+  form.brief input,form.brief textarea,form.brief select{background:var(--input-bg);border:1px solid var(--panel-brd);border-radius:calc(11px * var(--radius));padding:13px 15px;color:var(--text);font-family:var(--font-body);font-size:14.5px;transition:border-color .2s,background .2s}
+  form.brief input:focus,form.brief textarea:focus,form.brief select:focus{outline:none;border-color:var(--cyan);background:rgba(70,227,208,.04)}
+  form.brief textarea{resize:vertical;min-height:82px}
+  form.brief .row2{display:grid;grid-template-columns:1fr 1fr;gap:13px}
+  form.brief button{margin-top:4px;width:100%;justify-content:center}
+  form.brief .note{font-family:var(--font-mono);font-size:10.5px;color:var(--text-faint);text-align:center}
+  @media(max-width:860px){.cta .panel{grid-template-columns:1fr}.cta .left{border-right:none;border-bottom:1px solid var(--panel-brd);padding:40px 28px}form.brief{padding:40px 28px}}
+
+  /* ====== FOOTER ====== */
+  footer{padding:44px 0;border-top:1px solid var(--rule-faint)}
+  footer .wrap{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:16px}
+  footer .c{font-family:var(--font-mono);font-size:11.5px;color:var(--text-faint)}
+  footer .c b{color:var(--text-dim);font-weight:500}
+  footer a:hover{color:var(--cyan)}
+
+  /* ===== PLAYGROUND ===== */
+  .pg-launch{
+    position:fixed;right:22px;bottom:22px;z-index:90;width:50px;height:50px;border-radius:50%;
+    background:var(--grad);color:var(--ink-on-accent);cursor:pointer;border:none;
+    display:grid;place-items:center;box-shadow:0 10px 34px rgba(70,227,208,.4);transition:transform .25s,box-shadow .2s;
+  }
+  .pg-launch:hover{transform:translateY(-3px) rotate(-8deg);box-shadow:0 14px 44px rgba(139,123,255,.5)}
+  .pg-launch svg{width:22px;height:22px}
+  .pg-panel{
+    position:fixed;right:22px;bottom:84px;z-index:91;width:318px;
+    background:var(--panel-glass);backdrop-filter:blur(20px);border:1px solid var(--panel-brd);
+    border-radius:calc(20px * var(--radius));box-shadow:0 24px 64px rgba(0,0,0,.6);padding:22px;
+    opacity:0;transform:translateY(12px) scale(.97);pointer-events:none;transform-origin:bottom right;
+    transition:opacity .26s cubic-bezier(.16,1,.3,1),transform .26s cubic-bezier(.16,1,.3,1);
+    max-height:80vh;overflow-y:auto;
+  }
+  .pg-panel.open{opacity:1;transform:none;pointer-events:auto}
+  .pg-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px}
+  .pg-title{font-family:var(--font-mono);font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--cyan)}
+  .pg-reset{font-family:var(--font-mono);font-size:10px;letter-spacing:.06em;color:var(--text-dim);background:none;border:none;cursor:pointer;text-transform:uppercase}
+  .pg-reset:hover{color:var(--text)}
+  .pg-grp{margin-bottom:20px}.pg-grp:last-child{margin-bottom:4px}
+  .pg-grp > label{display:block;font-family:var(--font-mono);font-size:10px;letter-spacing:.13em;text-transform:uppercase;color:var(--text-dim);margin-bottom:11px}
+  .pg-grp > label .v{color:var(--text-faint);float:right;text-transform:none;letter-spacing:0}
+  .pg-swatches{display:flex;gap:9px;flex-wrap:wrap}
+  .pg-sw{width:28px;height:28px;border-radius:calc(9px * var(--radius));cursor:pointer;border:2px solid transparent;transition:transform .15s,border-color .15s;position:relative}
+  .pg-sw:hover{transform:scale(1.12)}
+  .pg-sw.on{border-color:var(--text)}
+  .pg-sw.custom{display:grid;place-items:center;background:var(--panel);border:1px solid var(--panel-brd);color:var(--text-faint);overflow:hidden}
+  .pg-sw.custom input{position:absolute;inset:0;opacity:0;cursor:pointer}
+  .pg-fonts{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  .pg-font{font-family:inherit;font-size:13px;padding:9px 10px;border-radius:calc(9px * var(--radius));border:1px solid var(--panel-brd);background:var(--panel);color:var(--text-dim);cursor:pointer;transition:.15s;text-align:left;line-height:1.1}
+  .pg-font:hover{border-color:var(--text-faint);color:var(--text)}
+  .pg-font.on{border-color:var(--cyan);color:var(--text)}
+  .pg-font .pf-name{font-size:9px;font-family:var(--font-mono);letter-spacing:.04em;color:var(--text-faint);display:block;margin-top:3px}
+  input[type=range].pg-range{-webkit-appearance:none;appearance:none;width:100%;height:3px;border-radius:3px;background:var(--panel-brd);outline:none;cursor:pointer}
+  input[type=range].pg-range::-webkit-slider-thumb{-webkit-appearance:none;width:16px;height:16px;border-radius:50%;background:var(--cyan);cursor:pointer;border:2px solid var(--bg-2)}
+  input[type=range].pg-range::-moz-range-thumb{width:14px;height:14px;border-radius:50%;background:var(--cyan);cursor:pointer;border:2px solid var(--bg-2)}
+  @media(max-width:560px){.pg-panel{width:calc(100vw - 44px)}}
+
+  .reveal{opacity:0;transform:translateY(26px);transition:opacity .75s cubic-bezier(.16,1,.3,1),transform .75s cubic-bezier(.16,1,.3,1)}
+  .reveal.in{opacity:1;transform:none}
+  @media(prefers-reduced-motion:reduce){*{animation:none !important;transition:none !important}.reveal{opacity:1;transform:none}.mesh{opacity:.4}}
+</style>
+</head>
+<body>
+
+<div class="mesh"><div class="blob b1"></div><div class="blob b2"></div><div class="blob b3"></div></div>
+<div class="grain"></div>
+<div class="veil"></div>
+
+<header>
+  <div class="wrap">
+    <a href="#top" class="brand"><span class="orb"></span>NYSGPT</a>
+    <nav>
+      <a href="#thesis">Thesis</a>
+      <a href="#work">Products</a>
+      <a href="#how">Method</a>
+      <button class="theme-toggle" id="themeToggle" type="button" aria-label="Toggle light and dark mode" title="Toggle theme">
+        <svg class="sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>
+        <svg class="moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+      </button>
+      <a href="#contact" class="pill">Book a session</a>
+    </nav>
+  </div>
+</header>
+
+<main id="top">
+
+  <!-- HERO -->
+  <section class="hero">
+    <div class="wrap">
+      <div class="badge"><span class="live"></span>AI-FIRST SOFTWARE · 8 PRODUCTS SHIPPED</div>
+      <h1><span class="l1">AI for complex,</span> <span class="l2">legacy</span> <span class="l3 grad-text">systems.</span></h1>
+      <p class="deck">
+        NYSGPT builds domain-specific AI applications for the systems ordinary software won't touch —
+        <b>impenetrable government databases, statutory regimes, and industrial records.</b>
+        We turn data nobody could read into software anyone can use.
+      </p>
+      <div class="cta">
+        <a href="#contact" class="btn btn-glow">Book a working session <span class="arr">→</span></a>
+        <a href="#work" class="btn btn-line">Explore the products <span class="arr">→</span></a>
+      </div>
+      <div class="stats">
+        <div class="s"><div class="n grad-text tnum">8</div><div class="l">Products shipped</div></div>
+        <div class="s"><div class="n tnum">350<span class="u">k+</span></div><div class="l">Records navigable</div></div>
+        <div class="s"><div class="n tnum">5</div><div class="l">Live in production</div></div>
+        <div class="s"><div class="n tnum">∞</div><div class="l">Legacy systems left</div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- THESIS -->
+  <section class="thesis" id="thesis">
+    <div class="wrap">
+      <div class="inner reveal">
+        <div class="kicker">The thesis</div>
+        <h2>The most consequential systems run on the <span class="grad-text">worst software.</span></h2>
+        <p>
+          Legislative records, customs rulings, energy filings, licensing registries, nuclear references —
+          the data is public, authoritative, and locked behind portals built two decades ago for nobody
+          in particular. <b>NYSGPT closes that gap.</b> We ingest the primary record, ground every answer
+          in a verifiable source, and rebuild the interface from the data up — so the person who actually
+          needs the answer gets one, not a 40-page PDF.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- PRODUCTS -->
+  <section class="work" id="work">
+    <div class="wrap">
+      <div class="head reveal">
+        <div class="kicker">The portfolio</div>
+        <h2>Eight products. One architecture.</h2>
+        <p>Every one ingests a hard public record and rebuilds the interface around it.</p>
+      </div>
+
+      <div class="grid">
+        <a class="card feat link reveal" href="https://44b.nysgpt.com" target="_blank" rel="noopener">
+          <span class="glow"></span>
+          <div class="top"><span class="idx">01</span><span class="status live"><span class="d"></span>LIVE</span></div>
+          <h3>44B</h3>
+          <div class="dsc">A public registry, research library, and incident record for AI — and the compliance portal for NY's Article 44-B. "SERFF, for AI."</div>
+          <div class="metric tnum">532 models<span class="sep">·</span>32k papers<span class="sep">·</span>2,561 incidents</div>
+        </a>
+
+        <a class="card feat link reveal" href="https://tariffs.nysgpt.com" target="_blank" rel="noopener">
+          <span class="glow" style="background:var(--violet)"></span>
+          <div class="top"><span class="idx">02</span><span class="status live"><span class="d"></span>LIVE</span></div>
+          <h3>Tariffs<span class="gpt">GPT</span></h3>
+          <div class="dsc">A self-serve refund engine for importers who paid IEEPA tariffs the Supreme Court invalidated — a real recoverable number before any phone call.</div>
+          <div class="metric tnum">220k+ customs rulings<span class="sep">·</span>live schedule</div>
+        </a>
+
+        <a class="card link reveal" href="https://childcare.nysgpt.com/console" target="_blank" rel="noopener">
+          <span class="glow" style="background:var(--pink)"></span>
+          <div class="top"><span class="idx">03</span><span class="status live"><span class="d"></span>LIVE</span></div>
+          <h3>Childcare<span class="gpt">GPT</span></h3>
+          <div class="dsc">NY childcare intelligence — every OCFS facility, county costs, and an AI-assisted subsidy form.</div>
+          <div class="metric tnum">16,800 facilities</div>
+        </a>
+
+        <a class="card link reveal" href="https://solar.nysgpt.com/map/plants-2" target="_blank" rel="noopener">
+          <span class="glow"></span>
+          <div class="top"><span class="idx">04</span><span class="status live"><span class="d"></span>LIVE</span></div>
+          <h3>Solar<span class="gpt">GPT</span></h3>
+          <div class="dsc">Clean-energy intelligence for every U.S. county, state, and grid region.</div>
+          <div class="metric tnum">EIA data pipelines</div>
+        </a>
+
+        <div class="card reveal">
+          <span class="glow" style="background:var(--violet)"></span>
+          <div class="top"><span class="idx">05</span><span class="status shipped"><span class="d"></span>SHIPPED</span></div>
+          <h3>Policy<span class="gpt">GPT</span></h3>
+          <div class="dsc">NY legislative &amp; financial intelligence — bills, budgets, lobbying, with an advocacy layer.</div>
+          <div class="metric tnum">Full NYS record</div>
+        </div>
+
+        <div class="card reveal">
+          <span class="glow"></span>
+          <div class="top"><span class="idx">06</span><span class="status shipped"><span class="d"></span>SHIPPED</span></div>
+          <h3>NSR<span class="gpt">gpt</span></h3>
+          <div class="dsc">Semantic search &amp; RAG over the Nuclear Science References database.</div>
+          <div class="metric tnum">88,000+ records</div>
+        </div>
+
+        <div class="card reveal">
+          <span class="glow" style="background:var(--pink)"></span>
+          <div class="top"><span class="idx">07</span><span class="status shipped"><span class="d"></span>SHIPPED</span></div>
+          <h3>Insurance<span class="gpt">GPT</span></h3>
+          <div class="dsc">Auto-insurance quotes grounded in filed carrier data, Stripe checkout, agent console.</div>
+          <div class="metric tnum">Grounded rates</div>
+        </div>
+
+        <div class="card feat reveal">
+          <span class="glow" style="background:var(--violet)"></span>
+          <div class="top"><span class="idx">08</span><span class="status shipped"><span class="d"></span>SHIPPED</span></div>
+          <h3>Sports<span class="gpt">GPT</span></h3>
+          <div class="dsc">High-school sports intelligence for Section XI football on Long Island — team and player stats, standings, choropleth maps, and AI-generated game highlights.</div>
+          <div class="metric tnum">Section XI<span class="sep">·</span>AI highlights</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- DOMAINS marquee -->
+  <section class="domains">
+    <div class="marquee">
+      <span>Government&nbsp;&amp;&nbsp;legislative</span><span>Trade&nbsp;&amp;&nbsp;customs</span><span>Energy&nbsp;&amp;&nbsp;grid</span><span>Social&nbsp;services</span><span>Insurance</span><span>Scientific&nbsp;reference</span><span>AI&nbsp;governance</span><span>Public&nbsp;records</span>
+      <span>Government&nbsp;&amp;&nbsp;legislative</span><span>Trade&nbsp;&amp;&nbsp;customs</span><span>Energy&nbsp;&amp;&nbsp;grid</span><span>Social&nbsp;services</span><span>Insurance</span><span>Scientific&nbsp;reference</span><span>AI&nbsp;governance</span><span>Public&nbsp;records</span>
+    </div>
+  </section>
+
+  <!-- METHOD -->
+  <section class="method" id="how">
+    <div class="wrap">
+      <div class="head reveal">
+        <div class="kicker">How we build</div>
+        <h2>Ingest. Ground. Ship.</h2>
+      </div>
+      <div class="msteps">
+        <div class="mstep reveal">
+          <div class="num">01</div>
+          <h3>Tame the primary record</h3>
+          <p>We crawl, dedupe, and structure the authoritative source — even with no bulk export, no API, or a pagination wall — into clean, queryable Postgres. The hard part nobody else does.</p>
+        </div>
+        <div class="mstep reveal">
+          <div class="num">02</div>
+          <h3>Make the AI accountable</h3>
+          <p>Retrieval over the real corpus, structured output, and a visible chain back to the source. The model reasons over primary data — and every answer can be checked.</p>
+        </div>
+        <div class="mstep reveal">
+          <div class="num">03</div>
+          <h3>Rebuild the interface</h3>
+          <p>Search, structured exploration, maps, and AI on one surface — designed for the human who needs the answer, and pushed to production with real users.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA -->
+  <section class="cta" id="contact">
+    <div class="wrap">
+      <div class="panel reveal">
+        <div class="left">
+          <div class="kicker">Let's build</div>
+          <h2>Got a system too complex for ordinary software?</h2>
+          <p>That's exactly what we build for. Book a working session and we'll pressure-test what an AI-first rebuild looks like for your data — or send a short brief and we'll come back with a concrete read.</p>
+          <div class="direct">
+            <a href="mailto:Brendan@nysgpt.com?subject=Working%20session%20—%20NYSGPT"><span class="ico">✉</span> Brendan@nysgpt.com</a>
+            <a href="mailto:Brendan@nysgpt.com?subject=Book%20a%20working%20session"><span class="ico">↗</span> Book a working session</a>
+          </div>
+        </div>
+        <form class="brief" onsubmit="return submitBrief(event)">
+          <div class="fld"><label for="b-name">Your name</label><input id="b-name" name="name" required placeholder="Jane Rivera" /></div>
+          <div class="row2">
+            <div class="fld"><label for="b-email">Email</label><input id="b-email" name="email" type="email" required placeholder="jane@org.gov" /></div>
+            <div class="fld"><label for="b-org">Organization</label><input id="b-org" name="org" placeholder="Agency / company" /></div>
+          </div>
+          <div class="fld"><label for="b-domain">The system / domain</label>
+            <select id="b-domain" name="domain">
+              <option>Government / legislative</option><option>Trade / customs</option><option>Energy / utilities</option>
+              <option>Social services</option><option>Insurance / regulatory</option><option>Scientific / technical reference</option><option>Other legacy system</option>
+            </select>
+          </div>
+          <div class="fld"><label for="b-brief">What's locked up in it?</label><textarea id="b-brief" name="brief" placeholder="The data, who needs it, and why it's hard to use today…"></textarea></div>
+          <button type="submit" class="btn btn-glow">Send the brief <span class="arr">→</span></button>
+          <div class="note">Goes straight to Brendan@nysgpt.com — no funnel, no sales bot.</div>
+        </form>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <div class="c"><b>NYSGPT</b> — AI-first software for legacy systems · Long Island, NY</div>
+    <div class="c"><a href="mailto:Brendan@nysgpt.com">Brendan@nysgpt.com</a> · <a href="https://github.com/nyd-user-1" target="_blank" rel="noopener">GitHub</a></div>
+    <div class="c">© 2026</div>
+  </div>
+</footer>
+
+<!-- ============ PLAYGROUND ============ -->
+<button class="pg-launch" id="pgLaunch" type="button" aria-label="Open the design playground" title="Play with the design">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="13.5" cy="6.5" r="2.5"/><circle cx="6" cy="11" r="2.5"/><circle cx="17.5" cy="13" r="2.5"/><circle cx="9" cy="18" r="2.5"/>
+    <path d="M13.5 9v3M8 12.5l2.5 1M15 15l-3 1.7"/>
+  </svg>
+</button>
+<div class="pg-panel" id="pgPanel" role="dialog" aria-label="Design playground">
+  <div class="pg-head">
+    <span class="pg-title">◆ Design playground</span>
+    <button class="pg-reset" id="pgReset" type="button">Reset</button>
+  </div>
+
+  <div class="pg-grp">
+    <label>Accent gradient</label>
+    <div class="pg-swatches" id="pgAccent">
+      <span class="pg-sw on" data-g="#46e3d0,#8b7bff,#ff6ea9" style="background:linear-gradient(120deg,#46e3d0,#8b7bff,#ff6ea9)"></span>
+      <span class="pg-sw" data-g="#5b8cff,#8b7bff,#c46bff" style="background:linear-gradient(120deg,#5b8cff,#8b7bff,#c46bff)"></span>
+      <span class="pg-sw" data-g="#37e0a0,#46e3d0,#5b8cff" style="background:linear-gradient(120deg,#37e0a0,#46e3d0,#5b8cff)"></span>
+      <span class="pg-sw" data-g="#ffb347,#ff6ea9,#c46bff" style="background:linear-gradient(120deg,#ffb347,#ff6ea9,#c46bff)"></span>
+      <span class="pg-sw" data-g="#ff8a5b,#ff6ea9,#ff4d6d" style="background:linear-gradient(120deg,#ff8a5b,#ff6ea9,#ff4d6d)"></span>
+      <span class="pg-sw" data-g="#e7ecf5,#9aa0b2,#5b6076" style="background:linear-gradient(120deg,#e7ecf5,#9aa0b2,#5b6076)"></span>
+      <label class="pg-sw custom" title="Custom hue">+<input type="color" id="pgAccentCustom" value="#46e3d0" /></label>
+    </div>
+  </div>
+
+  <div class="pg-grp">
+    <label>Display font</label>
+    <div class="pg-fonts" id="pgDisplay">
+      <button class="pg-font on" data-f='"Bricolage Grotesque", sans-serif' style='font-family:"Bricolage Grotesque",sans-serif'>Bricolage<span class="pf-name">grotesk</span></button>
+      <button class="pg-font" data-f='"Space Grotesk", sans-serif' style='font-family:"Space Grotesk",sans-serif'>Space G.<span class="pf-name">grotesk</span></button>
+      <button class="pg-font" data-f='"Sora", sans-serif' style='font-family:"Sora",sans-serif'>Sora<span class="pf-name">sans</span></button>
+      <button class="pg-font" data-f='"Instrument Serif", serif' style='font-family:"Instrument Serif",serif'>Instrument<span class="pf-name">serif</span></button>
+    </div>
+  </div>
+
+  <div class="pg-grp">
+    <label>Body font</label>
+    <div class="pg-fonts" id="pgBody">
+      <button class="pg-font on" data-f='"Familjen Grotesk", sans-serif' style='font-family:"Familjen Grotesk",sans-serif'>Familjen<span class="pf-name">grotesk</span></button>
+      <button class="pg-font" data-f='"DM Sans", sans-serif' style='font-family:"DM Sans",sans-serif'>DM Sans<span class="pf-name">sans</span></button>
+      <button class="pg-font" data-f='"Sora", sans-serif' style='font-family:"Sora",sans-serif'>Sora<span class="pf-name">sans</span></button>
+      <button class="pg-font" data-f='"Space Grotesk", sans-serif' style='font-family:"Space Grotesk",sans-serif'>Space G.<span class="pf-name">grotesk</span></button>
+    </div>
+  </div>
+
+  <div class="pg-grp">
+    <label>Corner rounding <span class="v" id="pgRadVal">1.0×</span></label>
+    <input type="range" class="pg-range" id="pgRadius" min="0" max="2" step="0.1" value="1" />
+  </div>
+
+  <div class="pg-grp">
+    <label>Heading weight <span class="v" id="pgWghtVal">0</span></label>
+    <input type="range" class="pg-range" id="pgWght" min="-160" max="160" step="10" value="0" />
+  </div>
+
+  <div class="pg-grp">
+    <label>Density <span class="v" id="pgDensVal">1.0×</span></label>
+    <input type="range" class="pg-range" id="pgDensity" min="0.8" max="1.25" step="0.05" value="1" />
+  </div>
+</div>
+
+<script>
+  // ---- theme toggle + persistence ----
+  (function(){
+    const root=document.documentElement, btn=document.getElementById('themeToggle');
+    btn.addEventListener('click',()=>{
+      const light=root.getAttribute('data-theme')==='light';
+      if(light) root.removeAttribute('data-theme'); else root.setAttribute('data-theme','light');
+      try{localStorage.setItem('nysgpt-theme-b', light?'dark':'light');}catch(e){}
+    });
+  })();
+
+  // ---- playground (session-only) ----
+  (function(){
+    const root=document.documentElement, rs=root.style;
+    const panel=document.getElementById('pgPanel'), launch=document.getElementById('pgLaunch');
+    launch.addEventListener('click',e=>{e.stopPropagation();panel.classList.toggle('open')});
+    document.addEventListener('click',e=>{ if(!panel.contains(e.target) && e.target!==launch && !launch.contains(e.target)) panel.classList.remove('open'); });
+
+    function setGrad(stops){
+      const [a,b,c]=stops.split(',');
+      rs.setProperty('--cyan',a); rs.setProperty('--violet',b); rs.setProperty('--pink',c);
+      rs.setProperty('--grad',`linear-gradient(110deg,${a},${b} 55%,${c})`);
+    }
+    const accWrap=document.getElementById('pgAccent');
+    accWrap.querySelectorAll('.pg-sw[data-g]').forEach(sw=>sw.addEventListener('click',()=>{
+      accWrap.querySelectorAll('.pg-sw').forEach(s=>s.classList.remove('on'));
+      sw.classList.add('on'); setGrad(sw.dataset.g);
+    }));
+    document.getElementById('pgAccentCustom').addEventListener('input',e=>{
+      accWrap.querySelectorAll('.pg-sw').forEach(s=>s.classList.remove('on'));
+      e.target.closest('.pg-sw').classList.add('on');
+      // build a tasteful gradient around the chosen hue
+      const hex=e.target.value;
+      rs.setProperty('--cyan',hex); rs.setProperty('--violet',hex); rs.setProperty('--pink',hex);
+      rs.setProperty('--grad',`linear-gradient(110deg,${hex},${hex} 55%,${hex})`);
+    });
+
+    function fontGroup(id,varName){
+      const wrap=document.getElementById(id);
+      wrap.querySelectorAll('.pg-font').forEach(b=>b.addEventListener('click',()=>{
+        wrap.querySelectorAll('.pg-font').forEach(x=>x.classList.remove('on'));
+        b.classList.add('on'); rs.setProperty(varName,b.dataset.f);
+      }));
+    }
+    fontGroup('pgDisplay','--font-display');
+    fontGroup('pgBody','--font-body');
+
+    const rad=document.getElementById('pgRadius'),radV=document.getElementById('pgRadVal');
+    rad.addEventListener('input',()=>{rs.setProperty('--radius',rad.value);radV.textContent=parseFloat(rad.value).toFixed(1)+'×'});
+    const wght=document.getElementById('pgWght'),wghtV=document.getElementById('pgWghtVal');
+    wght.addEventListener('input',()=>{rs.setProperty('--wght',wght.value);wghtV.textContent=(wght.value>0?'+':'')+wght.value});
+    const dens=document.getElementById('pgDensity'),densV=document.getElementById('pgDensVal');
+    dens.addEventListener('input',()=>{rs.setProperty('--density',dens.value);densV.textContent=parseFloat(dens.value).toFixed(2)+'×'});
+
+    document.getElementById('pgReset').addEventListener('click',()=>{
+      ['--cyan','--violet','--pink','--grad','--font-display','--font-body','--radius','--wght','--density'].forEach(v=>rs.removeProperty(v));
+      accWrap.querySelectorAll('.pg-sw').forEach((s,i)=>s.classList.toggle('on',i===0));
+      ['pgDisplay','pgBody'].forEach(id=>document.getElementById(id).querySelectorAll('.pg-font').forEach((b,i)=>b.classList.toggle('on',i===0)));
+      rad.value=1;radV.textContent='1.0×'; wght.value=0;wghtV.textContent='0'; dens.value=1;densV.textContent='1.0×';
+      document.getElementById('pgAccentCustom').value='#46e3d0';
+    });
+  })();
+
+  const io=new IntersectionObserver((es)=>{es.forEach(e=>{if(e.isIntersecting){e.target.classList.add('in');io.unobserve(e.target)}})},{threshold:.12,rootMargin:'0px 0px -6% 0px'});
+  document.querySelectorAll('.reveal').forEach((el,i)=>{el.style.transitionDelay=(i%4*60)+'ms';io.observe(el)});
+
+  // subtle parallax on the mesh
+  if(!matchMedia('(prefers-reduced-motion:reduce)').matches){
+    addEventListener('pointermove',e=>{
+      const x=(e.clientX/innerWidth-.5),y=(e.clientY/innerHeight-.5);
+      document.querySelector('.mesh').style.transform=`translate(${x*-22}px,${y*-22}px)`;
+    },{passive:true});
+  }
+
+  function submitBrief(e){
+    e.preventDefault();const f=e.target;
+    const body=encodeURIComponent(`Name: ${f.name.value}\nEmail: ${f.email.value}\nOrg: ${f.org.value}\nDomain: ${f.domain.value}\n\nBrief:\n${f.brief.value}`);
+    window.location.href=`mailto:Brendan@nysgpt.com?subject=${encodeURIComponent('Project brief — '+(f.org.value||f.name.value))}&body=${body}`;
+    return false;
+  }
+</script>
+</body>
+</html>

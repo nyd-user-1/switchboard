@@ -1,0 +1,14 @@
+# OS
+.DS_Store
+
+# editor
+.vscode/
+.idea/
+
+# vercel
+.vercel
+
+# scratch / previews
+_*.png
+*.tmp
+node_modules/

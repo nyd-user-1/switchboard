@@ -1,0 +1,708 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>NYSGPT — Schematics for legacy systems</title>
+<meta name="description" content="NYSGPT is an AI-first software company. We build domain-specific AI applications for complex, legacy, and regulatory systems — drafted, grounded, and shipped." />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500;600&family=Space+Grotesk:wght@400;500;600;700&family=Archivo:wght@400;500;600;700;800&family=Spline+Sans+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet" />
+<script>
+  // dark (cyanotype) is the default; go light only when explicitly chosen.
+  (function(){ try{ if(localStorage.getItem('nysgpt-theme-c')==='light') document.documentElement.setAttribute('data-theme','light'); }catch(e){} })();
+</script>
+<style>
+  :root{
+    /* ---- DARK: classic cyanotype blueprint ---- */
+    --bg:#0a1a2f;             /* cyanotype navy */
+    --bg-2:#0d2138;           /* raised plate */
+    --ink:#eaf2fb;            /* drafting white */
+    --ink-dim:#8fb0cf;        /* blueprint blue-grey */
+    --ink-faint:#5a7a9a;
+    --line:#1d3a57;           /* drafting line */
+    --line-soft:#152c44;
+    --grid:rgba(120,180,230,.07);   /* blueprint grid */
+    --grid-strong:rgba(120,180,230,.12);
+    --accent:#ff5a3c;         /* red drafting pencil */
+    --accent-2:#4cc3ff;       /* cyan annotation */
+    --good:#46d39a;
+    --plate-bg:rgba(13,33,56,.7);
+    --tick:rgba(140,176,207,.4);
+    --shadow:rgba(0,0,0,.4);
+    --grid-op:1;
+    --font-mono:"IBM Plex Mono", ui-monospace, monospace;
+    --font-display:"Archivo", system-ui, sans-serif;
+    --font-sans:"IBM Plex Sans", system-ui, sans-serif;
+    --maxw:1200px;
+    /* playground knobs */
+    --radius:1; --wght:0; --density:1;
+  }
+  /* ---- LIGHT: white drafting paper ---- */
+  :root[data-theme="light"]{
+    --bg:#eef1ec;             /* vellum paper */
+    --bg-2:#f7f8f4;
+    --ink:#16243a;            /* graphite-navy ink */
+    --ink-dim:#42597a;
+    --ink-faint:#7c93ad;
+    --line:#b9c7d6;
+    --line-soft:#d3dde6;
+    --grid:rgba(40,90,150,.09);
+    --grid-strong:rgba(40,90,150,.16);
+    --accent:#d8391c;
+    --accent-2:#1675c4;
+    --good:#138a5e;
+    --plate-bg:rgba(247,248,244,.78);
+    --tick:rgba(66,89,122,.4);
+    --shadow:rgba(40,70,110,.12);
+    --grid-op:1;
+  }
+  :root{color-scheme:dark} :root[data-theme="light"]{color-scheme:light}
+
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth;-webkit-text-size-adjust:100%}
+  body{
+    background:var(--bg);color:var(--ink);font-family:var(--font-sans);
+    font-size:15px;line-height:1.55;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility;
+    overflow-x:hidden;transition:background .4s ease,color .4s ease;
+  }
+  /* ===== blueprint grid background ===== */
+  body::before{
+    content:"";position:fixed;inset:0;z-index:0;pointer-events:none;opacity:var(--grid-op);
+    background-image:
+      linear-gradient(var(--grid) 1px,transparent 1px),
+      linear-gradient(90deg,var(--grid) 1px,transparent 1px),
+      linear-gradient(var(--grid-strong) 1px,transparent 1px),
+      linear-gradient(90deg,var(--grid-strong) 1px,transparent 1px);
+    background-size:28px 28px,28px 28px,140px 140px,140px 140px;
+  }
+  /* corner registration crosshair texture */
+  body::after{
+    content:"";position:fixed;inset:0;z-index:0;pointer-events:none;
+    background:radial-gradient(120% 90% at 50% 0%,transparent 60%,var(--bg) 100%);
+  }
+
+  .wrap{position:relative;z-index:1;max-width:var(--maxw);margin:0 auto;padding:0 32px}
+  a{color:inherit;text-decoration:none}
+  .mono{font-family:var(--font-mono)}
+  .tnum{font-variant-numeric:tabular-nums}
+
+  /* shared label / annotation style */
+  .anno{font-family:var(--font-mono);font-size:10.5px;letter-spacing:.18em;text-transform:uppercase;color:var(--ink-faint)}
+  .anno-accent{color:var(--accent)}
+  .leader{color:var(--accent-2)}
+
+  /* ===== TITLE BLOCK (header) ===== */
+  header{
+    position:sticky;top:0;z-index:50;background:var(--plate-bg);backdrop-filter:blur(10px);
+    border-bottom:1px solid var(--line);
+  }
+  header .wrap{display:flex;align-items:center;justify-content:space-between;height:60px}
+  .brand{display:flex;align-items:center;gap:13px}
+  .brand .glyph{
+    width:30px;height:30px;border:1.5px solid var(--ink);position:relative;display:grid;place-items:center;
+    font-family:var(--font-display);font-weight:700;font-size:13px;
+  }
+  .brand .glyph::before,.brand .glyph::after{content:"";position:absolute;background:var(--accent-2)}
+  .brand .glyph::before{top:-4px;left:50%;width:1px;height:3px;transform:translateX(-50%)}
+  .brand .glyph::after{bottom:-4px;left:50%;width:1px;height:3px;transform:translateX(-50%)}
+  .brand .bname{font-family:var(--font-mono);font-size:13px;letter-spacing:.16em;font-weight:500}
+  .brand .bname b{color:var(--accent);font-weight:600}
+  nav{display:flex;align-items:center;gap:26px}
+  nav a.nl{font-family:var(--font-mono);font-size:11.5px;letter-spacing:.08em;color:var(--ink-dim);transition:color .2s}
+  nav a.nl:hover{color:var(--ink)}
+  nav a.nl::before{content:"› ";color:var(--accent-2)}
+  .theme-toggle{width:34px;height:34px;border:1px solid var(--line);background:transparent;display:grid;place-items:center;
+    cursor:pointer;color:var(--ink-dim);transition:.2s;border-radius:calc(2px * var(--radius));flex-shrink:0}
+  .theme-toggle:hover{border-color:var(--accent-2);color:var(--ink)}
+  .theme-toggle svg{width:15px;height:15px}.theme-toggle .moon{display:none}
+  :root[data-theme="light"] .theme-toggle .sun{display:none}
+  :root[data-theme="light"] .theme-toggle .moon{display:block}
+  .nav-cta{font-family:var(--font-mono);font-size:11.5px;letter-spacing:.04em;border:1px solid var(--accent);color:var(--accent);
+    padding:8px 14px;border-radius:calc(2px * var(--radius));transition:.2s}
+  .nav-cta:hover{background:var(--accent);color:var(--bg)}
+  @media(max-width:780px){nav a.nl{display:none}}
+
+  /* ===== HERO ===== */
+  .hero{padding:calc(70px * var(--density)) 0 calc(56px * var(--density));position:relative}
+  .hero .meta{display:flex;justify-content:space-between;border-bottom:1px solid var(--line-soft);padding-bottom:12px;margin-bottom:40px}
+  .hero .meta span{font-family:var(--font-mono);font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-faint)}
+  .hero h1{font-family:var(--font-display);font-weight:calc(700 + var(--wght));font-size:clamp(40px,7vw,86px);line-height:.98;letter-spacing:-.02em;text-transform:uppercase;max-width:15ch}
+  .hero h1 .hl{color:var(--accent);position:relative}
+  .hero h1 .small{display:block;font-size:.42em;letter-spacing:.02em;color:var(--ink-dim);font-weight:500;margin-top:18px;text-transform:none;max-width:30ch;line-height:1.4;font-family:var(--font-sans)}
+  /* drafting dimension line under the headline */
+  .dimline{margin:30px 0;display:flex;align-items:center;gap:0;color:var(--accent-2)}
+  .dimline .bar{flex:1;height:1px;background:var(--accent-2);position:relative}
+  .dimline .bar::before,.dimline .bar::after{content:"";position:absolute;top:-4px;width:1px;height:9px;background:var(--accent-2)}
+  .dimline .bar::before{left:0}.dimline .bar::after{right:0}
+  .dimline .cap{font-family:var(--font-mono);font-size:10px;letter-spacing:.12em;padding:0 12px;color:var(--accent-2);white-space:nowrap}
+
+  .hero .cta-row{display:flex;gap:14px;flex-wrap:wrap;margin-top:8px}
+  .btn{font-family:var(--font-mono);font-size:12.5px;letter-spacing:.04em;padding:13px 22px;border-radius:calc(2px * var(--radius));
+    display:inline-flex;align-items:center;gap:9px;cursor:pointer;border:1px solid transparent;transition:.2s}
+  .btn .arr{transition:transform .25s}.btn:hover .arr{transform:translateX(4px)}
+  .btn-primary{background:var(--accent);color:var(--bg);font-weight:600}
+  .btn-primary:hover{background:transparent;color:var(--accent);border-color:var(--accent)}
+  .btn-ghost{border-color:var(--line);color:var(--ink)}
+  .btn-ghost:hover{border-color:var(--accent-2);color:var(--accent-2)}
+
+  /* spec readout strip */
+  .readout{margin-top:54px;border:1px solid var(--line);background:var(--plate-bg);display:grid;grid-template-columns:repeat(4,1fr)}
+  .readout .r{padding:20px 22px;border-right:1px solid var(--line-soft);position:relative}
+  .readout .r:last-child{border-right:none}
+  .readout .r .lab{font-family:var(--font-mono);font-size:9.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-faint);margin-bottom:9px}
+  .readout .r .val{font-family:var(--font-display);font-weight:calc(700 + var(--wght));font-size:34px;line-height:1;letter-spacing:-.01em}
+  .readout .r .val .u{color:var(--accent);font-size:18px}
+  @media(max-width:780px){.readout{grid-template-columns:repeat(2,1fr)}.readout .r:nth-child(2n){border-right:none}}
+
+  /* ===== SECTION HEADERS (drafting style) ===== */
+  .shead{display:flex;align-items:baseline;gap:16px;margin-bottom:8px}
+  .shead .tag{font-family:var(--font-mono);font-size:11px;letter-spacing:.12em;color:var(--accent);border:1px solid var(--accent);padding:3px 8px;border-radius:calc(2px * var(--radius))}
+  .shead h2{font-family:var(--font-display);font-weight:calc(700 + var(--wght));font-size:clamp(22px,3vw,32px);text-transform:uppercase;letter-spacing:-.01em}
+  .ssub{font-family:var(--font-mono);font-size:11.5px;color:var(--ink-faint);margin-bottom:30px;letter-spacing:.02em}
+
+  /* ===== THESIS ===== */
+  .thesis{padding:calc(60px * var(--density)) 0;border-top:1px solid var(--line)}
+  .thesis .grid{display:grid;grid-template-columns:0.9fr 1.1fr;gap:56px;align-items:start}
+  .thesis .body{display:grid;gap:16px;color:var(--ink-dim);font-size:15.5px;line-height:1.7}
+  .thesis .body b{color:var(--ink);font-weight:600}
+  .thesis .notes{border-left:2px solid var(--accent);padding-left:18px;display:grid;gap:14px;margin-top:6px}
+  .thesis .notes .n{display:grid;grid-template-columns:auto 1fr;gap:14px;align-items:baseline}
+  .thesis .notes .ref{font-family:var(--font-mono);font-size:10.5px;color:var(--accent-2);letter-spacing:.06em}
+  .thesis .notes .tx{font-size:13.5px;color:var(--ink-dim)}.thesis .notes .tx b{color:var(--ink)}
+  @media(max-width:860px){.thesis .grid{grid-template-columns:1fr;gap:32px}}
+
+  /* ===== PRODUCTS — TREATMENT 1: SPEC-SHEET ROWS ===== */
+  .specsheet{padding:calc(60px * var(--density)) 0;border-top:1px solid var(--line)}
+  .spec-row{
+    display:grid;grid-template-columns:64px 1.4fr 2fr 1.1fr 110px;gap:24px;align-items:center;
+    padding:22px 16px;border-bottom:1px solid var(--line-soft);position:relative;transition:background .2s;
+  }
+  .spec-row:first-of-type{border-top:1px solid var(--line)}
+  .spec-row::before{content:"";position:absolute;left:0;top:0;bottom:0;width:2px;background:var(--accent);transform:scaleY(0);transform-origin:top;transition:transform .3s}
+  .spec-row:hover{background:var(--plate-bg)}
+  .spec-row:hover::before{transform:scaleY(1)}
+  .spec-row .pn{font-family:var(--font-mono);font-size:11px;color:var(--ink-faint)}
+  .spec-row .pn .big{display:block;color:var(--accent-2);font-size:15px;margin-top:2px}
+  .spec-row .nm{font-family:var(--font-display);font-weight:calc(600 + var(--wght));font-size:19px;letter-spacing:-.01em;text-transform:uppercase}
+  .spec-row .nm .gpt{color:var(--ink-faint);font-weight:500}
+  .spec-row .ds{font-family:var(--font-sans);font-size:13.5px;color:var(--ink-dim);line-height:1.45}
+  .spec-row .mx{font-family:var(--font-mono);font-size:11.5px;color:var(--ink)}
+  .spec-row .mx .sub{display:block;color:var(--ink-faint);font-size:9.5px;letter-spacing:.1em;text-transform:uppercase;margin-top:3px}
+  .spec-row .st{justify-self:end;font-family:var(--font-mono);font-size:10px;letter-spacing:.1em;display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);padding:4px 9px;border-radius:calc(2px * var(--radius))}
+  .spec-row .st.live{color:var(--good);border-color:color-mix(in srgb,var(--good) 40%,transparent)}
+  .spec-row .st.live .d{width:5px;height:5px;background:var(--good);border-radius:50%}
+  .spec-row .st.sh{color:var(--ink-faint)}
+  .spec-row .st.sh .d{width:5px;height:5px;background:var(--ink-faint);border-radius:50%}
+  a.spec-row:hover .nm{color:var(--accent)}
+  a.spec-row .nm::after{content:" ↗";color:var(--accent);font-size:12px;opacity:0;transition:.2s}
+  a.spec-row:hover .nm::after{opacity:1}
+  @media(max-width:860px){
+    .spec-row{grid-template-columns:1fr;gap:7px;padding:18px 0 18px 16px}
+    .spec-row .pn{position:absolute;left:0;top:20px}.spec-row .st{justify-self:start}
+  }
+
+  /* ===== PRODUCTS — TREATMENT 2: SCHEMATIC DIAGRAM ===== */
+  .schematic{padding:calc(60px * var(--density)) 0;border-top:1px solid var(--line)}
+  .diagram{position:relative;border:1px solid var(--line);background:var(--plate-bg);padding:40px 32px;overflow:hidden}
+  .diagram .core{
+    text-align:center;margin-bottom:8px;
+  }
+  .diagram .core .chip{
+    display:inline-block;border:1.5px solid var(--accent);color:var(--accent);font-family:var(--font-mono);
+    font-size:12px;letter-spacing:.1em;padding:10px 20px;border-radius:calc(3px * var(--radius));background:var(--bg);
+    text-transform:uppercase;position:relative;z-index:2;
+  }
+  .diagram .core .sub{font-family:var(--font-mono);font-size:10px;color:var(--ink-faint);margin-top:10px;letter-spacing:.1em}
+  .diagram svg.bus{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:1}
+  .nodes{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-top:46px;position:relative;z-index:2}
+  .node{
+    border:1px solid var(--line);background:var(--bg-2);padding:14px;transition:.25s;text-decoration:none;color:inherit;
+    border-radius:calc(3px * var(--radius));position:relative;
+  }
+  .node:hover{border-color:var(--accent-2);transform:translateY(-3px);box-shadow:0 8px 20px var(--shadow)}
+  .node .nh{display:flex;justify-content:space-between;align-items:center;margin-bottom:9px}
+  .node .pin{font-family:var(--font-mono);font-size:9.5px;color:var(--accent-2);letter-spacing:.08em}
+  .node .dot{width:6px;height:6px;border-radius:50%}
+  .node .dot.live{background:var(--good);box-shadow:0 0 6px var(--good)}
+  .node .dot.sh{background:var(--ink-faint)}
+  .node .nn{font-family:var(--font-display);font-weight:calc(600 + var(--wght));font-size:15px;text-transform:uppercase;letter-spacing:-.01em;line-height:1.1}
+  .node .nn .gpt{color:var(--ink-faint);font-weight:500}
+  .node .nd{font-family:var(--font-mono);font-size:10px;color:var(--ink-faint);margin-top:7px;letter-spacing:.02em}
+  @media(max-width:860px){.nodes{grid-template-columns:repeat(2,1fr)}}
+  @media(max-width:520px){.nodes{grid-template-columns:1fr}}
+
+  /* ===== PRODUCTS — TREATMENT 3: EXPLODED INDEX PLATE ===== */
+  .plate{padding:calc(60px * var(--density)) 0 calc(80px * var(--density));border-top:1px solid var(--line)}
+  .plate-grid{display:grid;grid-template-columns:repeat(12,1fr);gap:1px;background:var(--line-soft);border:1px solid var(--line)}
+  .part{background:var(--bg);padding:18px 16px;position:relative;transition:background .2s;grid-column:span 3}
+  .part:hover{background:var(--plate-bg)}
+  .part .top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:14px}
+  .part .pno{font-family:var(--font-mono);font-size:10px;color:var(--accent-2);letter-spacing:.08em}
+  .part .rev{font-family:var(--font-mono);font-size:8.5px;color:var(--ink-faint);border:1px solid var(--line);padding:2px 5px;letter-spacing:.1em}
+  .part .pname{font-family:var(--font-display);font-weight:calc(600 + var(--wght));font-size:16px;text-transform:uppercase;letter-spacing:-.01em;margin-bottom:6px;line-height:1.05}
+  .part .pname .gpt{color:var(--ink-faint);font-weight:500}
+  .part .pspec{font-family:var(--font-mono);font-size:10px;color:var(--ink-dim);letter-spacing:.02em}
+  .part .leader-tick{position:absolute;bottom:0;left:16px;right:16px;height:1px;background:var(--accent);transform:scaleX(0);transform-origin:left;transition:transform .3s}
+  .part:hover .leader-tick{transform:scaleX(1)}
+  /* spans: make the plate read like a real exploded drawing */
+  .part.w4{grid-column:span 4}.part.w6{grid-column:span 6}
+  @media(max-width:860px){.part,.part.w4,.part.w6{grid-column:span 6}}
+  @media(max-width:520px){.part,.part.w4,.part.w6{grid-column:span 12}}
+
+  /* ===== METHOD ===== */
+  .method{padding:calc(60px * var(--density)) 0;border-top:1px solid var(--line)}
+  .msteps{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+  .mstep{border:1px solid var(--line);background:var(--plate-bg);padding:26px 22px;position:relative;transition:.25s;border-radius:calc(3px * var(--radius))}
+  .mstep:hover{border-color:var(--accent-2)}
+  .mstep .mn{font-family:var(--font-mono);font-size:11px;color:var(--accent);letter-spacing:.1em;margin-bottom:16px;display:flex;align-items:center;gap:8px}
+  .mstep .mn::after{content:"";flex:1;height:1px;background:var(--line)}
+  .mstep h3{font-family:var(--font-display);font-weight:600;font-size:18px;text-transform:uppercase;letter-spacing:-.01em;margin-bottom:10px}
+  .mstep p{color:var(--ink-dim);font-size:13.5px;line-height:1.6}
+  @media(max-width:820px){.msteps{grid-template-columns:1fr}}
+
+  /* ===== CTA ===== */
+  .cta{padding:calc(80px * var(--density)) 0}
+  .cta .panel{border:1px solid var(--line);background:var(--plate-bg);display:grid;grid-template-columns:1fr 1fr}
+  .cta .left{padding:46px 40px;border-right:1px solid var(--line)}
+  .cta .left .tag{font-family:var(--font-mono);font-size:11px;letter-spacing:.12em;color:var(--accent);margin-bottom:18px;display:block}
+  .cta .left h2{font-family:var(--font-display);font-weight:calc(700 + var(--wght));font-size:clamp(26px,3.4vw,40px);text-transform:uppercase;line-height:1.04;letter-spacing:-.01em}
+  .cta .left h2 .hl{color:var(--accent)}
+  .cta .left p{margin-top:18px;color:var(--ink-dim);font-size:15px;line-height:1.6;max-width:40ch}
+  .cta .direct{margin-top:28px;display:grid;gap:12px}
+  .cta .direct a{display:inline-flex;align-items:center;gap:11px;font-family:var(--font-mono);font-size:13px;color:var(--ink);transition:.2s;width:fit-content}
+  .cta .direct a:hover{color:var(--accent)}
+  .cta .direct .ic{width:32px;height:32px;border:1px solid var(--line);display:grid;place-items:center;color:var(--accent);border-radius:calc(2px * var(--radius))}
+  form.brief{padding:46px 40px;display:grid;gap:16px}
+  form.brief .fld{display:grid;gap:6px}
+  form.brief label{font-family:var(--font-mono);font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-faint)}
+  form.brief input,form.brief textarea,form.brief select{background:var(--bg);border:1px solid var(--line);border-radius:calc(2px * var(--radius));
+    padding:11px 13px;color:var(--ink);font-family:var(--font-sans);font-size:14px;transition:border-color .2s}
+  form.brief input:focus,form.brief textarea:focus,form.brief select:focus{outline:none;border-color:var(--accent)}
+  form.brief textarea{resize:vertical;min-height:78px}
+  form.brief .row2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  form.brief button{margin-top:2px;width:100%;justify-content:center}
+  form.brief .note{font-family:var(--font-mono);font-size:10px;color:var(--ink-faint);text-align:center;letter-spacing:.02em}
+  @media(max-width:860px){.cta .panel{grid-template-columns:1fr}.cta .left{border-right:none;border-bottom:1px solid var(--line);padding:36px 26px}form.brief{padding:36px 26px}}
+
+  /* ===== FOOTER (title block) ===== */
+  footer{border-top:1px solid var(--line);padding:34px 0}
+  footer .wrap{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--line-soft);border:1px solid var(--line)}
+  footer .cell{background:var(--bg);padding:16px 18px;font-family:var(--font-mono);font-size:10.5px;color:var(--ink-faint);letter-spacing:.04em}
+  footer .cell .k{display:block;color:var(--ink-faint);font-size:8.5px;letter-spacing:.14em;text-transform:uppercase;margin-bottom:6px}
+  footer .cell b{color:var(--ink-dim);font-weight:500}
+  footer .cell a:hover{color:var(--accent)}
+  @media(max-width:680px){footer .wrap{grid-template-columns:1fr 1fr}}
+
+  /* ===== PLAYGROUND ===== */
+  .pg-launch{position:fixed;right:22px;bottom:22px;z-index:90;width:48px;height:48px;border-radius:calc(3px * var(--radius));
+    background:var(--bg-2);border:1px solid var(--accent);color:var(--accent);cursor:pointer;display:grid;place-items:center;
+    box-shadow:0 8px 24px var(--shadow);transition:.25s}
+  .pg-launch:hover{transform:translateY(-3px);background:var(--accent);color:var(--bg)}
+  .pg-launch svg{width:20px;height:20px}
+  .pg-panel{position:fixed;right:22px;bottom:80px;z-index:91;width:312px;background:var(--bg-2);border:1px solid var(--line);
+    border-radius:calc(4px * var(--radius));box-shadow:0 24px 56px var(--shadow);padding:20px;opacity:0;transform:translateY(12px) scale(.97);
+    pointer-events:none;transform-origin:bottom right;transition:opacity .26s cubic-bezier(.16,1,.3,1),transform .26s cubic-bezier(.16,1,.3,1);max-height:80vh;overflow-y:auto}
+  .pg-panel.open{opacity:1;transform:none;pointer-events:auto}
+  .pg-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;border-bottom:1px solid var(--line-soft);padding-bottom:12px}
+  .pg-title{font-family:var(--font-mono);font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--accent)}
+  .pg-reset{font-family:var(--font-mono);font-size:9.5px;letter-spacing:.06em;color:var(--accent-2);background:none;border:none;cursor:pointer;text-transform:uppercase}
+  .pg-reset:hover{text-decoration:underline}
+  .pg-grp{margin-bottom:18px}.pg-grp:last-child{margin-bottom:2px}
+  .pg-grp > label{display:block;font-family:var(--font-mono);font-size:9.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-dim);margin-bottom:10px}
+  .pg-grp > label .v{color:var(--ink-faint);float:right;letter-spacing:0}
+  .pg-swatches{display:flex;gap:8px;flex-wrap:wrap}
+  .pg-sw{width:26px;height:26px;border-radius:calc(2px * var(--radius));cursor:pointer;border:2px solid transparent;transition:.15s;position:relative}
+  .pg-sw:hover{transform:scale(1.12)}.pg-sw.on{border-color:var(--ink)}
+  .pg-sw.custom{display:grid;place-items:center;background:var(--bg);border:1px solid var(--line);color:var(--ink-faint);overflow:hidden}
+  .pg-sw.custom input{position:absolute;inset:0;opacity:0;cursor:pointer}
+  .pg-fonts{display:grid;grid-template-columns:1fr 1fr;gap:7px}
+  .pg-font{font-family:inherit;font-size:12.5px;padding:8px 9px;border-radius:calc(2px * var(--radius));border:1px solid var(--line);background:var(--bg);color:var(--ink-dim);cursor:pointer;transition:.15s;text-align:left;line-height:1.1}
+  .pg-font:hover{border-color:var(--ink-faint);color:var(--ink)}.pg-font.on{border-color:var(--accent);color:var(--ink)}
+  .pg-font .pf{font-size:8.5px;font-family:var(--font-mono);letter-spacing:.04em;color:var(--ink-faint);display:block;margin-top:3px}
+  input[type=range].pg-range{-webkit-appearance:none;appearance:none;width:100%;height:2px;background:var(--line);outline:none;cursor:pointer}
+  input[type=range].pg-range::-webkit-slider-thumb{-webkit-appearance:none;width:14px;height:14px;border-radius:calc(2px * var(--radius));background:var(--accent);cursor:pointer}
+  input[type=range].pg-range::-moz-range-thumb{width:12px;height:12px;border-radius:2px;background:var(--accent);cursor:pointer;border:none}
+  @media(max-width:560px){.pg-panel{width:calc(100vw - 44px)}}
+
+  .reveal{opacity:0;transform:translateY(20px);transition:opacity .65s cubic-bezier(.16,1,.3,1),transform .65s cubic-bezier(.16,1,.3,1)}
+  .reveal.in{opacity:1;transform:none}
+  @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}.reveal{opacity:1;transform:none}}
+</style>
+</head>
+<body>
+
+<!-- ===== TITLE BLOCK ===== -->
+<header>
+  <div class="wrap">
+    <a href="#top" class="brand">
+      <span class="glyph">N</span>
+      <span class="bname">NYS<b>GPT</b></span>
+    </a>
+    <nav>
+      <a class="nl" href="#thesis">Thesis</a>
+      <a class="nl" href="#index">Index</a>
+      <a class="nl" href="#method">Method</a>
+      <button class="theme-toggle" id="themeToggle" type="button" aria-label="Toggle theme" title="Toggle theme">
+        <svg class="sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>
+        <svg class="moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+      </button>
+      <a class="nav-cta" href="#contact">[ BOOK SESSION ]</a>
+    </nav>
+  </div>
+</header>
+
+<main id="top">
+
+  <!-- ===== HERO ===== -->
+  <section class="hero">
+    <div class="wrap">
+      <div class="meta">
+        <span>NYSGPT / AI-FIRST SOFTWARE CO.</span>
+        <span>SHEET 01 · REV 2026.06 · LONG ISLAND NY</span>
+      </div>
+      <h1>Schematics<br />for <span class="hl">legacy</span> systems
+        <span class="small">NYSGPT drafts domain-specific AI applications for the complex, legacy, and regulatory systems ordinary software won't touch — then ships them to production.</span>
+      </h1>
+      <div class="dimline"><span class="bar"></span><span class="cap">8 PRODUCTS · 350K+ RECORDS · 5 LIVE</span><span class="bar"></span></div>
+      <div class="cta-row">
+        <a href="#contact" class="btn btn-primary">Book a working session <span class="arr">→</span></a>
+        <a href="#index" class="btn btn-ghost">Open the index <span class="arr">→</span></a>
+      </div>
+
+      <div class="readout">
+        <div class="r"><div class="lab">Products / shipped</div><div class="val tnum">8</div></div>
+        <div class="r"><div class="lab">Records / navigable</div><div class="val tnum">350<span class="u">K+</span></div></div>
+        <div class="r"><div class="lab">Live / production</div><div class="val tnum">5</div></div>
+        <div class="r"><div class="lab">Team / full-stack</div><div class="val tnum">1</div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== THESIS ===== -->
+  <section class="thesis" id="thesis">
+    <div class="wrap">
+      <div class="grid">
+        <div>
+          <div class="shead"><span class="tag">§ 0.0</span><h2>The brief</h2></div>
+          <p class="ssub">// why these systems stay broken</p>
+        </div>
+        <div class="body reveal">
+          <p>The most consequential systems run on the worst software. Legislative records, customs rulings, energy filings, licensing registries, nuclear references — the data is public, authoritative, and locked behind portals drafted two decades ago for nobody in particular.</p>
+          <p><b>NYSGPT closes that gap.</b> We don't bolt a chatbot onto the problem. We ingest the primary record, ground every answer in a verifiable source, and re-draft the interface from the data up — so the person who needs the answer gets one, not a 40-page PDF.</p>
+          <div class="notes">
+            <div class="n"><span class="ref">[N1]</span><span class="tx"><b>Grounded, not generated.</b> Every claim traces to a primary source. Fluency without traceability is a defect.</span></div>
+            <div class="n"><span class="ref">[N2]</span><span class="tx"><b>The data is the product.</b> Search, structure, and AI re-drafted as one surface from the record up.</span></div>
+            <div class="n"><span class="ref">[N3]</span><span class="tx"><b>Ship to production.</b> Live products with real users. Five of eight are running now.</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== PRODUCTS · TREATMENT 1: SPEC-SHEET ===== -->
+  <section class="specsheet" id="index">
+    <div class="wrap">
+      <div class="shead"><span class="tag">§ 1.0</span><h2>Index — spec sheet</h2></div>
+      <p class="ssub">// eight domain-specific AI products · one architecture · drafted &amp; shipped by NYSGPT</p>
+
+      <a class="spec-row" href="https://44b.nysgpt.com" target="_blank" rel="noopener">
+        <div class="pn">PN<span class="big">01</span></div>
+        <div class="nm">44B</div>
+        <div class="ds">A public registry, research library, and incident record for AI — the compliance portal for NY's Article 44-B. "SERFF, for AI."</div>
+        <div class="mx">32k papers<span class="sub">+2,561 incidents</span></div>
+        <div class="st live"><span class="d"></span>LIVE</div>
+      </a>
+      <a class="spec-row" href="https://tariffs.nysgpt.com" target="_blank" rel="noopener">
+        <div class="pn">PN<span class="big">02</span></div>
+        <div class="nm">Tariffs<span class="gpt">GPT</span></div>
+        <div class="ds">A self-serve refund engine for importers who paid IEEPA tariffs the Supreme Court invalidated — a real number before any call.</div>
+        <div class="mx">220k+ rulings<span class="sub">live schedule</span></div>
+        <div class="st live"><span class="d"></span>LIVE</div>
+      </a>
+      <a class="spec-row" href="https://childcare.nysgpt.com/console" target="_blank" rel="noopener">
+        <div class="pn">PN<span class="big">03</span></div>
+        <div class="nm">Childcare<span class="gpt">GPT</span></div>
+        <div class="ds">NY childcare intelligence — every OCFS facility, county cost data, and an AI-assisted subsidy application form.</div>
+        <div class="mx">16,800 facilities<span class="sub">OCFS-6025</span></div>
+        <div class="st live"><span class="d"></span>LIVE</div>
+      </a>
+      <a class="spec-row" href="https://solar.nysgpt.com/map/plants-2" target="_blank" rel="noopener">
+        <div class="pn">PN<span class="big">04</span></div>
+        <div class="nm">Solar<span class="gpt">GPT</span></div>
+        <div class="ds">Clean-energy intelligence — solar potential, grid economics, and emissions for every U.S. county, state, and grid region.</div>
+        <div class="mx">3,000+ counties<span class="sub">EIA pipelines</span></div>
+        <div class="st live"><span class="d"></span>LIVE</div>
+      </a>
+      <div class="spec-row">
+        <div class="pn">PN<span class="big">05</span></div>
+        <div class="nm">Policy<span class="gpt">GPT</span></div>
+        <div class="ds">NY legislative &amp; financial intelligence — bills, budgets, lobbying, contracts, members, with an embedded advocacy layer.</div>
+        <div class="mx">Full NYS record<span class="sub">semantic search</span></div>
+        <div class="st sh"><span class="d"></span>SHIPPED</div>
+      </div>
+      <div class="spec-row">
+        <div class="pn">PN<span class="big">06</span></div>
+        <div class="nm">NSR<span class="gpt">gpt</span></div>
+        <div class="ds">Semantic search and AI chat over the Nuclear Science References database — vector embeddings and a full RAG pipeline.</div>
+        <div class="mx">88,000+ records<span class="sub">pgvector RAG</span></div>
+        <div class="st sh"><span class="d"></span>SHIPPED</div>
+      </div>
+      <div class="spec-row">
+        <div class="pn">PN<span class="big">07</span></div>
+        <div class="nm">Insurance<span class="gpt">GPT</span></div>
+        <div class="ds">An auto-insurance quote &amp; lead engine — rate estimation grounded in filed carrier data, Stripe checkout, multi-role console.</div>
+        <div class="mx">Grounded rates<span class="sub">Stripe + console</span></div>
+        <div class="st sh"><span class="d"></span>SHIPPED</div>
+      </div>
+      <div class="spec-row">
+        <div class="pn">PN<span class="big">08</span></div>
+        <div class="nm">Sports<span class="gpt">GPT</span></div>
+        <div class="ds">High-school sports intelligence for Section XI — team and player stats, standings, choropleth maps, AI-generated highlights.</div>
+        <div class="mx">Section XI<span class="sub">AI highlights</span></div>
+        <div class="st sh"><span class="d"></span>SHIPPED</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== PRODUCTS · TREATMENT 2: SCHEMATIC ===== -->
+  <section class="schematic">
+    <div class="wrap">
+      <div class="shead"><span class="tag">§ 2.0</span><h2>Architecture — schematic</h2></div>
+      <p class="ssub">// every product wired to the same ingest → ground → ship bus</p>
+
+      <div class="diagram reveal">
+        <svg class="bus" preserveAspectRatio="none" viewBox="0 0 100 100">
+          <line x1="50" y1="11" x2="12.5" y2="38" stroke="var(--line)" stroke-width="0.2"/>
+          <line x1="50" y1="11" x2="37.5" y2="38" stroke="var(--line)" stroke-width="0.2"/>
+          <line x1="50" y1="11" x2="62.5" y2="38" stroke="var(--line)" stroke-width="0.2"/>
+          <line x1="50" y1="11" x2="87.5" y2="38" stroke="var(--line)" stroke-width="0.2"/>
+        </svg>
+        <div class="core">
+          <span class="chip">◇ NYSGPT CORE — INGEST · GROUND · SHIP</span>
+          <div class="sub">shared architecture · Neon Postgres · RAG · grounded output</div>
+        </div>
+        <div class="nodes">
+          <a class="node" href="https://44b.nysgpt.com" target="_blank" rel="noopener">
+            <div class="nh"><span class="pin">U01</span><span class="dot live"></span></div>
+            <div class="nn">44B</div><div class="nd">AI registry + 44-B portal</div>
+          </a>
+          <a class="node" href="https://tariffs.nysgpt.com" target="_blank" rel="noopener">
+            <div class="nh"><span class="pin">U02</span><span class="dot live"></span></div>
+            <div class="nn">Tariffs<span class="gpt">GPT</span></div><div class="nd">tariff refund engine</div>
+          </a>
+          <a class="node" href="https://childcare.nysgpt.com/console" target="_blank" rel="noopener">
+            <div class="nh"><span class="pin">U03</span><span class="dot live"></span></div>
+            <div class="nn">Childcare<span class="gpt">GPT</span></div><div class="nd">NY childcare intel</div>
+          </a>
+          <a class="node" href="https://solar.nysgpt.com/map/plants-2" target="_blank" rel="noopener">
+            <div class="nh"><span class="pin">U04</span><span class="dot live"></span></div>
+            <div class="nn">Solar<span class="gpt">GPT</span></div><div class="nd">clean-energy intel</div>
+          </a>
+          <div class="node">
+            <div class="nh"><span class="pin">U05</span><span class="dot sh"></span></div>
+            <div class="nn">Policy<span class="gpt">GPT</span></div><div class="nd">NYS legislative intel</div>
+          </div>
+          <div class="node">
+            <div class="nh"><span class="pin">U06</span><span class="dot sh"></span></div>
+            <div class="nn">NSR<span class="gpt">gpt</span></div><div class="nd">nuclear ref. RAG</div>
+          </div>
+          <div class="node">
+            <div class="nh"><span class="pin">U07</span><span class="dot sh"></span></div>
+            <div class="nn">Insurance<span class="gpt">GPT</span></div><div class="nd">auto-insurance engine</div>
+          </div>
+          <div class="node">
+            <div class="nh"><span class="pin">U08</span><span class="dot sh"></span></div>
+            <div class="nn">Sports<span class="gpt">GPT</span></div><div class="nd">HS sports intel</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== PRODUCTS · TREATMENT 3: EXPLODED PLATE ===== -->
+  <section class="plate">
+    <div class="wrap">
+      <div class="shead"><span class="tag">§ 3.0</span><h2>Domains — exploded plate</h2></div>
+      <p class="ssub">// the same architecture, applied part-by-part across eight domains</p>
+
+      <div class="plate-grid reveal">
+        <div class="part w6"><div class="top"><span class="pno">PT-01 / GOVERNANCE</span><span class="rev">REV A</span></div><div class="pname">44B</div><div class="pspec">AI registry · 44-B compliance · 532 models · 2,561 incidents</div><span class="leader-tick"></span></div>
+        <div class="part w6"><div class="top"><span class="pno">PT-02 / TRADE</span><span class="rev">REV A</span></div><div class="pname">Tariffs<span class="gpt">GPT</span></div><div class="pspec">tariff refund engine · 220k+ customs rulings · live schedule</div><span class="leader-tick"></span></div>
+        <div class="part w4"><div class="top"><span class="pno">PT-03 / SOCIAL</span><span class="rev">REV A</span></div><div class="pname">Childcare<span class="gpt">GPT</span></div><div class="pspec">16,800 facilities · OCFS-6025</div><span class="leader-tick"></span></div>
+        <div class="part w4"><div class="top"><span class="pno">PT-04 / ENERGY</span><span class="rev">REV A</span></div><div class="pname">Solar<span class="gpt">GPT</span></div><div class="pspec">every US county · EIA pipelines</div><span class="leader-tick"></span></div>
+        <div class="part w4"><div class="top"><span class="pno">PT-05 / GOVERNMENT</span><span class="rev">REV A</span></div><div class="pname">Policy<span class="gpt">GPT</span></div><div class="pspec">full NYS legislative record</div><span class="leader-tick"></span></div>
+        <div class="part w3"><div class="top"><span class="pno">PT-06 / SCIENCE</span><span class="rev">REV A</span></div><div class="pname">NSR<span class="gpt">gpt</span></div><div class="pspec">88k+ records</div><span class="leader-tick"></span></div>
+        <div class="part w3"><div class="top"><span class="pno">PT-07 / INSURANCE</span><span class="rev">REV A</span></div><div class="pname">Insurance<span class="gpt">GPT</span></div><div class="pspec">grounded rates</div><span class="leader-tick"></span></div>
+        <div class="part w6"><div class="top"><span class="pno">PT-08 / SPORTS</span><span class="rev">REV A</span></div><div class="pname">Sports<span class="gpt">GPT</span></div><div class="pspec">Section XI · stats · choropleth maps · AI-generated highlights</div><span class="leader-tick"></span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== METHOD ===== -->
+  <section class="method" id="method">
+    <div class="wrap">
+      <div class="shead"><span class="tag">§ 4.0</span><h2>Method — assembly</h2></div>
+      <p class="ssub">// the same three operations behind every product above</p>
+      <div class="msteps">
+        <div class="mstep reveal">
+          <div class="mn">OP 01 / INGEST</div>
+          <h3>Tame the record</h3>
+          <p>We crawl, dedupe, and structure the authoritative source — even with no bulk export, no API, or a pagination wall — into clean, queryable Postgres. The hard part nobody else does.</p>
+        </div>
+        <div class="mstep reveal">
+          <div class="mn">OP 02 / GROUND</div>
+          <h3>Make AI accountable</h3>
+          <p>Retrieval over the real corpus, structured output, and a visible chain back to the source. The model reasons over primary data — and every answer can be checked.</p>
+        </div>
+        <div class="mstep reveal">
+          <div class="mn">OP 03 / SHIP</div>
+          <h3>Re-draft the interface</h3>
+          <p>Search, structured exploration, maps, and AI on one surface — drafted for the human who needs the answer, and pushed to production with real users.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== CTA ===== -->
+  <section class="cta" id="contact">
+    <div class="wrap">
+      <div class="panel">
+        <div class="left">
+          <span class="tag">§ 5.0 — REQUEST</span>
+          <h2>Have a system <span class="hl">too complex</span> for ordinary software?</h2>
+          <p>That's the brief we draft for. Book a working session and we'll pressure-test what an AI-first rebuild looks like for your data — or file a short brief and we'll come back with a concrete read.</p>
+          <div class="direct">
+            <a href="mailto:Brendan@nysgpt.com?subject=Working%20session%20—%20NYSGPT"><span class="ic">✉</span> Brendan@nysgpt.com</a>
+            <a href="mailto:Brendan@nysgpt.com?subject=Book%20a%20working%20session"><span class="ic">↗</span> Book a working session</a>
+          </div>
+        </div>
+        <form class="brief" onsubmit="return submitBrief(event)">
+          <div class="fld"><label for="c-name">Name</label><input id="c-name" name="name" required placeholder="Jane Rivera" /></div>
+          <div class="row2">
+            <div class="fld"><label for="c-email">Email</label><input id="c-email" name="email" type="email" required placeholder="jane@org.gov" /></div>
+            <div class="fld"><label for="c-org">Organization</label><input id="c-org" name="org" placeholder="Agency / company" /></div>
+          </div>
+          <div class="fld"><label for="c-domain">System / domain</label>
+            <select id="c-domain" name="domain">
+              <option>Government / legislative</option><option>Trade / customs</option><option>Energy / utilities</option>
+              <option>Social services</option><option>Insurance / regulatory</option><option>Scientific / technical reference</option><option>Other legacy system</option>
+            </select>
+          </div>
+          <div class="fld"><label for="c-brief">What's locked up in it?</label><textarea id="c-brief" name="brief" placeholder="The data, who needs it, and why it's hard to use today…"></textarea></div>
+          <button type="submit" class="btn btn-primary">File the brief <span class="arr">→</span></button>
+          <div class="note">Routes straight to Brendan@nysgpt.com — no funnel, no sales bot.</div>
+        </form>
+      </div>
+    </div>
+  </section>
+</main>
+
+<!-- ===== FOOTER / TITLE BLOCK ===== -->
+<footer>
+  <div class="wrap">
+    <div class="cell"><span class="k">Drawn by</span><b>NYSGPT</b> · AI-first software</div>
+    <div class="cell"><span class="k">Discipline</span>AI for legacy &amp; regulatory systems</div>
+    <div class="cell"><span class="k">Contact</span><a href="mailto:Brendan@nysgpt.com">Brendan@nysgpt.com</a></div>
+    <div class="cell"><span class="k">Sheet</span>01 / 01 · © 2026 · Long Island NY</div>
+  </div>
+</footer>
+
+<!-- ===== PLAYGROUND ===== -->
+<button class="pg-launch" id="pgLaunch" type="button" aria-label="Open the design playground" title="Play with the design">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="13.5" cy="6.5" r="2.5"/><circle cx="6" cy="11" r="2.5"/><circle cx="17.5" cy="13" r="2.5"/><circle cx="9" cy="18" r="2.5"/><path d="M13.5 9v3M8 12.5l2.5 1M15 15l-3 1.7"/>
+  </svg>
+</button>
+<div class="pg-panel" id="pgPanel" role="dialog" aria-label="Design playground">
+  <div class="pg-head"><span class="pg-title">◇ Design playground</span><button class="pg-reset" id="pgReset" type="button">Reset</button></div>
+  <div class="pg-grp">
+    <label>Accent</label>
+    <div class="pg-swatches" id="pgAccent">
+      <span class="pg-sw on" data-c="#ff5a3c" style="background:#ff5a3c"></span>
+      <span class="pg-sw" data-c="#4cc3ff" style="background:#4cc3ff"></span>
+      <span class="pg-sw" data-c="#46d39a" style="background:#46d39a"></span>
+      <span class="pg-sw" data-c="#f5c542" style="background:#f5c542"></span>
+      <span class="pg-sw" data-c="#ff7ab8" style="background:#ff7ab8"></span>
+      <span class="pg-sw" data-c="#b388ff" style="background:#b388ff"></span>
+      <label class="pg-sw custom" title="Custom color">+<input type="color" id="pgAccentCustom" value="#ff5a3c" /></label>
+    </div>
+  </div>
+  <div class="pg-grp">
+    <label>Display font</label>
+    <div class="pg-fonts" id="pgDisplay">
+      <button class="pg-font on" data-f='"Archivo", sans-serif' style='font-family:"Archivo",sans-serif'>Archivo<span class="pf">grotesk</span></button>
+      <button class="pg-font" data-f='"Space Grotesk", sans-serif' style='font-family:"Space Grotesk",sans-serif'>Space G.<span class="pf">grotesk</span></button>
+      <button class="pg-font" data-f='"IBM Plex Mono", monospace' style='font-family:"IBM Plex Mono",monospace'>Plex Mono<span class="pf">mono</span></button>
+      <button class="pg-font" data-f='"IBM Plex Sans", sans-serif' style='font-family:"IBM Plex Sans",sans-serif'>Plex Sans<span class="pf">sans</span></button>
+    </div>
+  </div>
+  <div class="pg-grp">
+    <label>Body font</label>
+    <div class="pg-fonts" id="pgBody">
+      <button class="pg-font on" data-f='"IBM Plex Sans", sans-serif' style='font-family:"IBM Plex Sans",sans-serif'>Plex Sans<span class="pf">sans</span></button>
+      <button class="pg-font" data-f='"IBM Plex Mono", monospace' style='font-family:"IBM Plex Mono",monospace'>Plex Mono<span class="pf">mono</span></button>
+      <button class="pg-font" data-f='"Spline Sans Mono", monospace' style='font-family:"Spline Sans Mono",monospace'>Spline M.<span class="pf">mono</span></button>
+      <button class="pg-font" data-f='"Space Grotesk", sans-serif' style='font-family:"Space Grotesk",sans-serif'>Space G.<span class="pf">grotesk</span></button>
+    </div>
+  </div>
+  <div class="pg-grp"><label>Corner rounding <span class="v" id="pgRadVal">1.0×</span></label><input type="range" class="pg-range" id="pgRadius" min="0" max="4" step="0.2" value="1" /></div>
+  <div class="pg-grp"><label>Heading weight <span class="v" id="pgWghtVal">0</span></label><input type="range" class="pg-range" id="pgWght" min="-200" max="100" step="10" value="0" /></div>
+  <div class="pg-grp"><label>Density <span class="v" id="pgDensVal">1.0×</span></label><input type="range" class="pg-range" id="pgDensity" min="0.8" max="1.25" step="0.05" value="1" /></div>
+</div>
+
+<script>
+  // ---- theme toggle ----
+  (function(){
+    const root=document.documentElement, btn=document.getElementById('themeToggle');
+    btn.addEventListener('click',()=>{
+      const light=root.getAttribute('data-theme')==='light';
+      if(light) root.removeAttribute('data-theme'); else root.setAttribute('data-theme','light');
+      try{localStorage.setItem('nysgpt-theme-c', light?'dark':'light');}catch(e){}
+    });
+  })();
+
+  // ---- playground (session-only) ----
+  (function(){
+    const root=document.documentElement, rs=root.style;
+    const panel=document.getElementById('pgPanel'), launch=document.getElementById('pgLaunch');
+    launch.addEventListener('click',e=>{e.stopPropagation();panel.classList.toggle('open')});
+    document.addEventListener('click',e=>{ if(!panel.contains(e.target)&&e.target!==launch&&!launch.contains(e.target)) panel.classList.remove('open'); });
+
+    const accWrap=document.getElementById('pgAccent');
+    accWrap.querySelectorAll('.pg-sw[data-c]').forEach(sw=>sw.addEventListener('click',()=>{
+      accWrap.querySelectorAll('.pg-sw').forEach(s=>s.classList.remove('on')); sw.classList.add('on'); rs.setProperty('--accent',sw.dataset.c);
+    }));
+    document.getElementById('pgAccentCustom').addEventListener('input',e=>{
+      accWrap.querySelectorAll('.pg-sw').forEach(s=>s.classList.remove('on')); e.target.closest('.pg-sw').classList.add('on'); rs.setProperty('--accent',e.target.value);
+    });
+    function fontGroup(id,v){const w=document.getElementById(id);w.querySelectorAll('.pg-font').forEach(b=>b.addEventListener('click',()=>{w.querySelectorAll('.pg-font').forEach(x=>x.classList.remove('on'));b.classList.add('on');rs.setProperty(v,b.dataset.f)}))}
+    fontGroup('pgDisplay','--font-display'); fontGroup('pgBody','--font-sans');
+    const rad=document.getElementById('pgRadius'),radV=document.getElementById('pgRadVal');
+    rad.addEventListener('input',()=>{rs.setProperty('--radius',rad.value);radV.textContent=parseFloat(rad.value).toFixed(1)+'×'});
+    const wght=document.getElementById('pgWght'),wghtV=document.getElementById('pgWghtVal');
+    wght.addEventListener('input',()=>{rs.setProperty('--wght',wght.value);wghtV.textContent=(wght.value>0?'+':'')+wght.value});
+    const dens=document.getElementById('pgDensity'),densV=document.getElementById('pgDensVal');
+    dens.addEventListener('input',()=>{rs.setProperty('--density',dens.value);densV.textContent=parseFloat(dens.value).toFixed(2)+'×'});
+    document.getElementById('pgReset').addEventListener('click',()=>{
+      ['--accent','--font-display','--font-sans','--radius','--wght','--density'].forEach(v=>rs.removeProperty(v));
+      accWrap.querySelectorAll('.pg-sw').forEach((s,i)=>s.classList.toggle('on',i===0));
+      ['pgDisplay','pgBody'].forEach(id=>document.getElementById(id).querySelectorAll('.pg-font').forEach((b,i)=>b.classList.toggle('on',i===0)));
+      rad.value=1;radV.textContent='1.0×'; wght.value=0;wghtV.textContent='0'; dens.value=1;densV.textContent='1.0×';
+      document.getElementById('pgAccentCustom').value='#ff5a3c';
+    });
+  })();
+
+  // reveal
+  const io=new IntersectionObserver((es)=>{es.forEach(e=>{if(e.isIntersecting){e.target.classList.add('in');io.unobserve(e.target)}})},{threshold:.12,rootMargin:'0px 0px -6% 0px'});
+  document.querySelectorAll('.reveal').forEach((el,i)=>{el.style.transitionDelay=(i%3*60)+'ms';io.observe(el)});
+
+  function submitBrief(e){
+    e.preventDefault();const f=e.target;
+    const body=encodeURIComponent(`Name: ${f.name.value}\nEmail: ${f.email.value}\nOrg: ${f.org.value}\nDomain: ${f.domain.value}\n\nBrief:\n${f.brief.value}`);
+    window.location.href=`mailto:Brendan@nysgpt.com?subject=${encodeURIComponent('Project brief — '+(f.org.value||f.name.value))}&body=${body}`;
+    return false;
+  }
+</script>
+</body>
+</html>

@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>NYSGPT — design gallery</title>
+<meta name="description" content="A gallery of landing-page design explorations for NYSGPT, an AI-first software company building for complex, legacy systems." />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..600;1,9..144,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<script>
+  // dark is the gallery default; go light only when explicitly chosen.
+  (function(){ try{ if(localStorage.getItem('nysgpt-theme-idx')==='light') document.documentElement.setAttribute('data-theme','light'); }catch(e){} })();
+</script>
+<style>
+  :root{
+    --bg:#0a0b0f; --bg-2:#111319; --ink:#ece9e2; --dim:#8e8b81; --faint:#56544c;
+    --line:#22242b; --line-soft:#191b21; --accent:#ff5a1f;
+    --grid-line:rgba(255,255,255,.012); --grid-op:.5;
+    --mono:"JetBrains Mono",ui-monospace,monospace; --serif:"Fraunces",Georgia,serif;
+  }
+  :root[data-theme="light"]{
+    --bg:#f4f2ea; --bg-2:#fbfaf4; --ink:#1a1813; --dim:#5c5749; --faint:#9a9484;
+    --line:#ddd6c7; --line-soft:#e8e2d4; --accent:#d8420a;
+    --grid-line:rgba(0,0,0,.022); --grid-op:.6;
+  }
+  :root{color-scheme:dark} :root[data-theme="light"]{color-scheme:light}
+  html,body{transition:background .4s ease,color .4s ease}
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth}
+  body{background:var(--bg);color:var(--ink);font-family:var(--mono);font-size:14px;line-height:1.5;
+    -webkit-font-smoothing:antialiased;overflow-x:hidden;min-height:100vh}
+  body::before{content:"";position:fixed;inset:0;z-index:0;pointer-events:none;opacity:var(--grid-op);
+    background-image:repeating-linear-gradient(90deg,var(--grid-line) 0 1px,transparent 1px 90px)}
+  .wrap{position:relative;z-index:1;max-width:1080px;margin:0 auto;padding:0 28px}
+
+  header{border-bottom:1px solid var(--line);padding:22px 0}
+  header .wrap{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px}
+  .brand{display:flex;align-items:center;gap:11px}
+  .brand .mk{width:28px;height:28px;border:1.5px solid var(--ink);border-radius:5px;display:grid;place-items:center;font-family:var(--serif);font-weight:600;font-size:13px}
+  .brand .bn{font-size:13px;letter-spacing:.2em}.brand .bn b{color:var(--accent);font-weight:500}
+  header .right{display:flex;align-items:center;gap:16px}
+  header .tagline{font-size:11px;color:var(--faint);letter-spacing:.06em}
+  .theme-toggle{width:32px;height:32px;border:1px solid var(--line);border-radius:6px;background:transparent;
+    display:grid;place-items:center;cursor:pointer;color:var(--dim);transition:border-color .2s,color .2s;flex-shrink:0}
+  .theme-toggle:hover{border-color:var(--accent);color:var(--ink)}
+  .theme-toggle svg{width:14px;height:14px}.theme-toggle .moon{display:none}
+  :root[data-theme="light"] .theme-toggle .sun{display:none}
+  :root[data-theme="light"] .theme-toggle .moon{display:block}
+
+  .hero{padding:64px 0 40px;border-bottom:1px solid var(--line)}
+  .hero .kick{font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:var(--faint);display:inline-flex;align-items:center;gap:10px;margin-bottom:22px}
+  .hero .kick::before{content:"";width:22px;height:1px;background:var(--accent)}
+  .hero h1{font-family:var(--serif);font-weight:330;font-size:clamp(32px,5.4vw,58px);line-height:1.02;letter-spacing:-.02em;max-width:18ch}
+  .hero h1 em{font-style:italic;color:var(--accent)}
+  .hero p{margin-top:22px;max-width:62ch;font-size:14.5px;line-height:1.7;color:var(--dim)}
+  .hero p b{color:var(--ink);font-weight:500}
+
+  .gallery{padding:48px 0 70px}
+  .gh{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:26px;flex-wrap:wrap;gap:10px}
+  .gh .t{font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--faint)}
+  .grid{display:grid;grid-template-columns:repeat(2,1fr);gap:16px}
+  .card{position:relative;border:1px solid var(--line);background:var(--bg-2);padding:24px;text-decoration:none;color:inherit;
+    overflow:hidden;transition:border-color .25s,transform .25s;display:flex;flex-direction:column;min-height:184px}
+  .card::before{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--ca,var(--accent));transform:scaleY(0);transform-origin:top;transition:transform .3s}
+  .card:hover{transform:translateY(-3px)}
+  .card:hover::before{transform:scaleY(1)}
+  .card:hover{border-color:var(--ca,var(--accent))}
+  .card .top{display:flex;justify-content:space-between;align-items:center;margin-bottom:auto}
+  .card .id{font-size:11px;color:var(--faint);letter-spacing:.1em}
+  .card .swatch{display:flex;gap:5px}
+  .card .swatch i{width:13px;height:13px;border-radius:3px;display:block}
+  .card h2{font-family:var(--serif);font-weight:430;font-size:25px;letter-spacing:-.01em;margin:16px 0 7px}
+  .card h2 .ca{color:var(--ca,var(--accent))}
+  .card .d{font-size:12px;color:var(--dim);line-height:1.5}
+  .card .go{margin-top:14px;font-size:11px;letter-spacing:.08em;color:var(--ca,var(--accent));display:inline-flex;align-items:center;gap:7px}
+  .card .go .ar{transition:transform .25s}.card:hover .go .ar{transform:translateX(4px)}
+  .card.span2{grid-column:span 2}
+  @media(max-width:680px){.grid{grid-template-columns:1fr}.card.span2{grid-column:span 1}}
+
+  .subhead{grid-column:1/-1;display:flex;align-items:center;gap:14px;margin:14px 0 2px;font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--faint)}
+  .subhead::after{content:"";flex:1;height:1px;background:var(--line)}
+
+  footer{border-top:1px solid var(--line);padding:26px 0}
+  footer .wrap{display:flex;justify-content:space-between;flex-wrap:wrap;gap:10px;font-size:11px;color:var(--faint);letter-spacing:.05em}
+  footer b{color:var(--dim);font-weight:500}footer a:hover{color:var(--accent)}
+</style>
+</head>
+<body>
+  <header>
+    <div class="wrap">
+      <div class="brand"><span class="mk">N</span><span class="bn">NYS<b>GPT</b></span></div>
+      <div class="right">
+        <span class="tagline">DESIGN GALLERY · LANDING-PAGE EXPLORATIONS</span>
+        <button class="theme-toggle" id="themeToggle" type="button" aria-label="Toggle light and dark mode" title="Toggle theme">
+          <svg class="sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>
+          <svg class="moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <section class="hero">
+    <div class="wrap">
+      <div class="kick">One company · many faces</div>
+      <h1>Landing pages for an <em>AI-first</em> software company.</h1>
+      <p>NYSGPT builds domain-specific AI applications for complex, legacy, and regulatory systems — eight shipped products. <b>This is a working gallery of design directions for its landing page</b>, each a complete page with light/dark and a live design playground. Pick one to open it full-screen.</p>
+    </div>
+  </section>
+
+  <section class="gallery">
+    <div class="wrap">
+      <div class="gh"><span class="t">▸ Directions</span><span class="t">6 explorations · 3 families</span></div>
+      <div class="grid">
+
+        <a class="card" href="variant-a.html" style="--ca:#ff5a1f">
+          <div class="top"><span class="id">A · 01</span><span class="swatch"><i style="background:#0a0c0f"></i><i style="background:#ece7dd"></i><i style="background:#ff5a1f"></i></span></div>
+          <h2><span class="ca">Broadsheet</span></h2>
+          <div class="d">Editorial engineering terminal — serif + mono, hairline rules, the portfolio as a precise data ledger. Restrained, authoritative.</div>
+          <span class="go">Open <span class="ar">→</span></span>
+        </a>
+
+        <a class="card" href="variant-b.html" style="--ca:#46e3d0">
+          <div class="top"><span class="id">B · 02</span><span class="swatch"><i style="background:#06070d"></i><i style="background:#8b7bff"></i><i style="background:#46e3d0"></i></span></div>
+          <h2><span class="ca">Aurora</span></h2>
+          <div class="d">Luminous &amp; atmospheric — drifting gradient-mesh, glowing accent, lifting cards. Frontier-lab energy, motion-forward.</div>
+          <span class="go">Open <span class="ar">→</span></span>
+        </a>
+
+        <div class="subhead">C · Blueprint family — technical drafting / cyanotype</div>
+
+        <a class="card" href="variant-c2-schematic.html" style="--ca:#28e0b0">
+          <div class="top"><span class="id">C2 · 03</span><span class="swatch"><i style="background:#071318"></i><i style="background:#46c8ff"></i><i style="background:#28e0b0"></i></span></div>
+          <h2><span class="ca">Circuit</span></h2>
+          <div class="d">The portfolio as a live wiring schematic — a CORE bus routing to 8 product nodes, animated signal pulses, hover-to-trace. The most ambitious.</div>
+          <span class="go">Open <span class="ar">→</span></span>
+        </a>
+
+        <a class="card" href="variant-c1-spec.html" style="--ca:#e8a838">
+          <div class="top"><span class="id">C1 · 04</span><span class="swatch"><i style="background:#10130f"></i><i style="background:#d8451f"></i><i style="background:#e8a838"></i></span></div>
+          <h2><span class="ca">Datasheet</span></h2>
+          <div class="d">Pure electronics datasheet — absolute-max ratings, an electrical-characteristics table of the 8 products, revision history. Mono, amber.</div>
+          <span class="go">Open <span class="ar">→</span></span>
+        </a>
+
+        <a class="card" href="variant-c3-plate.html" style="--ca:#c0381a">
+          <div class="top"><span class="id">C3 · 05</span><span class="swatch"><i style="background:#f4f2ea"></i><i style="background:#1c5fa8"></i><i style="background:#c0381a"></i></span></div>
+          <h2><span class="ca">Plate</span></h2>
+          <div class="d">Exploded assembly drawing on white drafting paper — item balloons, leader lines, a parts list. The compositional, light-default one.</div>
+          <span class="go">Open <span class="ar">→</span></span>
+        </a>
+
+        <a class="card" href="variant-c.html" style="--ca:#4cc3ff">
+          <div class="top"><span class="id">C0 · 06</span><span class="swatch"><i style="background:#0a1a2f"></i><i style="background:#ff5a3c"></i><i style="background:#4cc3ff"></i></span></div>
+          <h2><span class="ca">Blueprint — combined</span></h2>
+          <div class="d">The original all-in-one Blueprint: the portfolio drawn three ways down one page (spec sheet · schematic · exploded plate). A showcase.</div>
+          <span class="go">Open <span class="ar">→</span></span>
+        </a>
+
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    <div class="wrap">
+      <div><b>NYSGPT</b> — AI-first software for legacy systems · Long Island, NY</div>
+      <div><a href="mailto:Brendan@nysgpt.com">Brendan@nysgpt.com</a></div>
+    </div>
+  </footer>
+
+  <script>
+    (function(){
+      const root=document.documentElement, btn=document.getElementById('themeToggle');
+      btn.addEventListener('click',()=>{
+        const light=root.getAttribute('data-theme')==='light';
+        if(light) root.removeAttribute('data-theme'); else root.setAttribute('data-theme','light');
+        try{localStorage.setItem('nysgpt-theme-idx', light?'dark':'light');}catch(e){}
+      });
+    })();
+  </script>
+</body>
+</html>

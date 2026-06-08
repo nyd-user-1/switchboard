@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>NYSGPT — Plate · exploded assembly, AI for legacy systems</title>
+<meta name="description" content="NYSGPT — AI-first software for complex, legacy, and regulatory systems. Eight products drawn as an exploded assembly plate." />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..600;1,9..144,400&family=IBM+Plex+Mono:wght@300;400;500;600&family=IBM+Plex+Sans:wght@400;500;600&family=Spline+Sans:wght@400;500;600&display=swap" rel="stylesheet" />
+<script>
+  // PLATE default = LIGHT drafting paper (the inversion). Dark only when chosen.
+  (function(){ try{ var t=localStorage.getItem('nysgpt-theme-c3'); if(t==='dark') document.documentElement.setAttribute('data-theme','dark'); }catch(e){} })();
+</script>
+<style>
+  :root{
+    /* ---- LIGHT (default): white drafting plate ---- */
+    --bg:#f4f2ea;             /* warm plate paper */
+    --bg-2:#fbfaf4;
+    --ink:#1b2a3a;            /* drafting graphite-navy */
+    --ink-dim:#52647a;
+    --ink-faint:#8b99a8;
+    --line:#c2cdd6;
+    --line-soft:#dbe2e7;
+    --blue:#1c5fa8;           /* blueprint blue line */
+    --accent:#c0381a;         /* red-pencil callout */
+    --accent-2:#1c5fa8;
+    --good:#1e7a4d;
+    --plate-bg:rgba(251,250,244,.8);
+    --grid:rgba(28,95,168,.07);
+    --grid-strong:rgba(28,95,168,.13);
+    --balloon-bg:#fbfaf4;
+    --shadow:rgba(30,50,80,.12);
+    --font-display:"Fraunces", Georgia, serif;
+    --font-mono:"IBM Plex Mono", ui-monospace, monospace;
+    --font-sans:"IBM Plex Sans", system-ui, sans-serif;
+    --maxw:1200px;
+    --radius:1; --wght:0; --density:1;
+  }
+  /* ---- DARK: cyanotype inversion ---- */
+  :root[data-theme="dark"]{
+    --bg:#0a1626;
+    --bg-2:#0e1d31;
+    --ink:#e9f1fa;
+    --ink-dim:#90aac6;
+    --ink-faint:#5a779a;
+    --line:#1c3a58;
+    --line-soft:#142a42;
+    --blue:#6cb6ff;
+    --accent:#ff6242;
+    --accent-2:#6cb6ff;
+    --good:#3ec98a;
+    --plate-bg:rgba(14,29,49,.7);
+    --grid:rgba(108,182,255,.06);
+    --grid-strong:rgba(108,182,255,.11);
+    --balloon-bg:#0e1d31;
+    --shadow:rgba(0,0,0,.4);
+  }
+  :root{color-scheme:light} :root[data-theme="dark"]{color-scheme:dark}
+
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth;-webkit-text-size-adjust:100%}
+  body{background:var(--bg);color:var(--ink);font-family:var(--font-sans);font-size:15px;line-height:1.55;
+    -webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility;overflow-x:hidden;transition:background .4s,color .4s}
+  /* engineering grid */
+  body::before{content:"";position:fixed;inset:0;z-index:0;pointer-events:none;
+    background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px),
+      linear-gradient(var(--grid-strong) 1px,transparent 1px),linear-gradient(90deg,var(--grid-strong) 1px,transparent 1px);
+    background-size:24px 24px,24px 24px,120px 120px,120px 120px}
+  .wrap{position:relative;z-index:1;max-width:var(--maxw);margin:0 auto;padding:0 32px}
+  a{color:inherit;text-decoration:none}
+  .mono{font-family:var(--font-mono)} .tnum{font-variant-numeric:tabular-nums}
+
+  /* the whole page sits inside a drawing border with a title block, like a real plate */
+  .sheet{position:relative;z-index:1;margin:18px;border:1.5px solid var(--ink);min-height:calc(100vh - 36px)}
+  .sheet::before{content:"";position:absolute;inset:7px;border:1px solid var(--line);pointer-events:none}
+
+  /* ===== HEADER ===== */
+  header{position:sticky;top:0;z-index:50;background:var(--plate-bg);backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
+  header .wrap{display:flex;align-items:center;justify-content:space-between;height:58px;max-width:none;padding:0 26px}
+  .brand{display:flex;align-items:center;gap:12px}
+  .brand .seal{width:30px;height:30px;border:1.5px solid var(--ink);border-radius:50%;display:grid;place-items:center;font-family:var(--font-display);font-weight:600;font-size:14px}
+  .brand .bn{font-family:var(--font-mono);font-size:13px;letter-spacing:.16em;font-weight:500}.brand .bn b{color:var(--accent);font-weight:600}
+  nav{display:flex;align-items:center;gap:22px}
+  nav a.nl{font-family:var(--font-mono);font-size:11.5px;letter-spacing:.05em;color:var(--ink-dim);transition:.2s}
+  nav a.nl:hover{color:var(--accent)}
+  .theme-toggle{width:34px;height:34px;border:1px solid var(--line);background:transparent;display:grid;place-items:center;cursor:pointer;color:var(--ink-dim);transition:.2s;border-radius:calc(2px * var(--radius));flex-shrink:0}
+  .theme-toggle:hover{border-color:var(--accent);color:var(--ink)}
+  .theme-toggle svg{width:15px;height:15px}.theme-toggle .moon{display:none}
+  /* in this file LIGHT is default → show moon by default (offering dark) */
+  .theme-toggle .sun{display:none}.theme-toggle .moon{display:block}
+  :root[data-theme="dark"] .theme-toggle .sun{display:block}:root[data-theme="dark"] .theme-toggle .moon{display:none}
+  .nav-cta{font-family:var(--font-mono);font-size:11.5px;border:1px solid var(--accent);color:var(--accent);padding:7px 13px;border-radius:calc(2px * var(--radius));transition:.2s}
+  .nav-cta:hover{background:var(--accent);color:var(--bg)}
+  @media(max-width:780px){nav a.nl{display:none}}
+
+  /* ===== HERO ===== */
+  .hero{padding:calc(60px * var(--density)) 0 calc(40px * var(--density))}
+  .hero .meta{display:flex;justify-content:space-between;border-bottom:1px solid var(--line-soft);padding-bottom:12px;margin-bottom:36px}
+  .hero .meta span{font-family:var(--font-mono);font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-faint)}
+  .hero h1{font-family:var(--font-display);font-weight:calc(340 + var(--wght));font-size:clamp(42px,7vw,88px);line-height:.98;letter-spacing:-.02em;max-width:14ch}
+  .hero h1 em{font-style:italic;color:var(--accent)}
+  .hero .deck{margin-top:24px;max-width:54ch;font-size:17.5px;line-height:1.6;color:var(--ink-dim)}
+  .hero .deck b{color:var(--ink);font-weight:600}
+  .hero .cta-row{display:flex;gap:14px;flex-wrap:wrap;margin-top:32px}
+  .btn{font-family:var(--font-mono);font-size:12.5px;letter-spacing:.04em;padding:13px 22px;border-radius:calc(2px * var(--radius));display:inline-flex;align-items:center;gap:9px;cursor:pointer;border:1px solid transparent;transition:.2s}
+  .btn .arr{transition:transform .25s}.btn:hover .arr{transform:translateX(4px)}
+  .btn-primary{background:var(--accent);color:var(--bg);font-weight:600}.btn-primary:hover{background:transparent;color:var(--accent);border-color:var(--accent)}
+  .btn-ghost{border-color:var(--line);color:var(--ink)}.btn-ghost:hover{border-color:var(--accent-2);color:var(--accent-2)}
+
+  /* ===== SECTION HEADS ===== */
+  .shead{display:flex;align-items:baseline;gap:14px;margin-bottom:5px}
+  .shead .tag{font-family:var(--font-mono);font-size:11px;letter-spacing:.1em;color:var(--accent);border:1px solid var(--accent);padding:3px 8px;border-radius:calc(2px * var(--radius))}
+  .shead h2{font-family:var(--font-display);font-weight:calc(400 + var(--wght));font-size:clamp(24px,3.2vw,38px);letter-spacing:-.015em}
+  .shead h2 em{font-style:italic;color:var(--accent)}
+  .ssub{font-family:var(--font-mono);font-size:11.5px;color:var(--ink-faint);margin-bottom:30px}
+
+  /* ===== THESIS ===== */
+  .thesis{padding:calc(54px * var(--density)) 0;border-top:1px solid var(--line)}
+  .thesis .grid{display:grid;grid-template-columns:.9fr 1.1fr;gap:50px;align-items:start}
+  .thesis .body{display:grid;gap:15px;color:var(--ink-dim);font-size:15.5px;line-height:1.7}.thesis .body b{color:var(--ink);font-weight:600}
+  @media(max-width:860px){.thesis .grid{grid-template-columns:1fr;gap:26px}}
+
+  /* ===== THE EXPLODED PLATE (centerpiece) ===== */
+  .plate{padding:calc(54px * var(--density)) 0;border-top:1px solid var(--line)}
+  .figure{position:relative;border:1px solid var(--line);background:var(--plate-bg);padding:30px;overflow:hidden}
+  .figure-title{font-family:var(--font-mono);font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-faint);
+    display:flex;justify-content:space-between;border-bottom:1px solid var(--line-soft);padding-bottom:12px;margin-bottom:24px}
+  .figure-title .fno{color:var(--accent)}
+  /* central assembly axis + the parts radiating */
+  .assembly{display:grid;grid-template-columns:1fr;gap:0;position:relative}
+  .axis{text-align:center;margin-bottom:6px}
+  .axis .core{display:inline-block;border:1.5px solid var(--accent-2);background:var(--balloon-bg);font-family:var(--font-mono);font-size:11px;
+    letter-spacing:.08em;text-transform:uppercase;color:var(--accent-2);padding:9px 18px;border-radius:calc(2px * var(--radius))}
+  .axis .sub{font-family:var(--font-mono);font-size:10px;color:var(--ink-faint);margin-top:8px;letter-spacing:.08em}
+  /* parts grid — varied widths like an exploded layout */
+  .parts{display:grid;grid-template-columns:repeat(12,1fr);gap:14px;margin-top:30px}
+  .part{position:relative;border:1px solid var(--line);background:var(--bg-2);padding:16px;transition:.25s;text-decoration:none;color:inherit;border-radius:calc(2px * var(--radius))}
+  .part:hover{border-color:var(--accent-2);transform:translateY(-3px);box-shadow:0 10px 24px var(--shadow)}
+  .part .balloon{position:absolute;top:-11px;left:14px;width:24px;height:24px;border-radius:50%;border:1.5px solid var(--accent);background:var(--balloon-bg);
+    display:grid;place-items:center;font-family:var(--font-mono);font-size:11px;font-weight:600;color:var(--accent)}
+  .part .leader{position:absolute;top:-11px;left:26px;width:0;height:1px;background:var(--accent);transition:width .3s}
+  .part:hover .leader{width:40px}
+  .part .top{display:flex;justify-content:flex-end;margin-bottom:8px}
+  .part .dot{width:7px;height:7px;border-radius:50%}
+  .part .dot.live{background:var(--good);box-shadow:0 0 6px var(--good)}.part .dot.sh{background:var(--ink-faint)}
+  .part .pn{font-family:var(--font-display);font-weight:calc(500 + var(--wght));font-size:18px;letter-spacing:-.01em;margin-bottom:5px;line-height:1.05;margin-top:6px}
+  .part .pn .gpt{color:var(--ink-faint);font-weight:400}
+  .part .ps{font-family:var(--font-mono);font-size:10.5px;color:var(--ink-dim);letter-spacing:.02em;line-height:1.4}
+  .part.link .pn::after{content:" ↗";color:var(--accent);font-size:13px;opacity:0;transition:.2s}.part.link:hover .pn::after{opacity:1}
+  .w3{grid-column:span 3}.w4{grid-column:span 4}.w5{grid-column:span 5}.w6{grid-column:span 6}.w7{grid-column:span 7}.w8{grid-column:span 8}
+  @media(max-width:860px){.w3,.w4,.w5,.w6,.w7,.w8{grid-column:span 6}}
+  @media(max-width:520px){.w3,.w4,.w5,.w6,.w7,.w8{grid-column:span 12}}
+
+  /* parts list / legend */
+  .partslist{margin-top:26px;border:1px solid var(--line)}
+  .partslist .plh{display:grid;grid-template-columns:54px 1fr 1.4fr 120px;font-family:var(--font-mono);font-size:9px;letter-spacing:.12em;text-transform:uppercase;
+    color:var(--ink-faint);padding:9px 16px;border-bottom:1px solid var(--line);background:var(--bg-2)}
+  .partslist .plr{display:grid;grid-template-columns:54px 1fr 1.4fr 120px;font-family:var(--font-mono);font-size:11.5px;padding:9px 16px;
+    border-bottom:1px solid var(--line-soft);color:var(--ink-dim);align-items:center}
+  .partslist .plr:last-child{border-bottom:none}
+  .partslist .plr .it{color:var(--accent)}.partslist .plr .nm{color:var(--ink);font-weight:500}
+  .partslist .plr .qty.live{color:var(--good)}
+  @media(max-width:640px){.partslist{display:none}}
+
+  /* ===== METHOD ===== */
+  .method{padding:calc(54px * var(--density)) 0;border-top:1px solid var(--line)}
+  .msteps{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+  .mstep{border:1px solid var(--line);background:var(--plate-bg);padding:24px 20px;position:relative;border-radius:calc(2px * var(--radius));transition:.2s}
+  .mstep:hover{border-color:var(--accent-2)}
+  .mstep .mn{font-family:var(--font-mono);font-size:11px;color:var(--accent);letter-spacing:.08em;margin-bottom:14px;display:flex;align-items:center;gap:8px}
+  .mstep .mn::after{content:"";flex:1;height:1px;background:var(--line)}
+  .mstep h3{font-family:var(--font-display);font-weight:500;font-size:20px;letter-spacing:-.01em;margin-bottom:9px}
+  .mstep p{color:var(--ink-dim);font-size:13.5px;line-height:1.6}
+  @media(max-width:820px){.msteps{grid-template-columns:1fr}}
+
+  /* ===== CTA ===== */
+  .cta{padding:calc(70px * var(--density)) 0}
+  .cta .panel{border:1px solid var(--line);background:var(--plate-bg);display:grid;grid-template-columns:1fr 1fr}
+  .cta .left{padding:44px 38px;border-right:1px solid var(--line)}
+  .cta .left .tag{font-family:var(--font-mono);font-size:11px;color:var(--accent);margin-bottom:16px;display:block;letter-spacing:.08em}
+  .cta .left h2{font-family:var(--font-display);font-weight:calc(400 + var(--wght));font-size:clamp(26px,3.4vw,40px);line-height:1.05;letter-spacing:-.015em}
+  .cta .left h2 em{font-style:italic;color:var(--accent)}
+  .cta .left p{margin-top:16px;color:var(--ink-dim);font-size:15px;line-height:1.6;max-width:40ch}
+  .cta .direct{margin-top:24px;display:grid;gap:11px}
+  .cta .direct a{display:inline-flex;align-items:center;gap:11px;font-family:var(--font-mono);font-size:13px;color:var(--ink);transition:.2s;width:fit-content}
+  .cta .direct a:hover{color:var(--accent)}
+  .cta .direct .ic{width:32px;height:32px;border:1px solid var(--line);display:grid;place-items:center;color:var(--accent);border-radius:calc(2px * var(--radius))}
+  form.brief{padding:44px 38px;display:grid;gap:14px}
+  form.brief .fld{display:grid;gap:6px}
+  form.brief label{font-family:var(--font-mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-faint)}
+  form.brief input,form.brief textarea,form.brief select{background:var(--bg);border:1px solid var(--line);border-radius:calc(2px * var(--radius));padding:10px 12px;color:var(--ink);font-family:var(--font-sans);font-size:14px;transition:border-color .2s}
+  form.brief input:focus,form.brief textarea:focus,form.brief select:focus{outline:none;border-color:var(--accent)}
+  form.brief textarea{resize:vertical;min-height:76px}
+  form.brief .row2{display:grid;grid-template-columns:1fr 1fr;gap:11px}
+  form.brief button{margin-top:2px;width:100%;justify-content:center}
+  form.brief .note{font-family:var(--font-mono);font-size:10px;color:var(--ink-faint);text-align:center}
+  @media(max-width:860px){.cta .panel{grid-template-columns:1fr}.cta .left{border-right:none;border-bottom:1px solid var(--line);padding:34px 24px}form.brief{padding:34px 24px}}
+
+  /* ===== TITLE BLOCK FOOTER ===== */
+  footer{border-top:1.5px solid var(--ink);padding:0}
+  footer .tb{display:grid;grid-template-columns:2fr 1fr 1fr 1fr}
+  footer .tb .c{padding:14px 18px;border-right:1px solid var(--line)}
+  footer .tb .c:last-child{border-right:none}
+  footer .tb .k{font-family:var(--font-mono);font-size:8.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-faint);display:block;margin-bottom:6px}
+  footer .tb .val{font-family:var(--font-mono);font-size:12px;color:var(--ink-dim)}
+  footer .tb .val.big{font-family:var(--font-display);font-size:16px;color:var(--ink)}
+  footer .tb a:hover{color:var(--accent)}
+  @media(max-width:680px){footer .tb{grid-template-columns:1fr 1fr}footer .tb .c{border-bottom:1px solid var(--line)}}
+
+  /* ===== PLAYGROUND ===== */
+  .pg-launch{position:fixed;right:22px;bottom:22px;z-index:90;width:48px;height:48px;border-radius:calc(2px * var(--radius));background:var(--bg-2);border:1px solid var(--accent);color:var(--accent);cursor:pointer;display:grid;place-items:center;box-shadow:0 8px 24px var(--shadow);transition:.25s}
+  .pg-launch:hover{transform:translateY(-3px);background:var(--accent);color:var(--bg)}
+  .pg-launch svg{width:20px;height:20px}
+  .pg-panel{position:fixed;right:22px;bottom:80px;z-index:91;width:312px;background:var(--bg-2);border:1px solid var(--line);border-radius:calc(3px * var(--radius));box-shadow:0 24px 56px var(--shadow);padding:20px;opacity:0;transform:translateY(12px) scale(.97);pointer-events:none;transform-origin:bottom right;transition:opacity .26s,transform .26s;max-height:80vh;overflow-y:auto}
+  .pg-panel.open{opacity:1;transform:none;pointer-events:auto}
+  .pg-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;border-bottom:1px solid var(--line-soft);padding-bottom:12px}
+  .pg-title{font-family:var(--font-mono);font-size:10.5px;letter-spacing:.13em;text-transform:uppercase;color:var(--accent)}
+  .pg-reset{font-family:var(--font-mono);font-size:9.5px;color:var(--accent-2);background:none;border:none;cursor:pointer;text-transform:uppercase}.pg-reset:hover{text-decoration:underline}
+  .pg-grp{margin-bottom:18px}.pg-grp:last-child{margin-bottom:2px}
+  .pg-grp>label{display:block;font-family:var(--font-mono);font-size:9.5px;letter-spacing:.11em;text-transform:uppercase;color:var(--ink-dim);margin-bottom:10px}
+  .pg-grp>label .v{color:var(--ink-faint);float:right;letter-spacing:0}
+  .pg-swatches{display:flex;gap:8px;flex-wrap:wrap}
+  .pg-sw{width:26px;height:26px;border-radius:calc(2px * var(--radius));cursor:pointer;border:2px solid transparent;transition:.15s;position:relative}.pg-sw:hover{transform:scale(1.12)}.pg-sw.on{border-color:var(--ink)}
+  .pg-sw.custom{display:grid;place-items:center;background:var(--bg);border:1px solid var(--line);color:var(--ink-faint);overflow:hidden}.pg-sw.custom input{position:absolute;inset:0;opacity:0;cursor:pointer}
+  .pg-fonts{display:grid;grid-template-columns:1fr 1fr;gap:7px}
+  .pg-font{font-family:inherit;font-size:12.5px;padding:8px 9px;border-radius:calc(2px * var(--radius));border:1px solid var(--line);background:var(--bg);color:var(--ink-dim);cursor:pointer;transition:.15s;text-align:left;line-height:1.1}
+  .pg-font:hover{border-color:var(--ink-faint);color:var(--ink)}.pg-font.on{border-color:var(--accent);color:var(--ink)}
+  .pg-font .pf{font-size:8.5px;font-family:var(--font-mono);color:var(--ink-faint);display:block;margin-top:3px}
+  input[type=range].pg-range{-webkit-appearance:none;appearance:none;width:100%;height:2px;background:var(--line);outline:none;cursor:pointer}
+  input[type=range].pg-range::-webkit-slider-thumb{-webkit-appearance:none;width:14px;height:14px;border-radius:50%;background:var(--accent);cursor:pointer}
+  input[type=range].pg-range::-moz-range-thumb{width:12px;height:12px;border-radius:50%;background:var(--accent);cursor:pointer;border:none}
+  @media(max-width:560px){.pg-panel{width:calc(100vw - 44px)}}
+
+  .reveal{opacity:0;transform:translateY(18px);transition:opacity .6s cubic-bezier(.16,1,.3,1),transform .6s cubic-bezier(.16,1,.3,1)}
+  .reveal.in{opacity:1;transform:none}
+  @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}.reveal{opacity:1;transform:none}}
+</style>
+</head>
+<body>
+<div class="sheet">
+<header>
+  <div class="wrap">
+    <a href="#top" class="brand"><span class="seal">N</span><span class="bn">NYS<b>GPT</b></span></a>
+    <nav>
+      <a class="nl" href="#thesis">// notes</a>
+      <a class="nl" href="#plate">// plate</a>
+      <a class="nl" href="#method">// method</a>
+      <button class="theme-toggle" id="themeToggle" type="button" aria-label="Toggle theme" title="Toggle theme">
+        <svg class="sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>
+        <svg class="moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+      </button>
+      <a class="nav-cta" href="#contact">[ BOOK SESSION ]</a>
+    </nav>
+  </div>
+</header>
+
+<main id="top">
+  <section class="hero">
+    <div class="wrap">
+      <div class="meta"><span>NYSGPT / AI-FIRST SOFTWARE CO.</span><span>PLATE 01 OF 01 · SCALE 1:1 · LONG ISLAND NY</span></div>
+      <h1>Eight parts.<br />One <em>assembly.</em></h1>
+      <p class="deck">NYSGPT builds domain-specific AI applications for the complex, legacy, and regulatory systems ordinary software won't touch. <b>Each product is one part of a single assembly</b> — the same architecture, exploded across eight domains.</p>
+      <div class="cta-row">
+        <a href="#contact" class="btn btn-primary">Book a working session <span class="arr">→</span></a>
+        <a href="#plate" class="btn btn-ghost">View the plate <span class="arr">→</span></a>
+      </div>
+    </div>
+  </section>
+
+  <section class="thesis" id="thesis">
+    <div class="wrap">
+      <div class="grid">
+        <div><div class="shead"><span class="tag">NOTES</span><h2>General <em>notes</em></h2></div><p class="ssub">// unless otherwise specified</p></div>
+        <div class="body reveal">
+          <p>The most consequential systems run on the worst software. Legislative records, customs rulings, energy filings, licensing registries, nuclear references — public, authoritative, and locked behind portals built two decades ago for nobody in particular.</p>
+          <p><b>NYSGPT closes that gap.</b> We don't bolt a chatbot onto the problem. We ingest the primary record, ground every answer in a verifiable source, and rebuild the interface from the data up. Each part below is the same assembly, drawn for a different domain.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== THE EXPLODED PLATE ===== -->
+  <section class="plate" id="plate">
+    <div class="wrap">
+      <div class="shead"><span class="tag">FIG. 1</span><h2>Exploded <em>assembly</em></h2></div>
+      <p class="ssub">// item balloons keyed to the parts list · hover a part to draw its leader</p>
+
+      <div class="figure reveal">
+        <div class="figure-title"><span class="fno">FIG. 1 — NYSGPT-8 ASSEMBLY</span><span>EXPLODED VIEW · ITEMS 1–8</span></div>
+        <div class="assembly">
+          <div class="axis">
+            <span class="core">◇ NYSGPT CORE — INGEST · GROUND · SHIP</span>
+            <div class="sub">shared architecture · all parts mount to this datum</div>
+          </div>
+          <div class="parts">
+            <a class="part link w6" href="https://44b.nysgpt.com" target="_blank" rel="noopener">
+              <span class="balloon">1</span><span class="leader"></span>
+              <div class="top"><span class="dot live"></span></div>
+              <div class="pn">44B</div>
+              <div class="ps">AI registry · 44-B compliance portal · 532 models · 2,561 incidents · "SERFF for AI"</div>
+            </a>
+            <a class="part link w6" href="https://tariffs.nysgpt.com" target="_blank" rel="noopener">
+              <span class="balloon">2</span><span class="leader"></span>
+              <div class="top"><span class="dot live"></span></div>
+              <div class="pn">Tariffs<span class="gpt">GPT</span></div>
+              <div class="ps">tariff refund engine · 220k+ customs rulings · live federal schedule</div>
+            </a>
+            <a class="part link w4" href="https://childcare.nysgpt.com/console" target="_blank" rel="noopener">
+              <span class="balloon">3</span><span class="leader"></span>
+              <div class="top"><span class="dot live"></span></div>
+              <div class="pn">Childcare<span class="gpt">GPT</span></div>
+              <div class="ps">16,800 facilities · OCFS-6025 form</div>
+            </a>
+            <a class="part link w4" href="https://solar.nysgpt.com/map/plants-2" target="_blank" rel="noopener">
+              <span class="balloon">4</span><span class="leader"></span>
+              <div class="top"><span class="dot live"></span></div>
+              <div class="pn">Solar<span class="gpt">GPT</span></div>
+              <div class="ps">every US county · EIA data pipelines</div>
+            </a>
+            <div class="part w4">
+              <span class="balloon">5</span><span class="leader"></span>
+              <div class="top"><span class="dot sh"></span></div>
+              <div class="pn">Policy<span class="gpt">GPT</span></div>
+              <div class="ps">full NYS legislative record</div>
+            </div>
+            <div class="part w3">
+              <span class="balloon">6</span><span class="leader"></span>
+              <div class="top"><span class="dot sh"></span></div>
+              <div class="pn">NSR<span class="gpt">gpt</span></div>
+              <div class="ps">88k+ records · RAG</div>
+            </div>
+            <div class="part w3">
+              <span class="balloon">7</span><span class="leader"></span>
+              <div class="top"><span class="dot sh"></span></div>
+              <div class="pn">Insurance<span class="gpt">GPT</span></div>
+              <div class="ps">grounded rates · Stripe</div>
+            </div>
+            <div class="part w6">
+              <span class="balloon">8</span><span class="leader"></span>
+              <div class="top"><span class="dot sh"></span></div>
+              <div class="pn">Sports<span class="gpt">GPT</span></div>
+              <div class="ps">Section XI · stats · choropleth maps · AI-generated highlights</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- PARTS LIST -->
+        <div class="partslist">
+          <div class="plh"><span>Item</span><span>Part</span><span>Domain</span><span>Qty / status</span></div>
+          <div class="plr"><span class="it">1</span><span class="nm">44B</span><span>Governance / AI</span><span class="qty live">● LIVE</span></div>
+          <div class="plr"><span class="it">2</span><span class="nm">TariffsGPT</span><span>Trade / customs</span><span class="qty live">● LIVE</span></div>
+          <div class="plr"><span class="it">3</span><span class="nm">ChildcareGPT</span><span>Social services</span><span class="qty live">● LIVE</span></div>
+          <div class="plr"><span class="it">4</span><span class="nm">SolarGPT</span><span>Energy / grid</span><span class="qty live">● LIVE</span></div>
+          <div class="plr"><span class="it">5</span><span class="nm">PolicyGPT</span><span>Government</span><span>○ SHIPPED</span></div>
+          <div class="plr"><span class="it">6</span><span class="nm">NSRgpt</span><span>Science / reference</span><span>○ SHIPPED</span></div>
+          <div class="plr"><span class="it">7</span><span class="nm">InsuranceGPT</span><span>Insurance / reg.</span><span>○ SHIPPED</span></div>
+          <div class="plr"><span class="it">8</span><span class="nm">SportsGPT</span><span>Sports / public</span><span>○ SHIPPED</span></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== METHOD ===== -->
+  <section class="method" id="method">
+    <div class="wrap">
+      <div class="shead"><span class="tag">PROC</span><h2>Assembly <em>procedure</em></h2></div>
+      <p class="ssub">// the same three operations build every part</p>
+      <div class="msteps">
+        <div class="mstep reveal"><div class="mn">OP 01 · INGEST</div><h3>Tame the record</h3><p>Crawl, dedupe, and structure the authoritative source — even with no bulk export, no API, or a pagination wall — into clean, queryable Postgres.</p></div>
+        <div class="mstep reveal"><div class="mn">OP 02 · GROUND</div><h3>Make AI accountable</h3><p>Retrieval over the real corpus, structured output, and a visible chain back to the source. Every answer can be checked.</p></div>
+        <div class="mstep reveal"><div class="mn">OP 03 · SHIP</div><h3>Rebuild the surface</h3><p>Search, structure, maps, and AI on one surface — built for the human who needs the answer, shipped to production.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== CTA ===== -->
+  <section class="cta" id="contact">
+    <div class="wrap">
+      <div class="panel">
+        <div class="left">
+          <span class="tag">REQUEST — REV REQUEST</span>
+          <h2>Need a part <em>we haven't drawn?</em></h2>
+          <p>If your system is too complex for ordinary software, that's the part we draw. Book a working session, or file a short brief and we'll come back with a concrete read.</p>
+          <div class="direct">
+            <a href="mailto:Brendan@nysgpt.com?subject=Working%20session%20—%20NYSGPT"><span class="ic">✉</span> Brendan@nysgpt.com</a>
+            <a href="mailto:Brendan@nysgpt.com?subject=Book%20a%20working%20session"><span class="ic">↗</span> Book a working session</a>
+          </div>
+        </div>
+        <form class="brief" onsubmit="return submitBrief(event)">
+          <div class="fld"><label for="n">Name</label><input id="n" name="name" required placeholder="Jane Rivera" /></div>
+          <div class="row2">
+            <div class="fld"><label for="e">Email</label><input id="e" name="email" type="email" required placeholder="jane@org.gov" /></div>
+            <div class="fld"><label for="o">Organization</label><input id="o" name="org" placeholder="Agency / company" /></div>
+          </div>
+          <div class="fld"><label for="d">System / domain</label>
+            <select id="d" name="domain"><option>Government / legislative</option><option>Trade / customs</option><option>Energy / utilities</option><option>Social services</option><option>Insurance / regulatory</option><option>Scientific / technical reference</option><option>Other legacy system</option></select>
+          </div>
+          <div class="fld"><label for="b">What's locked up in it?</label><textarea id="b" name="brief" placeholder="The data, who needs it, and why it's hard to use today…"></textarea></div>
+          <button type="submit" class="btn btn-primary">File the brief <span class="arr">→</span></button>
+          <div class="note">Routes straight to Brendan@nysgpt.com — no funnel, no sales bot.</div>
+        </form>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="tb">
+    <div class="c"><span class="k">Drawn by</span><span class="val big">NYSGPT — AI-first software</span></div>
+    <div class="c"><span class="k">Discipline</span><span class="val">Legacy &amp; regulatory systems</span></div>
+    <div class="c"><span class="k">Contact</span><span class="val"><a href="mailto:Brendan@nysgpt.com">Brendan@nysgpt.com</a></span></div>
+    <div class="c"><span class="k">Plate</span><span class="val">01 / 01 · © 2026 · LI NY</span></div>
+  </div>
+</footer>
+</div>
+
+<!-- PLAYGROUND -->
+<button class="pg-launch" id="pgLaunch" type="button" aria-label="Open the design playground" title="Play with the design">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="13.5" cy="6.5" r="2.5"/><circle cx="6" cy="11" r="2.5"/><circle cx="17.5" cy="13" r="2.5"/><circle cx="9" cy="18" r="2.5"/><path d="M13.5 9v3M8 12.5l2.5 1M15 15l-3 1.7"/></svg>
+</button>
+<div class="pg-panel" id="pgPanel" role="dialog" aria-label="Design playground">
+  <div class="pg-head"><span class="pg-title">◇ Design playground</span><button class="pg-reset" id="pgReset" type="button">Reset</button></div>
+  <div class="pg-grp"><label>Accent</label><div class="pg-swatches" id="pgAccent">
+    <span class="pg-sw on" data-c="#c0381a" style="background:#c0381a"></span>
+    <span class="pg-sw" data-c="#1c5fa8" style="background:#1c5fa8"></span>
+    <span class="pg-sw" data-c="#1e7a4d" style="background:#1e7a4d"></span>
+    <span class="pg-sw" data-c="#b5780a" style="background:#b5780a"></span>
+    <span class="pg-sw" data-c="#7d4ec0" style="background:#7d4ec0"></span>
+    <span class="pg-sw" data-c="#c43d72" style="background:#c43d72"></span>
+    <label class="pg-sw custom" title="Custom">+<input type="color" id="pgAccentCustom" value="#c0381a" /></label>
+  </div></div>
+  <div class="pg-grp"><label>Display font</label><div class="pg-fonts" id="pgDisplay">
+    <button class="pg-font on" data-f='"Fraunces", serif' style='font-family:"Fraunces",serif'>Fraunces<span class="pf">serif</span></button>
+    <button class="pg-font" data-f='"IBM Plex Sans", sans-serif' style='font-family:"IBM Plex Sans",sans-serif'>Plex<span class="pf">sans</span></button>
+    <button class="pg-font" data-f='"IBM Plex Mono", monospace' style='font-family:"IBM Plex Mono",monospace'>Plex M.<span class="pf">mono</span></button>
+    <button class="pg-font" data-f='"Spline Sans", sans-serif' style='font-family:"Spline Sans",sans-serif'>Spline<span class="pf">sans</span></button>
+  </div></div>
+  <div class="pg-grp"><label>Body font</label><div class="pg-fonts" id="pgBody">
+    <button class="pg-font on" data-f='"IBM Plex Sans", sans-serif' style='font-family:"IBM Plex Sans",sans-serif'>Plex<span class="pf">sans</span></button>
+    <button class="pg-font" data-f='"Spline Sans", sans-serif' style='font-family:"Spline Sans",sans-serif'>Spline<span class="pf">sans</span></button>
+    <button class="pg-font" data-f='"IBM Plex Mono", monospace' style='font-family:"IBM Plex Mono",monospace'>Plex M.<span class="pf">mono</span></button>
+    <button class="pg-font" data-f='"Fraunces", serif' style='font-family:"Fraunces",serif'>Fraunces<span class="pf">serif</span></button>
+  </div></div>
+  <div class="pg-grp"><label>Corner rounding <span class="v" id="pgRadVal">1.0×</span></label><input type="range" class="pg-range" id="pgRadius" min="0" max="4" step="0.2" value="1" /></div>
+  <div class="pg-grp"><label>Heading weight <span class="v" id="pgWghtVal">0</span></label><input type="range" class="pg-range" id="pgWght" min="-40" max="240" step="10" value="0" /></div>
+  <div class="pg-grp"><label>Density <span class="v" id="pgDensVal">1.0×</span></label><input type="range" class="pg-range" id="pgDensity" min="0.8" max="1.25" step="0.05" value="1" /></div>
+</div>
+
+<script>
+  (function(){const root=document.documentElement,btn=document.getElementById('themeToggle');btn.addEventListener('click',()=>{const d=root.getAttribute('data-theme')==='dark';if(d)root.removeAttribute('data-theme');else root.setAttribute('data-theme','dark');try{localStorage.setItem('nysgpt-theme-c3',d?'light':'dark')}catch(e){}})})();
+  (function(){
+    const root=document.documentElement,rs=root.style;
+    const panel=document.getElementById('pgPanel'),launch=document.getElementById('pgLaunch');
+    launch.addEventListener('click',e=>{e.stopPropagation();panel.classList.toggle('open')});
+    document.addEventListener('click',e=>{if(!panel.contains(e.target)&&e.target!==launch&&!launch.contains(e.target))panel.classList.remove('open')});
+    const acc=document.getElementById('pgAccent');
+    acc.querySelectorAll('.pg-sw[data-c]').forEach(sw=>sw.addEventListener('click',()=>{acc.querySelectorAll('.pg-sw').forEach(s=>s.classList.remove('on'));sw.classList.add('on');rs.setProperty('--accent',sw.dataset.c)}));
+    document.getElementById('pgAccentCustom').addEventListener('input',e=>{acc.querySelectorAll('.pg-sw').forEach(s=>s.classList.remove('on'));e.target.closest('.pg-sw').classList.add('on');rs.setProperty('--accent',e.target.value)});
+    function fg(id,v){const w=document.getElementById(id);w.querySelectorAll('.pg-font').forEach(b=>b.addEventListener('click',()=>{w.querySelectorAll('.pg-font').forEach(x=>x.classList.remove('on'));b.classList.add('on');rs.setProperty(v,b.dataset.f)}))}
+    fg('pgDisplay','--font-display');fg('pgBody','--font-sans');
+    const rad=document.getElementById('pgRadius'),rv=document.getElementById('pgRadVal');rad.addEventListener('input',()=>{rs.setProperty('--radius',rad.value);rv.textContent=parseFloat(rad.value).toFixed(1)+'×'});
+    const wg=document.getElementById('pgWght'),wv=document.getElementById('pgWghtVal');wg.addEventListener('input',()=>{rs.setProperty('--wght',wg.value);wv.textContent=(wg.value>0?'+':'')+wg.value});
+    const de=document.getElementById('pgDensity'),dv=document.getElementById('pgDensVal');de.addEventListener('input',()=>{rs.setProperty('--density',de.value);dv.textContent=parseFloat(de.value).toFixed(2)+'×'});
+    document.getElementById('pgReset').addEventListener('click',()=>{['--accent','--font-display','--font-sans','--radius','--wght','--density'].forEach(v=>rs.removeProperty(v));acc.querySelectorAll('.pg-sw').forEach((s,i)=>s.classList.toggle('on',i===0));['pgDisplay','pgBody'].forEach(id=>document.getElementById(id).querySelectorAll('.pg-font').forEach((b,i)=>b.classList.toggle('on',i===0)));rad.value=1;rv.textContent='1.0×';wg.value=0;wv.textContent='0';de.value=1;dv.textContent='1.0×';document.getElementById('pgAccentCustom').value='#c0381a'});
+  })();
+  const io=new IntersectionObserver((es)=>{es.forEach(e=>{if(e.isIntersecting){e.target.classList.add('in');io.unobserve(e.target)}})},{threshold:.1,rootMargin:'0px 0px -6% 0px'});
+  document.querySelectorAll('.reveal').forEach((el,i)=>{el.style.transitionDelay=(i%3*60)+'ms';io.observe(el)});
+  function submitBrief(e){e.preventDefault();const f=e.target;const body=encodeURIComponent(`Name: ${f.name.value}\nEmail: ${f.email.value}\nOrg: ${f.org.value}\nDomain: ${f.domain.value}\n\nBrief:\n${f.brief.value}`);window.location.href=`mailto:Brendan@nysgpt.com?subject=${encodeURIComponent('Project brief — '+(f.org.value||f.name.value))}&body=${body}`;return false}
+</script>
+</body>
+</html>
