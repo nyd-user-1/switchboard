@@ -123,10 +123,13 @@
 
   /* ===== THE EXPLODED PLATE (centerpiece) ===== */
   .plate{padding:calc(54px * var(--density)) 0;border-top:1px solid var(--line)}
-  .figure{position:relative;border:1px solid var(--line);background:var(--plate-bg);padding:30px;overflow:hidden}
-  .figure-title{font-family:var(--font-mono);font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-faint);
-    display:flex;justify-content:space-between;border-bottom:1px solid var(--line-soft);padding-bottom:12px;margin-bottom:24px}
-  .figure-title .fno{color:var(--accent)}
+  .figure{position:relative;border:1px solid var(--line);background:var(--plate-bg);padding:30px}
+  /* FIG. 1 tag straddling the top-right corner of the figure box */
+  .figure .fig-tag{position:absolute;top:0;right:18px;transform:translateY(-50%);
+    background:var(--bg);border:1px solid var(--line);padding:3px 10px;
+    font-family:var(--font-mono);font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-faint);
+    border-radius:calc(2px * var(--radius));white-space:nowrap}
+  .figure .fig-tag b{color:var(--accent);font-weight:600}
   /* central assembly axis + the parts radiating */
   .assembly{display:grid;grid-template-columns:1fr;gap:0;position:relative}
   .axis{text-align:center;margin-bottom:6px}
@@ -271,7 +274,7 @@
   <section class="thesis" id="thesis">
     <div class="wrap">
       <div class="grid">
-        <div><div class="shead"><span class="tag">NOTES</span><h2>General <em>notes</em></h2></div><p class="ssub">// unless otherwise specified</p></div>
+        <div><div class="shead"><span class="tag">NOTES</span><h2><em>Notes</em></h2></div></div>
         <div class="body reveal">
           <p>The most consequential systems run on the worst software. Legislative records, customs rulings, energy filings, licensing registries, nuclear references — public, authoritative, and locked behind portals built two decades ago for nobody in particular.</p>
           <p><b>NYSGPT closes that gap.</b> We don't bolt a chatbot onto the problem. We ingest the primary record, ground every answer in a verifiable source, and rebuild the interface from the data up. Each part below is the same assembly, drawn for a different domain.</p>
@@ -287,7 +290,7 @@
       <p class="ssub">// item balloons keyed to the parts list · hover a part to draw its leader</p>
 
       <div class="figure reveal">
-        <div class="figure-title"><span class="fno">FIG. 1 — NYSGPT-8 ASSEMBLY</span><span>EXPLODED VIEW · ITEMS 1–8</span></div>
+        <span class="fig-tag"><b>FIG. 1</b> — NYSGPT-8 ASSEMBLY</span>
         <div class="assembly">
           <div class="axis">
             <span class="core">◇ NYSGPT CORE — INGEST · GROUND · SHIP</span>
