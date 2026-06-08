@@ -41,4 +41,4 @@ The three Blueprint sub-variants (c1/c2/c3) were split out of `variant-c.html` �
 
 _None — the Circuit (c2) and Plate (c3) backlog is cleared._
 
-Resolved: Circuit section heads (`Signal`/`Board`/`Path`); Plate `Notes` rename + `// unless otherwise specified` removal; Plate figure tag de-duped (section header owns `FIG. 1`, corner tag now reads `NYSGPT-8 ASSEMBLY` and straddles the figure's top-right border).
+Resolved: Circuit section heads (`Signal`/`Board`/`Path`); Plate `Notes` rename + `// unless otherwise specified` removal; Plate section-header kicker tags dropped — both `NOTES` and `FIG. 1` removed so the headings stand alone (the figure's corner `NYSGPT-8 ASSEMBLY` tag stays); Plate part-name bottom margin opened up (5px → 20px) and the SportsGPT part caption trimmed to `choropleth maps · AI-generated highlights`.
