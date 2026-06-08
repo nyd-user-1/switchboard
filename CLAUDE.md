@@ -39,5 +39,6 @@ The three Blueprint sub-variants (c1/c2/c3) were split out of `variant-c.html` �
 
 ## Open edits (requested, not yet applied)
 
-- **Circuit (c2):** section heads → `Signal`, `Board`, `Path` (drop "The"; "signal path" → just "Path").
-- **Plate (c3):** "General notes" → `Notes`; remove the `// unless otherwise specified` subline; remove the duplicate inner `FIG. 1 — NYSGPT-8 ASSEMBLY` header row; move the `FIG. 1` tag to **straddle the top-right corner of the figure box** (on the border, not inside).
+_None — the Circuit (c2) and Plate (c3) backlog is cleared._
+
+Resolved: Circuit section heads (`Signal`/`Board`/`Path`); Plate `Notes` rename + `// unless otherwise specified` removal; Plate figure tag de-duped (section header owns `FIG. 1`, corner tag now reads `NYSGPT-8 ASSEMBLY` and straddles the figure's top-right border).
