@@ -152,11 +152,9 @@
   .core .ring.r2{display:none}
   @keyframes spin{to{transform:rotate(360deg)}}
   .core .ci{position:relative;z-index:2}
-  .core .ci .mk{font-family:var(--font-syne);font-weight:700;font-size:22px;letter-spacing:-.01em;color:var(--fg)}
-  .core .ci .sub{font-family:var(--font-mono);font-size:8.5px;letter-spacing:.16em;color:var(--fg-faint);margin-top:7px;text-transform:uppercase}
+  .core .ci .mk{font-family:var(--font-syne);font-weight:800;font-size:24px;letter-spacing:-.02em;color:var(--fg)}
   :root[data-theme="light"] .core .ci .mk{color:#f4f4f6}
   :root[data-theme="light"] .core{color:#f4f4f6}
-  :root[data-theme="light"] .core .ci .sub{color:rgba(255,255,255,.5)}
 
   /* ===== fixed UI overlays ===== */
   .hud{position:fixed;z-index:20;pointer-events:none}
@@ -414,7 +412,7 @@ function sparkPath(seed){
 
 // CORE node
 const core=document.createElement('div'); core.className='core'; core.style.left='0px'; core.style.top='0px';
-core.innerHTML=`<div class="ring"></div><div class="ring r2"></div><div class="ci"><div class="mk">NYSGPT</div><div class="sub">core · ingest · ground · ship</div></div>`;
+core.innerHTML=`<div class="ring"></div><div class="ci"><div class="mk">NYSGPT</div></div>`;
 core.addEventListener('click',e=>{e.stopPropagation(); focusOn(0,0,1.1); openCore();});
 world.appendChild(core);
 
