@@ -120,7 +120,7 @@
   /* ===== MODE SELECT ===== */
   .modes h2{font-family:var(--font-display);font-weight:800;font-size:28px;text-align:center;margin-bottom:4px}
   .modes .sub{text-align:center;color:var(--ink-dim);font-weight:700;margin-bottom:24px}
-  .modegrid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+  .modegrid{display:grid;grid-template-columns:repeat(2,1fr);gap:16px}
   .mode{border-radius:20px;padding:22px;color:#fff;text-align:left;position:relative;overflow:hidden;top:0;
     box-shadow:0 6px 0 var(--msh);transition:top .1s,box-shadow .1s;min-height:130px;display:flex;flex-direction:column;justify-content:flex-end}
   .mode:hover{top:-3px;box-shadow:0 9px 0 var(--msh)}
@@ -131,6 +131,9 @@
   .mode.classic{background:var(--blue);--msh:#2d6fd6}
   .mode.gold{background:var(--yellow);--msh:#d9a800;color:#5a4500}
   .mode.boss{background:var(--purple);--msh:#6a3cb0}
+  .mode.hacker{background:#101a14;--msh:#043b1f;color:#54f7a0;font-family:var(--font-body)}
+  .mode.hacker .mname,.mode.hacker .mdesc{font-family:"Nunito",ui-monospace,monospace}
+  .mode.hacker .mname{text-shadow:0 0 10px rgba(84,247,160,.55)}
   @media(max-width:560px){.modegrid{grid-template-columns:1fr}}
 
   /* ===== QUIZ ===== */
@@ -161,6 +164,15 @@
   .flash.show{animation:flashin .9s ease}
   @keyframes flashin{0%{opacity:0;transform:scale(.6)}20%{opacity:1;transform:scale(1)}80%{opacity:1}100%{opacity:0;transform:scale(1.1)}}
   .flash .msg{font-family:var(--font-display);font-weight:800;font-size:clamp(40px,9vw,90px);color:#fff;text-shadow:0 5px 0 rgba(0,0,0,.25)}
+
+  /* ===== HACKED glitch (hacker mode, wrong answer) ===== */
+  .flash.hacked{background:rgba(8,2,4,.6)}
+  .flash.hacked .msg{font-family:ui-monospace,"Courier New",monospace;color:#54f7a0;letter-spacing:.04em;
+    text-shadow:2px 0 #ff2d6f,-2px 0 #28e0ff,0 0 22px rgba(84,247,160,.6);animation:glitchtext .4s steps(2) 2}
+  @keyframes glitchtext{0%{transform:translate(0,0)}25%{transform:translate(-4px,2px)}50%{transform:translate(3px,-2px)}75%{transform:translate(-2px,-1px)}100%{transform:translate(0,0)}}
+  /* shake the whole stage when hacked */
+  .stage.glitch{animation:shake .5s cubic-bezier(.36,.07,.19,.97)}
+  @keyframes shake{10%{transform:translate(-3px,2px)}20%{transform:translate(4px,-3px)}30%{transform:translate(-5px,1px)}40%{transform:translate(3px,2px)}50%{transform:translate(-2px,-2px)}60%{transform:translate(4px,1px)}70%{transform:translate(-3px,-1px)}80%{transform:translate(2px,2px)}100%{transform:translate(0,0)}}
 
   /* ===== RESULTS ===== */
   .results{text-align:center;max-width:560px}
@@ -257,6 +269,7 @@
         <button class="mode classic" data-mode="classic"><span class="emoji">🎯</span><div class="mname">Classic</div><div class="mdesc">Build a streak. Pure points.</div></button>
         <button class="mode gold" data-mode="gold"><span class="emoji">🪙</span><div class="mname">Gold Quest</div><div class="mdesc">Right answers mine gold. Don't lose it all.</div></button>
         <button class="mode boss" data-mode="boss"><span class="emoji">👑</span><div class="mname">Boss Battle</div><div class="mdesc">Every question counts double. No mercy.</div></button>
+        <button class="mode hacker" data-mode="hacker"><span class="emoji">💻</span><div class="mname">Hacker</div><div class="mdesc">One wrong answer and you get hacked.</div></button>
       </div>
     </div>
   </section>
@@ -284,7 +297,7 @@
       <div class="accuracy" id="rAcc">0% accuracy</div>
       <div class="statrow">
         <div class="stat"><div class="n" id="rCorrect">0</div><div class="l">correct</div></div>
-        <div class="stat"><div class="n" id="rStreak">0</div><div class="l">best streak</div></div>
+        <div class="stat"><div class="n" id="rStreak">0</div><div class="l" id="rStreakL">best streak</div></div>
         <div class="stat"><div class="n" id="rMode">Classic</div><div class="l">mode</div></div>
       </div>
       <div class="lb" id="lb"></div>
@@ -379,7 +392,7 @@ const QUESTIONS = [
 ];
 
 //// ===== state =====
-const S = { mode:'classic', i:0, order:[], score:0, gold:0, correct:0, streak:0, best:0, locked:false };
+const S = { mode:'classic', i:0, order:[], score:0, gold:0, correct:0, streak:0, best:0, hacked:0, locked:false };
 const $ = id=>document.getElementById(id);
 function show(id){ document.querySelectorAll('.screen').forEach(s=>s.classList.remove('on')); $(id).classList.add('on'); }
 const ANS_SHAPES=['M12 2 L22 12 L12 22 L2 12Z','M2 2h20v20H2z','M12 2 L22 20 H2Z','M12 22 A10 10 0 1 1 12 2 A10 10 0 1 1 12 22'];
@@ -417,7 +430,7 @@ $('joinGo').onclick=()=>{
 document.querySelectorAll('.mode').forEach(m=>m.onclick=()=>{ S.mode=m.dataset.mode; startGame(); });
 
 function startGame(){
-  S.i=0; S.score=0; S.gold= S.mode==='gold'?500:0; S.correct=0; S.streak=0; S.best=0; S.locked=false;
+  S.i=0; S.score=0; S.gold= S.mode==='gold'?500:0; S.correct=0; S.streak=0; S.best=0; S.hacked=0; S.locked=false;
   S.order=[...Array(QUESTIONS.length).keys()];
   // shuffle (deterministic-ish via simple Fisher-Yates with index seed)
   for(let k=S.order.length-1;k>0;k--){ const j=(k*7+3)%(k+1); [S.order[k],S.order[j]]=[S.order[j],S.order[k]]; }
@@ -457,22 +470,40 @@ function answer(idx,btn,q){
   } else {
     S.streak=0;
     if(S.mode==='gold') S.gold=Math.max(0,S.gold-200);
-    flash('Nope!');
+    if(S.mode==='hacker'){
+      S.hacked++; S.score=Math.max(0,S.score-400); getHacked();
+    } else {
+      flash('Nope!');
+    }
   }
   $('qScore').textContent=S.score; $('qGoldN').textContent=S.gold;
   setTimeout(()=>{ S.i++; if(S.i>=S.order.length) finish(); else renderQ(); }, 1100);
 }
 
-function flash(msg){ const f=$('flash'); $('flashMsg').textContent=msg; f.classList.remove('show'); void f.offsetWidth; f.classList.add('show'); }
+function flash(msg,hacked){ const f=$('flash'); $('flashMsg').textContent=msg; f.classList.toggle('hacked',!!hacked); f.classList.remove('show'); void f.offsetWidth; f.classList.add('show'); }
+
+// hacker mode, wrong answer: glitch the screen + the scary banner
+function getHacked(){
+  flash('💀 HACKED  −400',true);
+  const stage=document.querySelector('.stage');
+  stage.classList.remove('glitch'); void stage.offsetWidth; stage.classList.add('glitch');
+  setTimeout(()=>stage.classList.remove('glitch'),600);
+}
 
 function finish(){
   const total = S.mode==='gold'?S.gold:S.score;
   $('rScore').textContent = (S.mode==='gold'?'🪙 ':'')+total.toLocaleString();
   const acc=Math.round(S.correct/S.order.length*100);
   $('rAcc').textContent=acc+'% accuracy · '+S.correct+'/'+S.order.length;
-  $('rCorrect').textContent=S.correct; $('rStreak').textContent=S.best;
-  $('rMode').textContent={classic:'Classic',gold:'Gold Quest',boss:'Boss Battle'}[S.mode];
-  $('rCrown').textContent = acc>=80?'👑':acc>=50?'🎉':'💪';
+  if(S.mode==='hacker'){
+    $('rStreak').textContent=S.hacked; $('rStreakL').textContent='times hacked';
+  } else {
+    $('rStreak').textContent=S.best; $('rStreakL').textContent='best streak';
+  }
+  $('rCorrect').textContent=S.correct;
+  $('rMode').textContent={classic:'Classic',gold:'Gold Quest',boss:'Boss Battle',hacker:'Hacker'}[S.mode];
+  if(S.mode==='hacker') $('rCrown').textContent = S.hacked===0?'🛡️':S.hacked<=2?'😎':'💀';
+  else $('rCrown').textContent = acc>=80?'👑':acc>=50?'🎉':'💪';
   buildLeaderboard(total);
   show('scResults');
 }
