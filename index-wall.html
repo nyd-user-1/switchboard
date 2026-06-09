@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>NYSGPT — gallery proof sheet</title>
+<meta name="description" content="A contact sheet of the NYSGPT landing-page design gallery — all 22 explorations as live previews on one wall." />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..600;1,9..144,400&family=Spline+Sans+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+<script>
+  (function(){ try{ if(localStorage.getItem('nysgpt-theme-wall')==='light') document.documentElement.setAttribute('data-theme','light'); }catch(e){} })();
+</script>
+<style>
+  :root{
+    --bg:#08090b; --bg-2:#0c0e11; --film:#101316; --ink:#ece9e2; --dim:#8b887e; --faint:#54524b;
+    --line:#1c1f25; --line-soft:#15171c; --accent:#ff5a1f;
+    --sprocket:#1a1d22; --frame:#04050700;
+    --mono:"Spline Sans Mono",ui-monospace,monospace; --serif:"Fraunces",Georgia,serif;
+  }
+  :root[data-theme="light"]{
+    --bg:#e7e3d8; --bg-2:#efebe0; --film:#f4f1e7; --ink:#1a1813; --dim:#5c5749; --faint:#9a9484;
+    --line:#d3ccbc; --line-soft:#e1dacb; --accent:#cf3f0a;
+    --sprocket:#d8d1c1;
+  }
+  :root{color-scheme:dark} :root[data-theme="light"]{color-scheme:light}
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:var(--bg);color:var(--ink);font-family:var(--mono);font-size:13px;line-height:1.5;
+    -webkit-font-smoothing:antialiased;min-height:100vh;
+    transition:background .4s ease,color .4s ease}
+  /* faint film-grain wash */
+  body::before{content:"";position:fixed;inset:0;z-index:0;pointer-events:none;opacity:.5;
+    background:radial-gradient(140% 100% at 50% -10%, color-mix(in srgb,var(--accent) 5%, transparent), transparent 55%)}
+  .wrap{position:relative;z-index:1;max-width:1320px;margin:0 auto;padding:0 26px}
+
+  /* ---------- masthead ---------- */
+  header{border-bottom:1px solid var(--line);position:sticky;top:0;z-index:20;background:color-mix(in srgb,var(--bg) 88%, transparent);backdrop-filter:blur(12px)}
+  header .wrap{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:15px 26px}
+  .brand{display:flex;align-items:center;gap:11px}
+  .brand .mk{width:28px;height:28px;border:1.5px solid var(--ink);border-radius:5px;display:grid;place-items:center;font-family:var(--serif);font-weight:600;font-size:13px}
+  .brand .bn{font-size:13px;letter-spacing:.22em}.brand .bn b{color:var(--accent);font-weight:600}
+  .brand .div{width:1px;height:18px;background:var(--line);margin:0 5px}
+  .brand .mode{font-size:10.5px;letter-spacing:.18em;text-transform:uppercase;color:var(--faint)}
+  header .right{display:flex;align-items:center;gap:10px}
+  .iconbtn{width:31px;height:31px;border:1px solid var(--line);border-radius:7px;background:transparent;
+    display:grid;place-items:center;cursor:pointer;color:var(--dim);transition:border-color .2s,color .2s}
+  .iconbtn:hover{border-color:var(--accent);color:var(--ink)}
+  .iconbtn svg{width:14px;height:14px}.iconbtn .moon{display:none}
+  :root[data-theme="light"] .iconbtn .sun{display:none}
+  :root[data-theme="light"] .iconbtn .moon{display:block}
+  .iconbtn.on{border-color:var(--accent);color:var(--accent)}
+
+  /* hero strip */
+  .hero{padding:34px 0 22px}
+  .hero h1{font-family:var(--serif);font-weight:330;font-size:clamp(26px,4.2vw,44px);line-height:1.04;letter-spacing:-.02em;max-width:22ch}
+  .hero h1 em{font-style:italic;color:var(--accent)}
+  .hero p{margin-top:13px;max-width:64ch;font-size:13px;color:var(--dim);line-height:1.7}
+
+  /* filter rail (sticky under header) */
+  .filters{position:sticky;top:60px;z-index:15;background:color-mix(in srgb,var(--bg) 88%, transparent);backdrop-filter:blur(12px);
+    border-bottom:1px solid var(--line-soft);padding:11px 0;margin-bottom:22px}
+  .filters .wrap{display:flex;align-items:center;gap:9px;flex-wrap:wrap}
+  .chip{display:inline-flex;align-items:center;gap:7px;border:1px solid var(--line);border-radius:99px;
+    padding:6px 13px;font-size:11.5px;color:var(--dim);cursor:pointer;background:transparent;
+    letter-spacing:.03em;transition:.18s;white-space:nowrap}
+  .chip i{width:9px;height:9px;border-radius:50%;flex-shrink:0}
+  .chip .n{color:var(--faint);font-size:10px}
+  .chip:hover{border-color:var(--dim);color:var(--ink)}
+  .chip.on{border-color:var(--ink);color:var(--ink);background:var(--line-soft)}
+  .chip.all.on{border-color:var(--accent);color:var(--accent)}
+  .filters .spacer{flex:1}
+  .filters .tog{font-size:11px;color:var(--faint);letter-spacing:.04em;display:flex;align-items:center;gap:8px;cursor:pointer;user-select:none}
+  .filters .tog input{accent-color:var(--accent)}
+
+  /* ---------- contact-sheet grid ---------- */
+  .sheet{display:grid;grid-template-columns:repeat(4,1fr);gap:18px;padding-bottom:64px}
+  @media(max-width:1080px){.sheet{grid-template-columns:repeat(3,1fr)}}
+  @media(max-width:760px){.sheet{grid-template-columns:repeat(2,1fr);gap:13px}}
+  @media(max-width:460px){.sheet{grid-template-columns:1fr}}
+
+  .subhead{grid-column:1/-1;display:flex;align-items:center;gap:13px;margin:18px 0 -2px;
+    font-size:10.5px;letter-spacing:.18em;text-transform:uppercase;color:var(--faint)}
+  .subhead .key{border:1px solid var(--line);border-radius:3px;padding:1px 5px;color:var(--dim);font-size:9.5px}
+  .subhead .ln{flex:1;height:1px;background:var(--line-soft)}
+  .subhead.hidden{display:none}
+
+  /* a "frame" = sprocketed film cell */
+  .frame{position:relative;text-decoration:none;color:inherit;display:block;
+    background:var(--film);border:1px solid var(--line);border-radius:10px;overflow:hidden;
+    transition:transform .25s, border-color .25s, box-shadow .25s}
+  .frame.hidden{display:none}
+  .frame::before{content:"";position:absolute;left:0;right:0;top:0;height:3px;background:var(--ca,var(--accent));
+    transform:scaleX(0);transform-origin:left;transition:transform .3s;z-index:6}
+  .frame:hover{transform:translateY(-4px);border-color:var(--ca,var(--accent));
+    box-shadow:0 24px 50px -24px rgba(0,0,0,.7)}
+  .frame:hover::before{transform:scaleX(1)}
+
+  /* the live thumbnail viewport */
+  .shot{position:relative;aspect-ratio:16/10;overflow:hidden;background:#0a0a0a;border-bottom:1px solid var(--line)}
+  .shot iframe{position:absolute;top:0;left:0;width:1440px;height:900px;border:0;transform-origin:top left;
+    pointer-events:none;opacity:0;transition:opacity .5s ease}
+  .shot iframe.in{opacity:1}
+  .shot .ph{position:absolute;inset:0;display:grid;place-items:center;gap:9px;z-index:1}
+  .shot .ph .sw{display:flex;gap:6px}
+  .shot .ph .sw i{width:20px;height:20px;border-radius:4px;box-shadow:0 0 0 1px rgba(255,255,255,.08) inset}
+  .shot .ph .pn{font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--faint)}
+  .shot.live .ph{opacity:0;transition:opacity .4s;pointer-events:none}
+  /* hover cue */
+  .shot .cue{position:absolute;right:9px;bottom:9px;z-index:5;background:rgba(6,7,9,.8);backdrop-filter:blur(6px);
+    border:1px solid var(--line);border-radius:7px;padding:5px 10px;font-size:10.5px;color:var(--ink);
+    letter-spacing:.04em;opacity:0;transform:translateY(5px);transition:.2s}
+  .frame:hover .cue{opacity:1;transform:none}
+  :root[data-theme="light"] .shot .cue{background:rgba(244,241,231,.85)}
+
+  /* caption strip — looks like a film frame's edge ledger */
+  .cap{display:flex;align-items:center;gap:10px;padding:11px 13px}
+  .cap .num{font-size:10px;color:var(--faint);letter-spacing:.08em;flex-shrink:0;font-variant-numeric:tabular-nums}
+  .cap .nm{font-family:var(--serif);font-size:17px;font-weight:430;letter-spacing:-.01em;flex:1;
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .cap .sw{display:flex;gap:4px;flex-shrink:0}
+  .cap .sw i{width:10px;height:10px;border-radius:2px;box-shadow:0 0 0 1px rgba(255,255,255,.12) inset}
+  .cap .ar{font-size:12px;color:var(--faint);transition:.2s}.frame:hover .cap .ar{color:var(--ca,var(--accent));transform:translateX(3px)}
+
+  .empty{grid-column:1/-1;text-align:center;color:var(--faint);padding:60px 0;display:none}
+  .empty.show{display:block}
+
+  footer{border-top:1px solid var(--line);padding:24px 0}
+  footer .wrap{display:flex;justify-content:space-between;flex-wrap:wrap;gap:10px;font-size:11px;color:var(--faint)}
+  footer b{color:var(--dim);font-weight:500}footer a{color:var(--faint);text-decoration:none}footer a:hover{color:var(--accent)}
+
+  @media(prefers-reduced-motion:reduce){*{transition:none!important}.shot iframe{opacity:1!important}}
+</style>
+</head>
+<body>
+  <header>
+    <div class="wrap">
+      <div class="brand">
+        <span class="mk">N</span><span class="bn">NYS<b>GPT</b></span>
+        <span class="div"></span><span class="mode">Proof Sheet</span>
+      </div>
+      <div class="right">
+        <button class="iconbtn" id="themeToggle" type="button" title="Toggle theme" aria-label="Toggle theme">
+          <svg class="sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>
+          <svg class="moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <section class="hero">
+    <div class="wrap">
+      <h1>Every design, <em>developed at once</em>.</h1>
+      <p>A contact sheet of the landing-page gallery for NYSGPT — an AI-first software company building for complex, legacy systems. All 22 explorations, six families, shown as live previews on one wall. Hover to wake a frame; click to open it full-screen.</p>
+    </div>
+  </section>
+
+  <div class="filters">
+    <div class="wrap" id="chips">
+      <button class="chip all on" data-fam="all">All <span class="n">22</span></button>
+      <!-- family chips injected -->
+      <span class="spacer"></span>
+      <label class="tog"><input type="checkbox" id="liveToggle" checked /> live previews</label>
+    </div>
+  </div>
+
+  <main>
+    <div class="wrap">
+      <div class="sheet" id="sheet"></div>
+      <div class="empty" id="empty">no frame matches that filter.</div>
+    </div>
+  </main>
+
+  <footer>
+    <div class="wrap">
+      <div><b>22</b> explorations · <b>6</b> families · each a complete page with light/dark + a live design playground</div>
+      <div><a href="mailto:Brendan@nysgpt.com">Brendan@nysgpt.com</a></div>
+    </div>
+  </footer>
+
+<script>
+/* ============ data ============ */
+const FAMILIES=[
+  {key:"A",label:"Editorial",note:"serif · hairline rules · newsprint",c:"#ff5a1f"},
+  {key:"B",label:"Luminous",note:"glow · motion · atmosphere",c:"#5ce0c0"},
+  {key:"C",label:"Blueprint",note:"technical drafting · cyanotype",c:"#46c8ff"},
+  {key:"D",label:"Monochrome",note:"shadow is the only ink",c:"#c8b890"},
+  {key:"E",label:"Interactive",note:"operated, not scrolled",c:"#6e8bff"},
+  {key:"F",label:"Playful",note:"game-UI cosplay · playable",c:"#ff7a3c"},
+];
+const V=[
+  {fam:"A",id:"A01",name:"Broadsheet",file:"variant-a.html",sw:["#0a0c0f","#ece7dd","#ff5a1f"]},
+  {fam:"A",id:"A02",name:"Column",file:"variant-a1-column.html",sw:["#0b0b0c","#ece6da","#e8472a"]},
+  {fam:"A",id:"A03",name:"Dispatch",file:"variant-a2-dispatch.html",sw:["#0c0d0a","#e8e6db","#f0a623"]},
+  {fam:"A",id:"A04",name:"Folio",file:"variant-a3-folio.html",sw:["#0c0a0b","#efe9e0","#b23a48"]},
+  {fam:"B",id:"B05",name:"Aurora",file:"variant-b.html",sw:["#06070d","#8b7bff","#46e3d0"]},
+  {fam:"B",id:"B06",name:"Signal",file:"variant-b1-signal.html",sw:["#04080a","#7bd0ff","#46e3c0"]},
+  {fam:"B",id:"B07",name:"Prism",file:"variant-b2-prism.html",sw:["#05060a","#a06bff","#3fd8e8"]},
+  {fam:"B",id:"B08",name:"Halo",file:"variant-b3-halo.html",sw:["#0a0a0c","#e8c98a","#b8862e"]},
+  {fam:"B",id:"B09",name:"Eclipse",file:"variant-b4-eclipse.html",sw:["#040409","#c9a4ff","#7af0d6"]},
+  {fam:"C",id:"C10",name:"Circuit",file:"variant-c2-schematic.html",sw:["#071318","#46c8ff","#28e0b0"]},
+  {fam:"C",id:"C11",name:"Datasheet",file:"variant-c1-spec.html",sw:["#10130f","#d8451f","#e8a838"]},
+  {fam:"C",id:"C12",name:"Plate",file:"variant-c3-plate.html",sw:["#f4f2ea","#1c5fa8","#c0381a"]},
+  {fam:"C",id:"C13",name:"Blueprint",file:"variant-c.html",sw:["#0a1a2f","#ff5a3c","#4cc3ff"]},
+  {fam:"D",id:"D14",name:"Paper",file:"variant-d1-paper.html",sw:["#e9e9ec","#b8bac0","#1a1b1f"]},
+  {fam:"D",id:"D15",name:"Slab",file:"variant-d2-slab.html",sw:["#ffffff","#000000","#5a5a5a"]},
+  {fam:"D",id:"D16",name:"Vitrine",file:"variant-d3-vitrine.html",sw:["#0d0d0f","#c8b890","#f1efea"]},
+  {fam:"E",id:"E17",name:"Terminal",file:"variant-e1-terminal.html",sw:["#08090c","#5cc8ff","#4fd6a8"]},
+  {fam:"E",id:"E18",name:"Canvas",file:"variant-e2-canvas.html",sw:["#0a0b10","#8b9bff","#5ce0c0"]},
+  {fam:"E",id:"E19",name:"Launcher",file:"variant-e3-launcher.html",sw:["#0b0b0e","#54d6a8","#6e8bff"]},
+  {fam:"F",id:"F20",name:"Discover",file:"variant-f1-roblox.html",sw:["#191b1f","#3b9dff","#00b06f"]},
+  {fam:"F",id:"F21",name:"Quest",file:"variant-f2-blooket.html",sw:["#3a2db5","#22d3c5","#ff5d8f"]},
+  {fam:"F",id:"F22",name:"Bank It",file:"variant-f3-outburst.html",sw:["#ff7a3c","#1fc7b6","#ffd23f"]},
+];
+
+/* ============ build the sheet ============ */
+const sheet=document.getElementById("sheet");
+const frames=[];
+FAMILIES.forEach(fam=>{
+  const members=V.filter(v=>v.fam===fam.key);
+  const sub=document.createElement("div");
+  sub.className="subhead"; sub.dataset.fam=fam.key;
+  sub.innerHTML=`<span class="key">${fam.key}</span><span>${fam.label} family</span><span class="ln"></span><span>${fam.note} · ${members.length}</span>`;
+  sheet.appendChild(sub);
+
+  members.forEach((v,i)=>{
+    const a=document.createElement("a");
+    a.className="frame"; a.href=v.file; a.dataset.fam=fam.key; a.dataset.id=v.id;
+    a.style.setProperty("--ca", v.sw[2]);
+    a.innerHTML=
+      `<div class="shot" data-src="${v.file}">`+
+        `<div class="ph"><div class="sw">${v.sw.map(c=>`<i style="background:${c}"></i>`).join("")}</div><div class="pn">${v.id} · loading preview</div></div>`+
+        `<div class="cue">Open →</div>`+
+      `</div>`+
+      `<div class="cap"><span class="num">${v.id}</span><span class="nm">${v.name}</span>`+
+        `<span class="sw">${v.sw.map(c=>`<i style="background:${c}"></i>`).join("")}</span><span class="ar">→</span></div>`;
+    a._v=v; a._sub=sub;
+    sheet.appendChild(a);
+    frames.push(a);
+  });
+});
+
+/* ============ scale thumbnails ============ */
+function scaleShot(shot){
+  const w=shot.clientWidth, h=shot.clientHeight;
+  const ifr=shot.querySelector("iframe"); if(!ifr) return;
+  const s=Math.max(w/1440, h/900);     // cover
+  ifr.style.transform=`scale(${s})`;
+}
+const ro=new ResizeObserver(es=>es.forEach(e=>scaleShot(e.target)));
+
+/* ============ lazy-mount live previews ============ */
+let liveOn=true;
+const io=new IntersectionObserver((entries)=>{
+  entries.forEach(ent=>{
+    if(!ent.isIntersecting) return;
+    const shot=ent.target;
+    if(shot._mounted || !liveOn) return;
+    mount(shot);
+    io.unobserve(shot);
+  });
+},{rootMargin:"400px 0px"});
+
+function mount(shot){
+  shot._mounted=true;
+  const ifr=document.createElement("iframe");
+  ifr.setAttribute("scrolling","no");
+  ifr.setAttribute("tabindex","-1");
+  ifr.setAttribute("aria-hidden","true");
+  ifr.loading="lazy";
+  ifr.addEventListener("load",()=>{ scaleShot(shot); ifr.classList.add("in"); shot.classList.add("live"); });
+  shot.insertBefore(ifr, shot.firstChild);
+  ro.observe(shot);
+  ifr.src=shot.dataset.src;
+}
+function unmountAll(){
+  document.querySelectorAll(".shot").forEach(shot=>{
+    const ifr=shot.querySelector("iframe"); if(ifr){ ro.unobserve(shot); ifr.remove(); }
+    shot._mounted=false; shot.classList.remove("live");
+  });
+}
+function observeVisible(){
+  document.querySelectorAll(".frame:not(.hidden) .shot").forEach(shot=>{ if(!shot._mounted) io.observe(shot); });
+}
+
+/* live previews toggle (perf escape hatch — falls back to swatch placeholders) */
+const liveToggle=document.getElementById("liveToggle");
+liveToggle.addEventListener("change",()=>{
+  liveOn=liveToggle.checked;
+  if(liveOn){ observeVisible(); } else { io.disconnect(); unmountAll(); }
+});
+
+/* ============ family filter ============ */
+const chipsWrap=document.getElementById("chips");
+FAMILIES.forEach(fam=>{
+  const n=V.filter(v=>v.fam===fam.key).length;
+  const b=document.createElement("button");
+  b.className="chip"; b.dataset.fam=fam.key;
+  b.innerHTML=`<i style="background:${fam.c}"></i>${fam.label} <span class="n">${n}</span>`;
+  chipsWrap.insertBefore(b, chipsWrap.querySelector(".spacer"));
+});
+const chips=[...chipsWrap.querySelectorAll(".chip")];
+const emptyEl=document.getElementById("empty");
+let activeFam="all";
+function applyFilter(fam){
+  activeFam=fam;
+  chips.forEach(c=>c.classList.toggle("on", c.dataset.fam===fam));
+  let shown=0;
+  frames.forEach(f=>{
+    const ok = fam==="all" || f.dataset.fam===fam;
+    f.classList.toggle("hidden", !ok);
+    if(ok) shown++;
+  });
+  document.querySelectorAll(".subhead").forEach(s=>{
+    s.classList.toggle("hidden", !(fam==="all" || s.dataset.fam===fam));
+  });
+  emptyEl.classList.toggle("show", shown===0);
+  if(liveOn) observeVisible();
+}
+chips.forEach(c=>c.addEventListener("click",()=>applyFilter(c.dataset.fam)));
+
+/* ============ theme ============ */
+(function(){
+  const root=document.documentElement, btn=document.getElementById("themeToggle");
+  btn.addEventListener("click",()=>{
+    const light=root.getAttribute("data-theme")==="light";
+    if(light) root.removeAttribute("data-theme"); else root.setAttribute("data-theme","light");
+    try{localStorage.setItem("nysgpt-theme-wall", light?"dark":"light");}catch(e){}
+  });
+})();
+
+/* ============ boot ============ */
+observeVisible();
+</script>
+</body>
+</html>
