@@ -28,8 +28,8 @@
     --accent-2:#8a93b0;        /* muted slate */
     --live:#7fb8a8;
     --ship:#565a6c;
-    --edge:rgba(170,180,200,.13);   /* faint hairline, no neon */
-    --edge-hot:rgba(127,184,168,.5);
+    --edge:rgba(150,165,195,.3);
+    --edge-hot:rgba(127,184,168,.7);
     --line:rgba(255,255,255,.07);
     --panel:rgba(16,18,26,.94);
     --font-display:"Space Grotesk",system-ui,sans-serif;
@@ -54,8 +54,8 @@
     --accent-2:#6a7290;
     --live:#3f8c78;
     --ship:#9498a6;
-    --edge:rgba(90,98,120,.2);
-    --edge-hot:rgba(63,140,120,.5);
+    --edge:rgba(70,80,110,.4);
+    --edge-hot:rgba(63,140,120,.6);
     --line:rgba(20,24,40,.09);
     --panel:rgba(246,247,250,.95);
   }
@@ -83,9 +83,9 @@
 
   /* ===== edges (SVG) sit under the nodes ===== */
   .edges{position:absolute;left:-6000px;top:-6000px;width:12000px;height:12000px;overflow:visible;pointer-events:none}
-  .edges path{fill:none;stroke:var(--edge);stroke-width:1;transition:stroke .3s,stroke-width .3s,opacity .3s}
-  .edges path.hot{stroke:var(--edge-hot);stroke-width:1.5}
-  .edges path.user{stroke-dasharray:5 5}        /* user-drawn links read dashed */
+  .edges path{fill:none;stroke:var(--edge);stroke-width:1.5;transition:stroke .3s,stroke-width .3s,opacity .3s}
+  .edges path.hot{stroke:var(--edge-hot);stroke-width:2.5}
+  .edges path.user{stroke-dasharray:6 5;stroke-width:1.75}   /* user-drawn links read dashed */
   .edges .pulse{fill:var(--accent)}
 
   /* ===== nodes — quiet by default, color only on hover/focus ===== */
