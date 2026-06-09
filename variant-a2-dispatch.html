@@ -71,7 +71,7 @@
   @keyframes blink{50%{opacity:0}}
 
   /* ===================== HEADER (wire bar) ===================== */
-  header{position:sticky;top:0;z-index:50;background:var(--header-bg);backdrop-filter:blur(12px) saturate(140%);border-bottom:1px solid var(--rule)}
+  header{position:sticky;top:0;z-index:50;background:var(--header-bg);backdrop-filter:blur(12px) saturate(140%)}
   header .wrap{display:flex;align-items:center;justify-content:space-between;height:56px}
   .brand{display:flex;align-items:center;gap:11px;font-family:var(--font-mono);font-weight:600;font-size:13.5px;letter-spacing:.06em}
   .brand .sig{width:26px;height:26px;border:1px solid var(--accent);border-radius:calc(5px*var(--radius));display:grid;place-items:center;color:var(--accent);font-size:11px}
@@ -97,14 +97,14 @@
   @keyframes scroll{to{transform:translateX(-50%)}}
 
   /* ===================== HERO ===================== */
-  .hero{padding:calc(70px * var(--density)) 0 calc(52px * var(--density));border-bottom:1px solid var(--rule)}
+  .hero{padding:calc(52px * var(--density)) 0 calc(52px * var(--density))}
   .hero .slug{display:flex;align-items:center;gap:12px;font-family:var(--font-mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--paper-faint);margin-bottom:26px}
   .hero .slug .pri{color:var(--red)}
   .hero .slug .ln{height:1px;background:var(--rule);flex:1}
   /* the typed bulletin */
   .hero .wire{font-family:var(--font-mono);font-size:13px;color:var(--good);letter-spacing:.02em;min-height:1.6em;margin-bottom:30px}
   .hero .wire .pre{color:var(--paper-faint)}
-  .hero h1{font-family:var(--font-display);font-weight:calc(340 + var(--wght));font-size:clamp(40px,8vw,98px);line-height:.97;letter-spacing:-.026em;max-width:15ch}
+  .hero h1{font-family:var(--font-display);font-weight:calc(340 + var(--wght));font-size:clamp(40px,8vw,98px);line-height:1.08;letter-spacing:-.026em;max-width:15ch}
   .hero h1 em{font-style:italic;color:var(--accent);font-weight:360}
   .hero h1 .ln2{display:block;overflow:hidden}
   .hero h1 .ln2>span{display:block;transform:translateY(106%);animation:rise .9s cubic-bezier(.16,1,.3,1) forwards}
@@ -124,7 +124,7 @@
   .btn-ghost:hover{border-color:var(--accent);background:var(--tint)}
 
   /* ===================== PROOF BAR (component: proof-bar / boxed-wire variant) ===================== */
-  .proof{padding:calc(34px*var(--density)) 0;border-bottom:1px solid var(--rule)}
+  .proof{padding:calc(34px*var(--density)) 0}
   .proof .grid{display:grid;grid-template-columns:repeat(4,1fr);border:1px solid var(--rule)}
   .proof .cell{padding:22px 20px;border-right:1px solid var(--rule-soft)}
   .proof .cell:last-child{border-right:none}
@@ -135,7 +135,7 @@
   @media(max-width:720px){.proof .grid{grid-template-columns:repeat(2,1fr)}.proof .cell:nth-child(2n){border-right:none}}
 
   /* ===================== THESIS (the brief) ===================== */
-  .thesis{padding:calc(64px*var(--density)) 0;border-bottom:1px solid var(--rule)}
+  .thesis{padding:calc(64px*var(--density)) 0}
   .thesis .slug{font-family:var(--font-mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--accent);margin-bottom:24px}
   .thesis .grid{display:grid;grid-template-columns:1fr 1fr;gap:48px;align-items:start}
   .thesis h2{font-family:var(--font-display);font-weight:calc(340 + var(--wght));font-size:clamp(25px,3.4vw,40px);line-height:1.1;letter-spacing:-.02em}
@@ -150,7 +150,7 @@
   @media(max-width:860px){.thesis .grid{grid-template-columns:1fr;gap:30px}}
 
   /* ===================== WIRE FEED (products) — the signature ===================== */
-  .feed{padding:calc(60px*var(--density)) 0 calc(70px*var(--density));border-bottom:1px solid var(--rule)}
+  .feed{padding:calc(60px*var(--density)) 0 calc(70px*var(--density))}
   .feed .hd{display:flex;justify-content:space-between;align-items:flex-end;gap:20px;flex-wrap:wrap;margin-bottom:26px}
   .feed .hd h2{font-family:var(--font-display);font-weight:calc(340 + var(--wght));font-size:clamp(26px,4vw,46px);letter-spacing:-.02em;line-height:1}
   .feed .hd h2 em{font-style:italic;color:var(--accent)}
@@ -274,36 +274,11 @@
   </div>
 </header>
 
-<!-- ticker -->
-<div class="ticker">
-  <div class="wrap">
-    <span class="tag">◆ WIRE</span>
-    <div class="track" id="track">
-      <span><b>NYSGPT</b>&nbsp;— 8 products shipped, 5 live in production</span>
-      <span><b>44B</b>&nbsp;— 32k papers + 2,561 incidents indexed</span>
-      <span><b>TARIFFSGPT</b>&nbsp;— 220k+ customs rulings searchable</span>
-      <span><b>SOLARGPT</b>&nbsp;— 3,000+ U.S. counties mapped</span>
-      <span><b>CHILDCAREGPT</b>&nbsp;— 16,800 facilities</span>
-      <span><b>NSRGPT</b>&nbsp;— 88,000+ records · pgvector RAG</span>
-      <span><b>350K+</b>&nbsp;public records made navigable</span>
-      <!-- duplicate for seamless loop -->
-      <span><b>NYSGPT</b>&nbsp;— 8 products shipped, 5 live in production</span>
-      <span><b>44B</b>&nbsp;— 32k papers + 2,561 incidents indexed</span>
-      <span><b>TARIFFSGPT</b>&nbsp;— 220k+ customs rulings searchable</span>
-      <span><b>SOLARGPT</b>&nbsp;— 3,000+ U.S. counties mapped</span>
-      <span><b>CHILDCAREGPT</b>&nbsp;— 16,800 facilities</span>
-      <span><b>NSRGPT</b>&nbsp;— 88,000+ records · pgvector RAG</span>
-      <span><b>350K+</b>&nbsp;public records made navigable</span>
-    </div>
-  </div>
-</div>
-
 <main id="top">
 
   <!-- HERO -->
   <section class="hero">
     <div class="wrap">
-      <div class="slug"><span class="pri">● PRIORITY</span><span>DISPATCH 001</span><span class="ln"></span><span>LONG ISLAND, N.Y.</span></div>
       <div class="wire"><span class="pre">&gt;&gt; </span><span id="wireOut"></span><span class="caret" id="wireCaret"></span></div>
       <h1>
         <span class="ln2"><span>AI for complex,</span></span>
@@ -332,7 +307,6 @@
   <!-- THESIS -->
   <section class="thesis" id="thesis">
     <div class="wrap">
-      <div class="slug">// The brief</div>
       <div class="grid">
         <div>
           <h2>The most consequential systems run on the <em>worst software.</em></h2>
@@ -356,7 +330,6 @@
     <div class="wrap">
       <div class="hd">
         <h2>The <em>wire</em></h2>
-        <p>EIGHT DOMAIN-SPECIFIC AI PRODUCTS · ONE ARCHITECTURE · FILED BY NYSGPT</p>
       </div>
       <div class="wirelist">
 
@@ -407,7 +380,6 @@
   <!-- METHOD -->
   <section class="method" id="how">
     <div class="wrap">
-      <div class="slug">// How we build</div>
       <h2>Ingest. Ground. Ship.</h2>
       <div class="cols">
         <div class="c"><div class="ic">01 — INGEST</div><h3>Tame the primary record</h3><p>We crawl, dedupe, and structure the authoritative source — even with no bulk export, no API, or a pagination wall — into clean, queryable Postgres. The hard part nobody else does.</p></div>
@@ -422,7 +394,6 @@
     <div class="wrap">
       <div class="panel reveal">
         <div class="left">
-          <div class="slug">// File a story</div>
           <h2>Have a system that's <em>too complex</em> for ordinary software?</h2>
           <p>That's exactly what we build for. Book a working session and we'll pressure-test what an AI-first rebuild looks like for your data — or send a short brief and we'll come back with a concrete read.</p>
           <div class="direct">
