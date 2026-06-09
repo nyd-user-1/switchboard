@@ -73,6 +73,7 @@
   .card h2{font-family:var(--serif);font-weight:430;font-size:25px;letter-spacing:-.01em;margin:16px 0 7px}
   .card h2 .ca{color:var(--ca,var(--accent))}
   .card .d{font-size:12px;color:var(--dim);line-height:1.5}
+  .card .d code{font-family:var(--mono);font-size:.92em;color:var(--ca,var(--accent));background:var(--line-soft);padding:1px 4px;border-radius:3px}
   .card .go{margin-top:14px;font-size:11px;letter-spacing:.08em;color:var(--ca,var(--accent));display:inline-flex;align-items:center;gap:7px}
   .card .go .ar{transition:transform .25s}.card:hover .go .ar{transform:translateX(4px)}
   .card.span2{grid-column:span 2}
@@ -110,7 +111,7 @@
 
   <section class="gallery">
     <div class="wrap">
-      <div class="gh"><span class="t">▸ Directions</span><span class="t">16 explorations · 4 families</span></div>
+      <div class="gh"><span class="t">▸ Directions</span><span class="t">19 explorations · 5 families</span></div>
       <div class="grid">
 
         <div class="subhead">A · Editorial family — serif + hairline rules / newsprint · 4</div>
@@ -230,6 +231,29 @@
           <div class="top"><span class="id">D3 · 16</span><span class="swatch"><i style="background:#0d0d0f"></i><i style="background:#c8b890"></i><i style="background:#f1efea"></i></span></div>
           <h2><span class="ca">Vitrine</span></h2>
           <div class="d">Gallery / museum — content in pools of spotlight against a near-black wall, long soft cast-shadows. Products presented one at a time as exhibits on plinths (spatial, not a grid); the proof as didactic wall-text. A whisper of warm stone for hairlines only. Curatorial, dramatic. The expressive one.</div>
+          <span class="go">Open <span class="ar">→</span></span>
+        </a>
+
+        <div class="subhead">E · Interactive family — not a page you scroll · a thing you operate · 3</div>
+
+        <a class="card" href="variant-e1-terminal.html" style="--ca:#4fd6a8">
+          <div class="top"><span class="id">E1 · 17</span><span class="swatch"><i style="background:#08090c"></i><i style="background:#5cc8ff"></i><i style="background:#4fd6a8"></i></span></div>
+          <h2><span class="ca">Terminal</span></h2>
+          <div class="d">A working command-line REPL — the products are a corpus you query. <code>ls products</code>, <code>open 44b</code>, <code>query "tariff refund"</code>, <code>whoami</code>, <code>book session</code>. Copy is streamed command output; keyboard-driven with clickable chips, history, autocomplete. The page demonstrates the product instead of describing it.</div>
+          <span class="go">Run it <span class="ar">→</span></span>
+        </a>
+
+        <a class="card" href="variant-e2-canvas.html" style="--ca:#5ce0c0">
+          <div class="top"><span class="id">E2 · 18</span><span class="swatch"><i style="background:#0a0b10"></i><i style="background:#8b9bff"></i><i style="background:#5ce0c0"></i></span></div>
+          <h2><span class="ca">Canvas</span></h2>
+          <div class="d">An infinite pan/zoom map — no scroll. The eight products are nodes orbiting a glowing CORE hub, wired by shared-architecture edges. Drag to explore, scroll to zoom, click a node and the camera flies to it as a detail drawer slides up. The portfolio as a system diagram you navigate.</div>
+          <span class="go">Explore <span class="ar">→</span></span>
+        </a>
+
+        <a class="card span2" href="variant-e3-launcher.html" style="--ca:#6e8bff">
+          <div class="top"><span class="id">E3 · 19</span><span class="swatch"><i style="background:#0b0b0e"></i><i style="background:#54d6a8"></i><i style="background:#6e8bff"></i></span></div>
+          <h2><span class="ca">Launcher</span></h2>
+          <div class="d">The whole page is a ⌘K command-palette. Fuzzy-search the eight products and the actions (book, brief, method, whoami) with live result-highlighting, arrow-key navigation, and inline drill-down pages — no marketing sections at all. The most app-like of the set: a launcher you operate, not a page you read.</div>
           <span class="go">Open <span class="ar">→</span></span>
         </a>
 

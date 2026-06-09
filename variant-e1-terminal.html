@@ -1,0 +1,621 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>nysgpt — query console</title>
+<meta name="description" content="NYSGPT is an AI-first software company building domain-specific applications for complex, legacy, and regulatory systems. Eight shipped products. A console you query, not a page you scroll." />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,400;0,500;0,700;1,400&family=IBM+Plex+Mono:wght@400;500;600&family=Fragment+Mono:ital@0;1&display=swap" rel="stylesheet" />
+<script>
+  // dark is the console default; go light only when explicitly chosen.
+  (function(){ try{ if(localStorage.getItem('nysgpt-theme-e1')==='light') document.documentElement.setAttribute('data-theme','light'); }catch(e){} })();
+</script>
+<style>
+  :root{
+    /* ---- DARK (default): a phosphor terminal ---- */
+    --bg:#08090c;
+    --bg-2:#0c0e12;
+    --fg:#d6dbe2;
+    --fg-dim:#7c8290;
+    --fg-faint:#4a4f5c;
+    --prompt:#4fd6a8;          /* the prompt + accents — terminal green */
+    --prompt-2:#5cc8ff;
+    --warn:#ffcf6b;
+    --err:#ff6b81;
+    --sel:rgba(79,214,168,.22);
+    --line:rgba(255,255,255,.07);
+    --line-soft:rgba(255,255,255,.04);
+    --glow:0 0 8px rgba(79,214,168,.5);
+    --scan-op:.04;
+    --font-mono:"JetBrains Mono",ui-monospace,monospace;
+    --font-mono-2:"IBM Plex Mono",ui-monospace,monospace;
+    --font-frag:"Fragment Mono",ui-monospace,monospace;
+    /* playground knobs */
+    --fs:14.5px;               /* terminal font size */
+    --scan:1;                  /* scanline visibility multiplier */
+    --tspeed:1;                /* typewriter speed multiplier */
+  }
+  :root[data-theme="light"]{
+    /* ---- LIGHT: a paper teletype printout ---- */
+    --bg:#f4f2ec;
+    --bg-2:#fbfaf5;
+    --fg:#1c1d22;
+    --fg-dim:#5a5d68;
+    --fg-faint:#9a9ca6;
+    --prompt:#0f9b6c;
+    --prompt-2:#1f7fc4;
+    --warn:#b97f12;
+    --err:#d23a4f;
+    --sel:rgba(15,155,108,.16);
+    --line:rgba(20,22,30,.1);
+    --line-soft:rgba(20,22,30,.05);
+    --glow:none;
+    --scan-op:0;
+  }
+  :root{color-scheme:dark} :root[data-theme="light"]{color-scheme:light}
+  html,body{transition:background .4s ease,color .4s ease}
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{-webkit-text-size-adjust:100%}
+  body{
+    background:var(--bg);color:var(--fg);font-family:var(--font-mono);
+    font-size:var(--fs);line-height:1.65;-webkit-font-smoothing:antialiased;
+    height:100vh;overflow:hidden;
+  }
+  ::selection{background:var(--sel)}
+  a{color:inherit;text-decoration:none}
+
+  /* scanlines + a faint vignette for CRT feel */
+  .crt{position:fixed;inset:0;z-index:30;pointer-events:none;opacity:calc(var(--scan-op) * var(--scan));
+    background:repeating-linear-gradient(0deg,rgba(255,255,255,.5) 0 1px,transparent 1px 3px)}
+  .vig{position:fixed;inset:0;z-index:29;pointer-events:none;
+    background:radial-gradient(120% 100% at 50% 50%,transparent 60%,rgba(0,0,0,.35))}
+  :root[data-theme="light"] .vig{background:radial-gradient(120% 100% at 50% 50%,transparent 70%,rgba(120,116,100,.12))}
+
+  /* ===== the window chrome ===== */
+  .term{position:relative;z-index:2;height:100vh;display:flex;flex-direction:column;max-width:1080px;margin:0 auto;
+    border-left:1px solid var(--line-soft);border-right:1px solid var(--line-soft)}
+  .bar{display:flex;align-items:center;gap:14px;padding:13px 20px;border-bottom:1px solid var(--line);flex-shrink:0;background:var(--bg-2)}
+  .dots{display:flex;gap:8px}
+  .dots i{width:12px;height:12px;border-radius:50%;background:var(--fg-faint);opacity:.6}
+  .dots i:nth-child(1){background:var(--err)}
+  .dots i:nth-child(2){background:var(--warn)}
+  .dots i:nth-child(3){background:var(--prompt)}
+  .bar .title{font-size:12px;color:var(--fg-dim);letter-spacing:.02em}
+  .bar .title b{color:var(--fg);font-weight:500}
+  .bar .spacer{flex:1}
+  .bar .right{display:flex;align-items:center;gap:10px}
+  .bar .stat{font-size:11px;color:var(--fg-faint);display:none}
+  @media(min-width:620px){.bar .stat{display:inline}}
+  .bar .stat .on{color:var(--prompt)}
+  .icon-btn{width:30px;height:30px;border:1px solid var(--line);background:transparent;border-radius:6px;display:grid;place-items:center;cursor:pointer;color:var(--fg-dim);transition:border-color .2s,color .2s}
+  .icon-btn:hover{border-color:var(--prompt);color:var(--fg)}
+  .icon-btn svg{width:14px;height:14px}
+  .icon-btn .moon{display:none}
+  :root[data-theme="light"] .icon-btn .sun{display:none}
+  :root[data-theme="light"] .icon-btn .moon{display:block}
+
+  /* ===== scrollback ===== */
+  .screen{flex:1;overflow-y:auto;padding:24px 26px 8px;scroll-behavior:smooth}
+  .screen::-webkit-scrollbar{width:10px}
+  .screen::-webkit-scrollbar-thumb{background:var(--line);border-radius:10px}
+  .screen::-webkit-scrollbar-track{background:transparent}
+
+  /* a single command block: the echoed command + its output */
+  .blk{margin-bottom:18px;animation:appear .2s ease both}
+  @keyframes appear{from{opacity:0}to{opacity:1}}
+  .cmdline{display:flex;gap:10px;align-items:baseline;flex-wrap:wrap}
+  .ps1{color:var(--prompt);white-space:nowrap}
+  .ps1 .path{color:var(--prompt-2)}
+  .cmd-echo{color:var(--fg)}
+  .out{margin-top:8px;color:var(--fg-dim);white-space:pre-wrap;word-break:break-word}
+  .out .k{color:var(--fg);font-weight:500}
+  .out .g{color:var(--prompt)}
+  .out .b{color:var(--prompt-2)}
+  .out .w{color:var(--warn)}
+  .out .e{color:var(--err)}
+  .out .dim{color:var(--fg-faint)}
+  .out a.lnk{color:var(--prompt-2);text-decoration:underline;text-underline-offset:3px;text-decoration-color:var(--line)}
+  .out a.lnk:hover{text-decoration-color:var(--prompt-2)}
+  .caret{display:inline-block;width:9px;height:1.05em;background:var(--prompt);vertical-align:-2px;box-shadow:var(--glow);animation:blink 1.05s step-end infinite}
+  @keyframes blink{50%{opacity:0}}
+
+  /* the ASCII banner from `whoami` / boot */
+  .banner{color:var(--prompt);text-shadow:var(--glow);font-size:clamp(7px,1.7vw,12px);line-height:1.15;white-space:pre;overflow-x:auto;margin-bottom:6px}
+
+  /* product table from `ls products` */
+  .ptable{display:grid;grid-template-columns:max-content 1fr max-content;gap:3px 26px;margin-top:8px;font-size:.96em}
+  .ptable .row{display:contents;cursor:pointer}
+  .ptable .row > span{padding:4px 0;transition:background .15s}
+  .ptable .row:hover > span{background:var(--sel);box-shadow:0 0 0 4px var(--sel)}
+  .ptable .pn{color:var(--prompt);white-space:nowrap;padding-right:8px}
+  .ptable .pd{color:var(--fg-dim)}
+  .ptable .ps{color:var(--fg-faint);white-space:nowrap;text-align:right}
+  .ptable .ps.live{color:var(--prompt)}
+
+  /* product "manpage" from `open <x>` */
+  .card{border:1px solid var(--line);border-left:2px solid var(--prompt);border-radius:6px;padding:16px 18px;margin-top:8px;background:var(--bg-2)}
+  .card .h{display:flex;justify-content:space-between;align-items:baseline;gap:12px;flex-wrap:wrap}
+  .card .nm{color:var(--fg);font-weight:600;font-size:1.12em}
+  .card .nm .gpt{color:var(--fg-dim);font-weight:400}
+  .card .tag{font-size:11px;color:var(--prompt);border:1px solid var(--line);padding:2px 8px;border-radius:100px}
+  .card .tag.ship{color:var(--fg-faint)}
+  .card .dl{display:grid;grid-template-columns:auto 1fr;gap:3px 14px;margin-top:12px;font-size:.94em}
+  .card .dl dt{color:var(--fg-faint)}
+  .card .dl dd{color:var(--fg-dim)}
+  .card .open{margin-top:14px;display:inline-flex;align-items:center;gap:8px;color:var(--prompt-2);font-size:.94em}
+  .card .open:hover{text-shadow:var(--glow)}
+
+  /* ===== the input line (sticky bottom) ===== */
+  .inputbar{flex-shrink:0;border-top:1px solid var(--line);padding:14px 26px;background:var(--bg-2)}
+  .inputrow{display:flex;gap:10px;align-items:baseline}
+  .inputrow .ps1{flex-shrink:0}
+  .inputwrap{position:relative;flex:1;display:flex;align-items:baseline}
+  #cmdInput{flex:1;background:transparent;border:none;outline:none;color:var(--fg);font-family:var(--font-mono);font-size:var(--fs);caret-color:transparent;padding:0}
+  /* fake caret that rides the typed text */
+  .fakecaret{position:absolute;width:9px;height:1.15em;background:var(--prompt);box-shadow:var(--glow);pointer-events:none;transform:translateY(2px);animation:blink 1.05s step-end infinite}
+  .ghost{color:var(--fg-faint);position:absolute;left:0;top:0;pointer-events:none;white-space:pre}
+
+  /* clickable command chips */
+  .chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+  .chip{font-family:var(--font-mono);font-size:12px;color:var(--fg-dim);border:1px solid var(--line);padding:6px 12px;border-radius:6px;cursor:pointer;transition:border-color .18s,color .18s,background .18s;white-space:nowrap}
+  .chip:hover{border-color:var(--prompt);color:var(--fg);background:var(--sel)}
+  .chip .k{color:var(--prompt)}
+  .hint{margin-top:9px;font-size:11px;color:var(--fg-faint)}
+  .hint kbd{font-family:var(--font-mono);border:1px solid var(--line);border-radius:4px;padding:1px 6px;color:var(--fg-dim);font-size:10px}
+
+  /* ===== PLAYGROUND ===== */
+  .pg-launch{position:fixed;right:18px;bottom:96px;z-index:90;width:44px;height:44px;border-radius:8px;
+    background:var(--bg-2);color:var(--fg-dim);cursor:pointer;border:1px solid var(--line);display:grid;place-items:center;transition:border-color .2s,color .2s}
+  .pg-launch:hover{border-color:var(--prompt);color:var(--fg)}
+  .pg-launch svg{width:20px;height:20px}
+  .pg-panel{position:fixed;right:18px;bottom:150px;z-index:91;width:300px;
+    background:var(--bg-2);border:1px solid var(--line);border-radius:10px;box-shadow:0 24px 60px rgba(0,0,0,.5);padding:20px;
+    opacity:0;transform:translateY(10px) scale(.98);pointer-events:none;transform-origin:bottom right;
+    transition:opacity .22s,transform .22s;max-height:74vh;overflow-y:auto}
+  .pg-panel.open{opacity:1;transform:none;pointer-events:auto}
+  .pg-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px}
+  .pg-title{font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--prompt)}
+  .pg-reset{font-size:10px;color:var(--fg-dim);background:none;border:none;cursor:pointer;text-transform:uppercase}
+  .pg-reset:hover{color:var(--fg)}
+  .pg-grp{margin-bottom:18px}.pg-grp:last-child{margin-bottom:2px}
+  .pg-grp > label{display:block;font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--fg-dim);margin-bottom:10px}
+  .pg-grp > label .v{color:var(--fg-faint);float:right;text-transform:none;letter-spacing:0}
+  .pg-swatches{display:flex;gap:8px;flex-wrap:wrap}
+  .pg-sw{width:26px;height:26px;border-radius:6px;cursor:pointer;border:2px solid transparent;transition:transform .15s;position:relative}
+  .pg-sw:hover{transform:scale(1.12)}
+  .pg-sw.on{border-color:var(--fg)}
+  .pg-sw.custom{display:grid;place-items:center;border:1px solid var(--line);color:var(--fg-faint);overflow:hidden}
+  .pg-sw.custom input{position:absolute;inset:0;opacity:0;cursor:pointer}
+  .pg-fonts{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  .pg-font{font-family:inherit;font-size:12px;padding:9px 10px;border-radius:6px;border:1px solid var(--line);background:transparent;color:var(--fg-dim);cursor:pointer;transition:.15s;text-align:left;line-height:1.1}
+  .pg-font:hover{border-color:var(--fg-faint);color:var(--fg)}
+  .pg-font.on{border-color:var(--prompt);color:var(--fg)}
+  .pg-font .pf-name{font-size:9px;letter-spacing:.04em;color:var(--fg-faint);display:block;margin-top:3px}
+  input[type=range].pg-range{-webkit-appearance:none;appearance:none;width:100%;height:3px;border-radius:3px;background:var(--line);outline:none;cursor:pointer}
+  input[type=range].pg-range::-webkit-slider-thumb{-webkit-appearance:none;width:15px;height:15px;border-radius:50%;background:var(--prompt);cursor:pointer}
+  input[type=range].pg-range::-moz-range-thumb{width:13px;height:13px;border-radius:50%;background:var(--prompt);cursor:pointer;border:none}
+  @media(max-width:560px){.pg-panel{width:calc(100vw - 36px)}}
+  @media(prefers-reduced-motion:reduce){*{animation-duration:.01ms !important}}
+</style>
+</head>
+<body>
+
+<div class="crt"></div>
+<div class="vig"></div>
+
+<div class="term">
+  <div class="bar">
+    <div class="dots"><i></i><i></i><i></i></div>
+    <div class="title"><b>nysgpt</b> — query console — zsh</div>
+    <div class="spacer"></div>
+    <div class="right">
+      <span class="stat"><span class="on">●</span> 8 products · 5 live</span>
+      <button class="icon-btn" id="themeToggle" type="button" aria-label="Toggle light and dark" title="Toggle theme">
+        <svg class="sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>
+        <svg class="moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+      </button>
+    </div>
+  </div>
+
+  <div class="screen" id="screen"><!-- command blocks injected here --></div>
+
+  <div class="inputbar">
+    <div class="inputrow">
+      <span class="ps1">nysgpt<span class="path">:~</span>$</span>
+      <div class="inputwrap">
+        <span class="ghost" id="ghost"></span>
+        <input id="cmdInput" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" aria-label="Command input" />
+        <span class="fakecaret" id="fakecaret"></span>
+      </div>
+    </div>
+    <div class="chips" id="chips">
+      <span class="chip" data-cmd="help"><span class="k">help</span></span>
+      <span class="chip" data-cmd="ls products">ls <span class="k">products</span></span>
+      <span class="chip" data-cmd="whoami">whoami</span>
+      <span class="chip" data-cmd="method">method</span>
+      <span class="chip" data-cmd="query tariff refund">query <span class="k">"tariff refund"</span></span>
+      <span class="chip" data-cmd="book session">book <span class="k">session</span></span>
+    </div>
+    <div class="hint"><kbd>↑</kbd><kbd>↓</kbd> history · <kbd>Tab</kbd> complete · <kbd>type</kbd> a command, or click a chip</div>
+  </div>
+</div>
+
+<!-- ============ PLAYGROUND ============ -->
+<button class="pg-launch" id="pgLaunch" type="button" aria-label="Open the design playground" title="Play with the design">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="13.5" cy="6.5" r="2.5"/><circle cx="6" cy="11" r="2.5"/><circle cx="17.5" cy="13" r="2.5"/><circle cx="9" cy="18" r="2.5"/>
+    <path d="M13.5 9v3M8 12.5l2.5 1M15 15l-3 1.7"/>
+  </svg>
+</button>
+<div class="pg-panel" id="pgPanel" role="dialog" aria-label="Design playground">
+  <div class="pg-head"><span class="pg-title">▮ playground</span><button class="pg-reset" id="pgReset" type="button">Reset</button></div>
+  <div class="pg-grp">
+    <label>Phosphor</label>
+    <div class="pg-swatches" id="pgAccent">
+      <span class="pg-sw on" data-a="#4fd6a8" data-a2="#5cc8ff" style="background:#4fd6a8"></span>
+      <span class="pg-sw" data-a="#7dffb0" data-a2="#4fd6a8" style="background:#7dffb0"></span>
+      <span class="pg-sw" data-a="#ffb454" data-a2="#ff8f6b" style="background:#ffb454"></span>
+      <span class="pg-sw" data-a="#5cc8ff" data-a2="#9a8bff" style="background:#5cc8ff"></span>
+      <span class="pg-sw" data-a="#ff6b81" data-a2="#ff9f6b" style="background:#ff6b81"></span>
+      <span class="pg-sw" data-a="#c8d0dc" data-a2="#9aa4b4" style="background:#c8d0dc"></span>
+      <label class="pg-sw custom" title="Custom hue">+<input type="color" id="pgAccentCustom" value="#4fd6a8" /></label>
+    </div>
+  </div>
+  <div class="pg-grp">
+    <label>Typeface</label>
+    <div class="pg-fonts" id="pgMono">
+      <button class="pg-font on" data-f='"JetBrains Mono", monospace' style='font-family:"JetBrains Mono",monospace'>JetBrains<span class="pf-name">mono</span></button>
+      <button class="pg-font" data-f='"IBM Plex Mono", monospace' style='font-family:"IBM Plex Mono",monospace'>IBM Plex<span class="pf-name">mono</span></button>
+      <button class="pg-font" data-f='"Fragment Mono", monospace' style='font-family:"Fragment Mono",monospace'>Fragment<span class="pf-name">mono</span></button>
+      <button class="pg-font" data-f='ui-monospace, monospace' style='font-family:ui-monospace,monospace'>System<span class="pf-name">mono</span></button>
+    </div>
+  </div>
+  <div class="pg-grp">
+    <label>Font size <span class="v" id="pgFsVal">14.5px</span></label>
+    <input type="range" class="pg-range" id="pgFs" min="12" max="18" step="0.5" value="14.5" />
+  </div>
+  <div class="pg-grp">
+    <label>Scanlines <span class="v" id="pgScanVal">1.0×</span></label>
+    <input type="range" class="pg-range" id="pgScan" min="0" max="2.5" step="0.1" value="1" />
+  </div>
+  <div class="pg-grp">
+    <label>Type speed <span class="v" id="pgSpdVal">1.0×</span></label>
+    <input type="range" class="pg-range" id="pgSpd" min="0.3" max="3" step="0.1" value="1" />
+  </div>
+</div>
+
+<script>
+//// ===== DATA: the corpus =====
+const PRODUCTS = [
+  {id:'44b', name:'44B', gpt:'', cat:'AI governance', status:'live', url:'https://44b.nysgpt.com',
+   one:'Public registry, research library & incident record for AI — and the compliance portal for NY Article 44-B. "SERFF, for AI."',
+   stats:[['models','532'],['papers','32k'],['incidents','2,561']]},
+  {id:'tariffsgpt', name:'Tariffs', gpt:'GPT', cat:'Trade & customs', status:'live', url:'https://tariffs.nysgpt.com',
+   one:'Self-serve refund engine for importers who paid IEEPA tariffs the Supreme Court invalidated — a real recoverable number before any phone call.',
+   stats:[['customs rulings','220k+'],['schedule','live']]},
+  {id:'childcaregpt', name:'Childcare', gpt:'GPT', cat:'Social services', status:'live', url:'https://childcare.nysgpt.com/console',
+   one:'NY childcare intelligence — every OCFS facility, county costs, and an AI-assisted subsidy form.',
+   stats:[['facilities','16,800']]},
+  {id:'solargpt', name:'Solar', gpt:'GPT', cat:'Energy & grid', status:'live', url:'https://solar.nysgpt.com/map/plants-2',
+   one:'Clean-energy intelligence for every U.S. county, state, and grid region.',
+   stats:[['source','EIA pipelines']]},
+  {id:'policygpt', name:'Policy', gpt:'GPT', cat:'Government', status:'shipped', url:'',
+   one:'NY legislative & financial intelligence — bills, budgets, lobbying, with an advocacy layer.',
+   stats:[['coverage','full NYS record']]},
+  {id:'nsrgpt', name:'NSR', gpt:'gpt', cat:'Scientific reference', status:'shipped', url:'',
+   one:'Semantic search & RAG over the Nuclear Science References database.',
+   stats:[['records','88,000+']]},
+  {id:'insurancegpt', name:'Insurance', gpt:'GPT', cat:'Insurance', status:'shipped', url:'',
+   one:'Auto-insurance quotes grounded in filed carrier data, Stripe checkout, agent console.',
+   stats:[['rates','grounded']]},
+  {id:'sportsgpt', name:'Sports', gpt:'GPT', cat:'Public records', status:'shipped', url:'',
+   one:'HS sports intelligence for Section XI football on Long Island — stats, standings, choropleth maps, AI-generated highlights.',
+   stats:[['coverage','Section XI'],['extra','AI highlights']]},
+];
+
+const BANNER =
+`███╗   ██╗██╗   ██╗███████╗ ██████╗ ██████╗ ████████╗
+████╗  ██║╚██╗ ██╔╝██╔════╝██╔════╝ ██╔══██╗╚══██╔══╝
+██╔██╗ ██║ ╚████╔╝ ███████╗██║  ███╗██████╔╝   ██║
+██║╚██╗██║  ╚██╔╝  ╚════██║██║   ██║██╔═══╝    ██║
+██║ ╚████║   ██║   ███████║╚██████╔╝██║        ██║
+╚═╝  ╚═══╝   ╚═╝   ╚══════╝ ╚═════╝ ╚═╝        ╚═╝`;
+
+const screen = document.getElementById('screen');
+const input = document.getElementById('cmdInput');
+const ghost = document.getElementById('ghost');
+const fakecaret = document.getElementById('fakecaret');
+const reduce = matchMedia('(prefers-reduced-motion:reduce)').matches;
+let history = [], hidx = -1, busy = false;
+
+// our corpus is trusted/static — escape only the angle brackets that would break markup.
+// (we intentionally do NOT entity-encode &, so the char-by-char typewriter prints a literal "&".)
+const esc = s => String(s).replace(/</g,'&lt;').replace(/>/g,'&gt;');
+function scrollDown(){ screen.scrollTop = screen.scrollHeight; }
+
+//// ===== rendering a command block =====
+function newBlock(cmd){
+  const blk = document.createElement('div'); blk.className='blk';
+  blk.innerHTML = `<div class="cmdline"><span class="ps1">nysgpt<span class="path">:~</span>$</span> <span class="cmd-echo">${esc(cmd)}</span></div><div class="out"></div>`;
+  screen.appendChild(blk); scrollDown();
+  return blk.querySelector('.out');
+}
+
+const decode = s => s.replace(/&lt;/g,'<').replace(/&gt;/g,'>').replace(/&amp;/g,'&');
+// tokenize html into tag-tokens (inserted whole) and text-tokens (typed char by char, entities decoded)
+function tokenize(html){
+  const toks=[]; let i=0;
+  while(i<html.length){
+    if(html[i]==='<'){ const j=html.indexOf('>',i); toks.push({t:'tag',v:html.slice(i,j+1)}); i=j+1; }
+    else { let j=html.indexOf('<',i); if(j<0) j=html.length; toks.push({t:'txt',v:decode(html.slice(i,j))}); i=j; }
+  }
+  return toks;
+}
+// typewriter: tags apply instantly, text types out a character at a time
+function typeHTML(el, html, done){
+  if(reduce){ el.innerHTML = html; scrollDown(); done&&done(); return; }
+  const speed = 5 / (parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--tspeed'))||1);
+  busy=true; el.innerHTML='';
+  const caret=document.createElement('span'); caret.className='caret'; el.appendChild(caret);
+  const toks=tokenize(html); let ti=0, ci=0;
+  (function step(){
+    if(ti>=toks.length){ caret.remove(); busy=false; scrollDown(); done&&done(); return; }
+    const tok=toks[ti];
+    if(tok.t==='tag'){ caret.insertAdjacentHTML('beforebegin', tok.v); ti++; ci=0; step(); return; }
+    if(ci>=tok.v.length){ ti++; ci=0; step(); return; }
+    caret.insertAdjacentText('beforebegin', tok.v[ci]); ci++;
+    if(ci%2===0) scrollDown();
+    setTimeout(step, speed);
+  })();
+}
+
+//// ===== command implementations =====
+function out_help(){
+  return `Available commands:
+  <span class="k">ls products</span>      list the eight shipped products
+  <span class="k">open</span> <span class="dim">&lt;name&gt;</span>      read a product's manpage  <span class="dim">(e.g. open 44b)</span>
+  <span class="k">query</span> <span class="dim">"..."</span>     search the portfolio by what it solves
+  <span class="k">whoami</span>           who NYSGPT is, and the one-line thesis
+  <span class="k">method</span>           how every product gets built
+  <span class="k">thesis</span>           the long version
+  <span class="k">book session</span>     start a working session with Brendan
+  <span class="k">clear</span>            wipe the scrollback
+  <span class="dim">tip: ↑/↓ for history, Tab to autocomplete, or just click a chip.</span>`;
+}
+
+function out_whoami(){
+  return `<div class="banner">${BANNER}</div>
+<span class="k">NYSGPT</span> — AI for complex, <span class="g">legacy</span> systems.
+Long Island, NY · <span class="dim">one founder, full-stack · est. 2026</span>
+
+Public doesn't mean usable. The records that run government, energy,
+and trade are <span class="k">open to everyone and legible to almost no one</span> — so
+we rebuild them, record by record, into software anyone can use.
+
+  <span class="g">8</span> products shipped   <span class="g">5</span> live in production   <span class="g">1</span> hand
+  <span class="dim">run</span> <span class="k">ls products</span> <span class="dim">to see them, or</span> <span class="k">method</span> <span class="dim">for how they're built.</span>`;
+}
+
+function out_thesis(){
+  return `<span class="dim"># the thesis</span>
+The most consequential systems run on the <span class="w">worst software.</span>
+
+Legislative records, customs rulings, energy filings, licensing
+registries, nuclear references — the data is public, authoritative,
+and locked behind portals built two decades ago for nobody in
+particular. <span class="k">NYSGPT closes that gap.</span> We ingest the primary
+record, ground every answer in a verifiable source, and rebuild the
+interface from the data up — so the person who actually needs the
+answer gets one, not a 40-page PDF.`;
+}
+
+function out_method(){
+  return `<span class="dim"># ingest → ground → ship</span>
+<span class="g">[1] tame the primary record</span>
+    crawl, dedupe, structure the authoritative source — even with no
+    bulk export, no API, or a pagination wall — into queryable Postgres.
+<span class="g">[2] make the AI accountable</span>
+    retrieval over the real corpus, structured output, a visible chain
+    back to the source. every answer can be checked.
+<span class="g">[3] rebuild the interface</span>
+    search, structured exploration, maps & AI on one surface — shipped
+    to production with real users.`;
+}
+
+function out_ls(){
+  let rows = PRODUCTS.map((p,i)=>{
+    const idx = String(i+1).padStart(2,'0');
+    const st = p.status==='live'?'<span class="ps live">● live</span>':'<span class="ps">○ shipped</span>';
+    const blurb = esc(p.one.split('—')[0].split('.')[0].trim().slice(0,46));
+    return `<div class="row" data-open="${p.id}"><span class="pn">${idx} · ${p.id}</span><span class="pd">${blurb}</span>${st}</div>`;
+  }).join('');
+  return {block:true, html:`<div style="color:var(--fg-faint);margin-bottom:2px">8 products · 5 live · 3 shipped — click a row, or <span class="k">open &lt;name&gt;</span></div>
+<div class="ptable">${rows}</div>`};
+}
+
+function out_open(arg){
+  if(!arg) return `<span class="e">open: missing operand.</span> try <span class="k">open 44b</span> — or <span class="k">ls products</span>.`;
+  const q = arg.toLowerCase().replace(/[^a-z0-9]/g,'');
+  const p = PRODUCTS.find(p=>p.id.replace(/[^a-z0-9]/g,'')===q || p.id.startsWith(q) || (p.name.toLowerCase()===arg.toLowerCase()));
+  if(!p) return `<span class="e">open: no product '${esc(arg)}'.</span> run <span class="k">ls products</span> for the list.`;
+  const tag = p.status==='live'?'<span class="tag">● LIVE</span>':'<span class="tag ship">○ SHIPPED</span>';
+  const dl = p.stats.map(s=>`<dt>${esc(s[0])}</dt><dd>${esc(s[1])}</dd>`).join('');
+  const link = p.url ? `<a class="open lnk" href="${p.url}" target="_blank" rel="noopener">launch ${p.id} ↗</a>` : `<span class="open dim">not public — shipped internally</span>`;
+  return {block:true, html:`<div class="card"><div class="h"><span class="nm">${esc(p.name)}<span class="gpt">${esc(p.gpt)}</span></span>${tag}</div>
+<div style="color:var(--fg-dim);margin-top:8px">${esc(p.one)}</div>
+<dl class="dl">${dl}<dt>domain</dt><dd>${esc(p.cat)}</dd></dl>${link}</div>`};
+}
+
+function out_query(arg){
+  if(!arg) return `<span class="e">query: empty.</span> try <span class="k">query "tariff refund"</span> or <span class="k">query childcare</span>.`;
+  const terms = arg.toLowerCase().replace(/["']/g,'').split(/\s+/).filter(Boolean);
+  const scored = PRODUCTS.map(p=>{
+    const hay = (p.name+' '+p.id+' '+p.cat+' '+p.one).toLowerCase();
+    let s=0; terms.forEach(t=>{ if(hay.includes(t)) s+= hay.indexOf(t)<24?3:1; });
+    return {p,s};
+  }).filter(x=>x.s>0).sort((a,b)=>b.s-a.s);
+  if(!scored.length) return `<span class="dim">query "${esc(arg)}" — 0 matches in the portfolio.</span>
+the eight cover: governance · trade · social · energy · government ·
+science · insurance · public records. try one of those, or <span class="k">ls products</span>.`;
+  const hits = scored.slice(0,3).map(({p})=>`  <span class="g">→</span> <span class="k">${esc(p.name+p.gpt)}</span> <span class="dim">·</span> ${esc(p.one.slice(0,58))}… <span class="dim">[open ${p.id}]</span>`).join('\n');
+  return `<span class="dim">query "${esc(arg)}" — ${scored.length} match${scored.length>1?'es':''}, top ${Math.min(3,scored.length)}:</span>
+${hits}
+<span class="dim">run</span> <span class="k">open ${scored[0].p.id}</span> <span class="dim">to read the manpage.</span>`;
+}
+
+function out_book(){
+  const subj = encodeURIComponent('Working session — NYSGPT');
+  return `<span class="g">› booking a working session…</span>
+Got a system too complex for ordinary software? That's what we build for.
+We'll pressure-test what an AI-first rebuild looks like for your data.
+
+  <span class="dim">direct:</span>  <a class="lnk" href="mailto:Brendan@nysgpt.com?subject=${subj}">Brendan@nysgpt.com</a>
+  <span class="dim">opening your mail client…</span>`;
+}
+
+function out_clear(){ screen.innerHTML=''; return null; }
+
+//// ===== command router =====
+function run(raw){
+  const cmd = raw.trim();
+  if(!cmd) return;
+  if(history[history.length-1]!==cmd) history.push(cmd); hidx = history.length;
+  const out = newBlock(cmd);
+  const [name, ...rest] = cmd.split(/\s+/);
+  const arg = rest.join(' ');
+  let html=null, after=null;
+  switch(name.toLowerCase()){
+    case 'help': case 'man': case '?': html=out_help(); break;
+    case 'whoami': case 'about': html=out_whoami(); break;
+    case 'thesis': html=out_thesis(); break;
+    case 'method': case 'how': html=out_method(); break;
+    case 'ls': case 'dir': html=out_ls(); break;
+    case 'open': case 'cat': case 'cd': html=out_open(arg); break;
+    case 'query': case 'search': case 'find': case 'grep': html=out_query(arg); break;
+    case 'book': html=out_book(); after=()=>{ const s=encodeURIComponent('Working session — NYSGPT'); setTimeout(()=>{location.href=`mailto:Brendan@nysgpt.com?subject=${s}`;},700); }; break;
+    case 'clear': case 'cls': out.parentElement.remove(); out_clear(); return;
+    case 'sudo': html=`<span class="w">nice try.</span> this whole site is already running as you.`; break;
+    case 'exit': case 'quit': html=`<span class="dim">there's no exit — the data's still locked up out there. better to</span> <span class="k">book session</span><span class="dim">.</span>`; break;
+    default: html=`<span class="e">command not found: ${esc(name)}</span>. type <span class="k">help</span> for the list.`;
+  }
+  if(html===null) return;
+  if(typeof html==='object' && html.block){ renderBlock(out, html.html); after&&after(); }
+  else typeHTML(out, html, after);
+}
+
+// render structured HTML instantly (cards, tables) — no char animation
+function renderBlock(el, html){ el.innerHTML = html; scrollDown(); }
+
+//// ===== input handling, ghost autocomplete, history =====
+const COMPLETIONS = ['help','ls products','whoami','thesis','method','book session','clear',
+  ...PRODUCTS.map(p=>'open '+p.id), 'query '];
+
+function updateGhost(){
+  const v = input.value;
+  ghost.textContent='';
+  if(v){
+    const m = COMPLETIONS.find(c=>c.startsWith(v) && c!==v);
+    if(m) ghost.textContent = v + m.slice(v.length).replace(/./g,' ') ; // reserve, then show suffix
+    if(m){ ghost.innerHTML = `<span style="visibility:hidden">${esc(v)}</span>${esc(m.slice(v.length))}`; }
+  }
+  // move fake caret to end of typed text
+  positionCaret();
+}
+function positionCaret(){
+  // measure text width with a hidden span
+  const meas = document.createElement('span');
+  meas.style.cssText='position:absolute;visibility:hidden;white-space:pre;font:inherit';
+  meas.textContent = input.value;
+  input.parentElement.appendChild(meas);
+  fakecaret.style.left = Math.min(meas.offsetWidth, input.offsetWidth-2)+'px';
+  meas.remove();
+}
+
+input.addEventListener('input', updateGhost);
+input.addEventListener('keydown', e=>{
+  if(e.key==='Enter'){ const v=input.value; input.value=''; ghost.textContent=''; positionCaret(); if(!busy||true) run(v); }
+  else if(e.key==='Tab'){ e.preventDefault(); const m=COMPLETIONS.find(c=>c.startsWith(input.value)&&c!==input.value); if(m){ input.value=m; updateGhost(); } }
+  else if(e.key==='ArrowUp'){ e.preventDefault(); if(history.length){ hidx=Math.max(0,hidx-1); input.value=history[hidx]||''; updateGhost(); } }
+  else if(e.key==='ArrowDown'){ e.preventDefault(); if(history.length){ hidx=Math.min(history.length,hidx+1); input.value=history[hidx]||''; updateGhost(); } }
+  else if(e.key==='l'&&e.ctrlKey){ e.preventDefault(); screen.innerHTML=''; }
+});
+
+// keep focus on the prompt; clicking anywhere refocuses (except controls)
+document.addEventListener('click', e=>{
+  if(e.target.closest('.icon-btn,.pg-launch,.pg-panel,.chip,a,.row[data-open]')) return;
+  input.focus();
+});
+// chips
+document.getElementById('chips').addEventListener('click', e=>{
+  const chip=e.target.closest('.chip'); if(!chip) return;
+  input.value=''; ghost.textContent=''; run(chip.dataset.cmd); input.focus();
+});
+// clickable product rows in `ls`
+screen.addEventListener('click', e=>{
+  const row=e.target.closest('.row[data-open]'); if(row){ run('open '+row.dataset.open); input.focus(); }
+});
+
+//// ===== boot sequence =====
+function boot(){
+  const lines = [
+    {cmd:'whoami', fn:out_whoami},
+    {cmd:'ls products', fn:out_ls},
+  ];
+  let k=0;
+  (function next(){
+    if(k>=lines.length){ input.focus(); positionCaret(); return; }
+    const {cmd,fn}=lines[k++];
+    const out=newBlock(cmd);
+    typeHTML(out, fn(), ()=>setTimeout(next, reduce?0:180));
+  })();
+}
+
+//// ===== theme + playground =====
+(function(){
+  const root=document.documentElement, btn=document.getElementById('themeToggle');
+  btn.addEventListener('click',()=>{
+    const light=root.getAttribute('data-theme')==='light';
+    if(light) root.removeAttribute('data-theme'); else root.setAttribute('data-theme','light');
+    try{localStorage.setItem('nysgpt-theme-e1', light?'dark':'light');}catch(e){}
+  });
+})();
+(function(){
+  const root=document.documentElement, rs=root.style;
+  const panel=document.getElementById('pgPanel'), launch=document.getElementById('pgLaunch');
+  launch.addEventListener('click',e=>{e.stopPropagation();panel.classList.toggle('open')});
+  document.addEventListener('click',e=>{ if(!panel.contains(e.target)&&e.target!==launch&&!launch.contains(e.target)) panel.classList.remove('open'); });
+  function setAccent(a,a2){ rs.setProperty('--prompt',a); if(a2) rs.setProperty('--prompt-2',a2);
+    rs.setProperty('--sel',hexA(a,.22)); rs.setProperty('--glow',`0 0 8px ${hexA(a,.5)}`); }
+  function hexA(hex,al){ const c=hex.replace('#',''); const r=parseInt(c.substr(0,2),16),g=parseInt(c.substr(2,2),16),b=parseInt(c.substr(4,2),16); return `rgba(${r},${g},${b},${al})`; }
+  const accWrap=document.getElementById('pgAccent');
+  accWrap.querySelectorAll('.pg-sw[data-a]').forEach(sw=>sw.addEventListener('click',()=>{
+    accWrap.querySelectorAll('.pg-sw').forEach(s=>s.classList.remove('on')); sw.classList.add('on'); setAccent(sw.dataset.a,sw.dataset.a2);
+  }));
+  document.getElementById('pgAccentCustom').addEventListener('input',e=>{
+    accWrap.querySelectorAll('.pg-sw').forEach(s=>s.classList.remove('on')); e.target.closest('.pg-sw').classList.add('on'); setAccent(e.target.value,e.target.value);
+  });
+  const mw=document.getElementById('pgMono');
+  mw.querySelectorAll('.pg-font').forEach(b=>b.addEventListener('click',()=>{
+    mw.querySelectorAll('.pg-font').forEach(x=>x.classList.remove('on')); b.classList.add('on'); rs.setProperty('--font-mono',b.dataset.f);
+  }));
+  function rng(id,vid,varName,fmt){const r=document.getElementById(id),v=document.getElementById(vid);r.addEventListener('input',()=>{rs.setProperty(varName,varName==='--fs'?r.value+'px':r.value);v.textContent=fmt(r.value);if(varName==='--fs')positionCaret();});}
+  rng('pgFs','pgFsVal','--fs',x=>x+'px');
+  rng('pgScan','pgScanVal','--scan',x=>parseFloat(x).toFixed(1)+'×');
+  rng('pgSpd','pgSpdVal','--tspeed',x=>parseFloat(x).toFixed(1)+'×');
+  document.getElementById('pgReset').addEventListener('click',()=>{
+    ['--prompt','--prompt-2','--sel','--glow','--font-mono','--fs','--scan','--tspeed'].forEach(v=>rs.removeProperty(v));
+    accWrap.querySelectorAll('.pg-sw').forEach((s,i)=>s.classList.toggle('on',i===0));
+    mw.querySelectorAll('.pg-font').forEach((b,i)=>b.classList.toggle('on',i===0));
+    document.getElementById('pgFs').value=14.5;document.getElementById('pgFsVal').textContent='14.5px';
+    document.getElementById('pgScan').value=1;document.getElementById('pgScanVal').textContent='1.0×';
+    document.getElementById('pgSpd').value=1;document.getElementById('pgSpdVal').textContent='1.0×';
+    document.getElementById('pgAccentCustom').value='#4fd6a8'; positionCaret();
+  });
+})();
+
+boot();
+</script>
+</body>
+</html>

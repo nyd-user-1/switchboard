@@ -1,0 +1,478 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>nysgpt — the map</title>
+<meta name="description" content="NYSGPT is an AI-first software company building domain-specific applications for complex, legacy, and regulatory systems. Eight shipped products, mapped in space — pan and zoom." />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Hanken+Grotesk:wght@400;500;600&family=Space+Mono:wght@400;700&family=Syne:wght@600;700;800&display=swap" rel="stylesheet" />
+<script>
+  // dark is the default; go light only when explicitly chosen.
+  (function(){ try{ if(localStorage.getItem('nysgpt-theme-e2')==='light') document.documentElement.setAttribute('data-theme','light'); }catch(e){} })();
+</script>
+<style>
+  :root{
+    --bg:#0a0b10;
+    --bg-2:#0e1018;
+    --grid:rgba(255,255,255,.035);
+    --grid-2:rgba(255,255,255,.07);
+    --fg:#eef0f6;
+    --fg-dim:#9498a8;
+    --fg-faint:#565a6c;
+    --node:#12141d;
+    --node-brd:rgba(255,255,255,.1);
+    --core:#1a1d2a;
+    --accent:#5ce0c0;
+    --accent-2:#8b9bff;
+    --live:#5ce0c0;
+    --ship:#565a6c;
+    --edge:rgba(140,155,255,.22);
+    --edge-hot:rgba(92,224,192,.7);
+    --line:rgba(255,255,255,.08);
+    --panel:rgba(14,16,24,.92);
+    --font-display:"Space Grotesk",system-ui,sans-serif;
+    --font-body:"Hanken Grotesk",system-ui,sans-serif;
+    --font-mono:"Space Mono",ui-monospace,monospace;
+    --font-syne:"Syne",sans-serif;
+    /* playground */
+    --hue:0;                   /* accent rotation handled via JS swatches */
+  }
+  :root[data-theme="light"]{
+    --bg:#eef0f4;
+    --bg-2:#f6f7fa;
+    --grid:rgba(20,24,40,.05);
+    --grid-2:rgba(20,24,40,.1);
+    --fg:#13151c;
+    --fg-dim:#565b6a;
+    --fg-faint:#9498a6;
+    --node:#ffffff;
+    --node-brd:rgba(20,24,40,.12);
+    --core:#13151c;
+    --accent:#11a988;
+    --accent-2:#5566e8;
+    --live:#11a988;
+    --ship:#9498a6;
+    --edge:rgba(85,102,232,.25);
+    --edge-hot:rgba(17,169,136,.6);
+    --line:rgba(20,24,40,.1);
+    --panel:rgba(246,247,250,.95);
+  }
+  :root{color-scheme:dark} :root[data-theme="light"]{color-scheme:light}
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%;overflow:hidden}
+  body{background:var(--bg);color:var(--fg);font-family:var(--font-body);
+    -webkit-font-smoothing:antialiased;transition:background .4s ease,color .4s ease;
+    user-select:none;-webkit-user-select:none}
+  a{color:inherit;text-decoration:none}
+
+  /* ===== the viewport ===== */
+  .stage{position:fixed;inset:0;overflow:hidden;cursor:grab;
+    background:
+      radial-gradient(120% 90% at 50% 50%, transparent 55%, rgba(0,0,0,.4)),
+      var(--bg)}
+  :root[data-theme="light"] .stage{background:radial-gradient(120% 90% at 50% 50%, transparent 60%, rgba(120,124,140,.12)),var(--bg)}
+  .stage.grabbing{cursor:grabbing}
+  /* the panning world */
+  .world{position:absolute;left:0;top:0;width:0;height:0;transform-origin:0 0;will-change:transform}
+  /* dotted grid floor that pans with the world (rendered via background on a huge layer) */
+  .floor{position:absolute;left:-6000px;top:-6000px;width:12000px;height:12000px;pointer-events:none;
+    background-image:radial-gradient(var(--grid) 1.4px, transparent 1.4px);background-size:46px 46px}
+  .floor::after{content:"";position:absolute;inset:0;background-image:radial-gradient(var(--grid-2) 1.6px,transparent 1.6px);background-size:230px 230px}
+
+  /* ===== edges (SVG) sit under the nodes ===== */
+  .edges{position:absolute;left:-6000px;top:-6000px;width:12000px;height:12000px;overflow:visible;pointer-events:none}
+  .edges path{fill:none;stroke:var(--edge);stroke-width:1.5;transition:stroke .3s,stroke-width .3s}
+  .edges path.hot{stroke:var(--edge-hot);stroke-width:2.5}
+  .edges .pulse{fill:var(--accent)}
+
+  /* ===== nodes ===== */
+  .node{position:absolute;transform:translate(-50%,-50%);width:236px;
+    background:var(--node);border:1px solid var(--node-brd);border-radius:16px;padding:18px 20px;
+    cursor:pointer;transition:border-color .25s,box-shadow .3s,transform .12s;will-change:transform}
+  .node:hover{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent),0 18px 50px -16px rgba(0,0,0,.6)}
+  .node.dim{opacity:.4;filter:saturate(.5)}
+  .node .ntop{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
+  .node .nid{font-family:var(--font-mono);font-size:10px;letter-spacing:.1em;color:var(--fg-faint)}
+  .node .st{font-family:var(--font-mono);font-size:9px;letter-spacing:.08em;display:inline-flex;align-items:center;gap:6px;color:var(--ship)}
+  .node .st .d{width:6px;height:6px;border-radius:50%;background:var(--ship)}
+  .node .st.live{color:var(--live)}.node .st.live .d{background:var(--live);box-shadow:0 0 8px var(--live)}
+  .node h3{font-family:var(--font-display);font-weight:600;font-size:20px;letter-spacing:-.01em;margin-bottom:6px}
+  .node h3 .gpt{color:var(--fg-dim);font-weight:400}
+  .node .cat{font-family:var(--font-mono);font-size:10.5px;letter-spacing:.06em;color:var(--fg-faint);text-transform:uppercase}
+  .node .spark{margin-top:12px;height:30px;width:100%;overflow:visible}
+  .node .spark path{fill:none;stroke:var(--accent);stroke-width:1.6;opacity:.65}
+
+  /* the CORE node */
+  .core{position:absolute;transform:translate(-50%,-50%);width:200px;height:200px;border-radius:50%;
+    background:radial-gradient(circle at 50% 40%,var(--core),var(--bg-2));border:1px solid var(--accent);
+    display:grid;place-items:center;text-align:center;cursor:pointer;
+    box-shadow:0 0 0 1px var(--accent),0 0 80px -10px var(--accent),inset 0 0 60px -20px var(--accent)}
+  .core .ring{position:absolute;inset:-14px;border-radius:50%;border:1px solid var(--edge);animation:spin 60s linear infinite}
+  .core .ring.r2{inset:-30px;border-style:dashed;border-color:var(--line);animation-duration:90s;animation-direction:reverse}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  .core .ci{position:relative;z-index:2}
+  .core .ci .mk{font-family:var(--font-syne);font-weight:800;font-size:24px;letter-spacing:-.02em;color:var(--fg)}
+  .core .ci .sub{font-family:var(--font-mono);font-size:9px;letter-spacing:.18em;color:var(--accent);margin-top:6px;text-transform:uppercase}
+  :root[data-theme="light"] .core .ci .mk{color:#fff}
+  :root[data-theme="light"] .core{color:#fff}
+
+  /* ===== fixed UI overlays ===== */
+  .hud{position:fixed;z-index:20;pointer-events:none}
+  .hud.tl{left:0;top:0;padding:26px 30px}
+  .hud.tl .brand{font-family:var(--font-syne);font-weight:800;font-size:22px;letter-spacing:-.01em;pointer-events:auto;display:inline-flex;align-items:center;gap:11px}
+  .hud.tl .brand .dot{width:11px;height:11px;border-radius:50%;background:var(--accent);box-shadow:0 0 14px var(--accent)}
+  .hud.tl .tag{font-family:var(--font-mono);font-size:11px;letter-spacing:.06em;color:var(--fg-dim);margin-top:8px;max-width:30ch}
+  .hud.tl .tag b{color:var(--fg)}
+
+  .hud.tr{right:0;top:0;padding:24px 26px;display:flex;gap:10px;pointer-events:auto}
+  .ctrl{width:40px;height:40px;border:1px solid var(--line);background:var(--panel);backdrop-filter:blur(10px);border-radius:10px;
+    display:grid;place-items:center;cursor:pointer;color:var(--fg-dim);transition:border-color .2s,color .2s;font-family:var(--font-mono);font-size:16px}
+  .ctrl:hover{border-color:var(--accent);color:var(--fg)}
+  .ctrl svg{width:16px;height:16px}
+  .ctrl .moon{display:none}
+  :root[data-theme="light"] .ctrl .sun{display:none}
+  :root[data-theme="light"] .ctrl .moon{display:block}
+
+  /* bottom: legend + the "book" pill + zoom */
+  .hud.bl{left:0;bottom:0;padding:24px 30px;pointer-events:auto}
+  .legend{font-family:var(--font-mono);font-size:11px;color:var(--fg-faint);display:flex;gap:18px;align-items:center;flex-wrap:wrap}
+  .legend .it{display:inline-flex;align-items:center;gap:7px}
+  .legend .sw{width:9px;height:9px;border-radius:50%}
+  .legend .sw.l{background:var(--live);box-shadow:0 0 8px var(--live)}
+  .legend .sw.s{background:var(--ship)}
+  .legend .sw.e{width:16px;height:2px;border-radius:2px;background:var(--edge)}
+  .hud.bl .hint{font-family:var(--font-mono);font-size:10.5px;color:var(--fg-faint);margin-top:10px}
+  .hud.bl .hint kbd{border:1px solid var(--line);border-radius:4px;padding:1px 6px;color:var(--fg-dim)}
+
+  .hud.br{right:0;bottom:0;padding:24px 26px;display:flex;flex-direction:column;align-items:flex-end;gap:14px;pointer-events:auto}
+  .zoom{display:flex;flex-direction:column;border:1px solid var(--line);border-radius:10px;overflow:hidden;background:var(--panel);backdrop-filter:blur(10px)}
+  .zoom button{width:40px;height:38px;background:transparent;border:none;cursor:pointer;color:var(--fg-dim);font-size:18px;display:grid;place-items:center;transition:background .2s,color .2s}
+  .zoom button:hover{background:var(--node);color:var(--fg)}
+  .zoom button:first-child{border-bottom:1px solid var(--line)}
+  .zoomlvl{font-family:var(--font-mono);font-size:10px;color:var(--fg-faint);text-align:center;padding:5px 0;border-top:1px solid var(--line)}
+  .book{font-family:var(--font-body);font-weight:600;font-size:14px;color:var(--bg);background:var(--accent);
+    padding:13px 22px;border-radius:100px;cursor:pointer;display:inline-flex;align-items:center;gap:9px;
+    box-shadow:0 10px 30px -8px var(--accent);transition:transform .2s,box-shadow .2s}
+  :root[data-theme="light"] .book{color:#fff}
+  .book:hover{transform:translateY(-2px);box-shadow:0 14px 40px -8px var(--accent)}
+
+  /* ===== detail drawer (slides up when a node is opened) ===== */
+  .drawer{position:fixed;left:50%;bottom:24px;transform:translateX(-50%) translateY(140%);z-index:40;width:min(560px,calc(100vw - 40px));
+    background:var(--panel);backdrop-filter:blur(20px);border:1px solid var(--line);border-radius:18px;padding:26px 28px;
+    box-shadow:0 30px 80px -20px rgba(0,0,0,.6);transition:transform .45s cubic-bezier(.16,1,.3,1)}
+  .drawer.open{transform:translateX(-50%) translateY(0)}
+  .drawer .dh{display:flex;justify-content:space-between;align-items:flex-start;gap:16px}
+  .drawer .dh h3{font-family:var(--font-display);font-weight:600;font-size:26px;letter-spacing:-.015em}
+  .drawer .dh h3 .gpt{color:var(--fg-dim);font-weight:400}
+  .drawer .dh .x{width:32px;height:32px;border:1px solid var(--line);border-radius:8px;background:transparent;color:var(--fg-dim);cursor:pointer;flex-shrink:0;font-size:15px;transition:border-color .2s,color .2s}
+  .drawer .dh .x:hover{border-color:var(--accent);color:var(--fg)}
+  .drawer .dcat{font-family:var(--font-mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--accent);margin-top:4px}
+  .drawer .dsc{margin-top:14px;color:var(--fg-dim);font-size:15px;line-height:1.65}
+  .drawer .dstats{margin-top:16px;display:flex;gap:24px;flex-wrap:wrap}
+  .drawer .dstats .s .n{font-family:var(--font-display);font-weight:600;font-size:22px}
+  .drawer .dstats .s .l{font-family:var(--font-mono);font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--fg-faint);margin-top:2px}
+  .drawer .dgo{margin-top:20px;display:inline-flex;align-items:center;gap:9px;font-family:var(--font-body);font-weight:600;font-size:14px;color:var(--bg);background:var(--accent);padding:12px 22px;border-radius:100px;transition:transform .2s}
+  :root[data-theme="light"] .drawer .dgo{color:#fff}
+  .drawer .dgo:hover{transform:translateY(-2px)}
+  .drawer .dgo.disabled{background:transparent;color:var(--fg-faint);border:1px solid var(--line);cursor:default}
+
+  /* ===== PLAYGROUND ===== */
+  .pg-launch{position:fixed;right:26px;bottom:150px;z-index:50;width:44px;height:44px;border-radius:10px;
+    background:var(--panel);backdrop-filter:blur(10px);color:var(--fg-dim);cursor:pointer;border:1px solid var(--line);display:grid;place-items:center;transition:border-color .2s,color .2s}
+  .pg-launch:hover{border-color:var(--accent);color:var(--fg)}
+  .pg-launch svg{width:20px;height:20px}
+  .pg-panel{position:fixed;right:26px;bottom:204px;z-index:51;width:300px;
+    background:var(--panel);backdrop-filter:blur(20px);border:1px solid var(--line);border-radius:14px;box-shadow:0 24px 60px rgba(0,0,0,.5);padding:20px;
+    opacity:0;transform:translateY(10px) scale(.98);pointer-events:none;transform-origin:bottom right;
+    transition:opacity .22s,transform .22s;max-height:70vh;overflow-y:auto}
+  .pg-panel.open{opacity:1;transform:none;pointer-events:auto}
+  .pg-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px}
+  .pg-title{font-family:var(--font-mono);font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--accent)}
+  .pg-reset{font-family:var(--font-mono);font-size:10px;color:var(--fg-dim);background:none;border:none;cursor:pointer;text-transform:uppercase}
+  .pg-reset:hover{color:var(--fg)}
+  .pg-grp{margin-bottom:18px}.pg-grp:last-child{margin-bottom:2px}
+  .pg-grp > label{display:block;font-family:var(--font-mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--fg-dim);margin-bottom:10px}
+  .pg-swatches{display:flex;gap:8px;flex-wrap:wrap}
+  .pg-sw{width:26px;height:26px;border-radius:7px;cursor:pointer;border:2px solid transparent;transition:transform .15s;position:relative}
+  .pg-sw:hover{transform:scale(1.12)}.pg-sw.on{border-color:var(--fg)}
+  .pg-sw.custom{display:grid;place-items:center;border:1px solid var(--line);color:var(--fg-faint);overflow:hidden}
+  .pg-sw.custom input{position:absolute;inset:0;opacity:0;cursor:pointer}
+  .pg-fonts{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  .pg-font{font-family:inherit;font-size:12px;padding:9px 10px;border-radius:7px;border:1px solid var(--line);background:transparent;color:var(--fg-dim);cursor:pointer;transition:.15s;text-align:left;line-height:1.1}
+  .pg-font:hover{border-color:var(--fg-faint);color:var(--fg)}.pg-font.on{border-color:var(--accent);color:var(--fg)}
+  .pg-font .pf-name{font-size:9px;font-family:var(--font-mono);color:var(--fg-faint);display:block;margin-top:3px}
+
+  @media(prefers-reduced-motion:reduce){.core .ring{animation:none}}
+</style>
+</head>
+<body>
+
+<div class="stage" id="stage">
+  <div class="world" id="world">
+    <div class="floor"></div>
+    <svg class="edges" id="edges" viewBox="-6000 -6000 12000 12000"></svg>
+    <!-- nodes injected here -->
+  </div>
+</div>
+
+<!-- ===== HUD ===== -->
+<div class="hud tl">
+  <div class="brand"><span class="dot"></span>NYSGPT</div>
+  <div class="tag"><b>AI for complex, legacy systems.</b> Eight products, one architecture — mapped. Drag to explore.</div>
+</div>
+
+<div class="hud tr">
+  <button class="ctrl" id="recenter" title="Recenter" aria-label="Recenter the map">⌖</button>
+  <button class="ctrl" id="themeToggle" title="Toggle theme" aria-label="Toggle light and dark">
+    <svg class="sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>
+    <svg class="moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+  </button>
+</div>
+
+<div class="hud bl">
+  <div class="legend">
+    <span class="it"><span class="sw l"></span> live in production</span>
+    <span class="it"><span class="sw s"></span> shipped</span>
+    <span class="it"><span class="sw e"></span> shared architecture</span>
+  </div>
+  <div class="hint"><kbd>drag</kbd> pan · <kbd>scroll</kbd> zoom · <kbd>click</kbd> a node · <kbd>⌖</kbd> recenter</div>
+</div>
+
+<div class="hud br">
+  <a class="book" id="bookBtn" href="mailto:Brendan@nysgpt.com?subject=Working%20session%20—%20NYSGPT">Book a working session →</a>
+  <div class="zoom">
+    <button id="zin" aria-label="Zoom in">+</button>
+    <button id="zout" aria-label="Zoom out">−</button>
+    <div class="zoomlvl" id="zlvl">100%</div>
+  </div>
+</div>
+
+<!-- detail drawer -->
+<div class="drawer" id="drawer" role="dialog" aria-label="Product detail">
+  <div class="dh">
+    <div>
+      <h3 id="dName"></h3>
+      <div class="dcat" id="dCat"></div>
+    </div>
+    <button class="x" id="dClose" aria-label="Close">✕</button>
+  </div>
+  <div class="dsc" id="dDsc"></div>
+  <div class="dstats" id="dStats"></div>
+  <a class="dgo" id="dGo" target="_blank" rel="noopener"></a>
+</div>
+
+<!-- ===== PLAYGROUND ===== -->
+<button class="pg-launch" id="pgLaunch" type="button" aria-label="Open the design playground" title="Play with the design">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="13.5" cy="6.5" r="2.5"/><circle cx="6" cy="11" r="2.5"/><circle cx="17.5" cy="13" r="2.5"/><circle cx="9" cy="18" r="2.5"/>
+    <path d="M13.5 9v3M8 12.5l2.5 1M15 15l-3 1.7"/>
+  </svg>
+</button>
+<div class="pg-panel" id="pgPanel" role="dialog" aria-label="Design playground">
+  <div class="pg-head"><span class="pg-title">◆ playground</span><button class="pg-reset" id="pgReset" type="button">Reset</button></div>
+  <div class="pg-grp">
+    <label>Signal color</label>
+    <div class="pg-swatches" id="pgAccent">
+      <span class="pg-sw on" data-a="#5ce0c0" data-a2="#8b9bff" style="background:#5ce0c0"></span>
+      <span class="pg-sw" data-a="#8b9bff" data-a2="#c08bff" style="background:#8b9bff"></span>
+      <span class="pg-sw" data-a="#ffb454" data-a2="#ff7b9c" style="background:#ffb454"></span>
+      <span class="pg-sw" data-a="#5cc8ff" data-a2="#5ce0c0" style="background:#5cc8ff"></span>
+      <span class="pg-sw" data-a="#ff7b9c" data-a2="#c08bff" style="background:#ff7b9c"></span>
+      <span class="pg-sw" data-a="#a0e85c" data-a2="#5ce0c0" style="background:#a0e85c"></span>
+      <label class="pg-sw custom" title="Custom hue">+<input type="color" id="pgAccentCustom" value="#5ce0c0" /></label>
+    </div>
+  </div>
+  <div class="pg-grp">
+    <label>Display font</label>
+    <div class="pg-fonts" id="pgDisplay">
+      <button class="pg-font on" data-f='"Space Grotesk", sans-serif' style='font-family:"Space Grotesk",sans-serif'>Space G.<span class="pf-name">grotesk</span></button>
+      <button class="pg-font" data-f='"Syne", sans-serif' style='font-family:"Syne",sans-serif'>Syne<span class="pf-name">geometric</span></button>
+      <button class="pg-font" data-f='"Hanken Grotesk", sans-serif' style='font-family:"Hanken Grotesk",sans-serif'>Hanken<span class="pf-name">grotesk</span></button>
+      <button class="pg-font" data-f='"Space Mono", monospace' style='font-family:"Space Mono",monospace'>Space Mono<span class="pf-name">mono</span></button>
+    </div>
+  </div>
+  <div class="pg-grp">
+    <label>Body font</label>
+    <div class="pg-fonts" id="pgBody">
+      <button class="pg-font on" data-f='"Hanken Grotesk", sans-serif' style='font-family:"Hanken Grotesk",sans-serif'>Hanken<span class="pf-name">grotesk</span></button>
+      <button class="pg-font" data-f='"Space Grotesk", sans-serif' style='font-family:"Space Grotesk",sans-serif'>Space G.<span class="pf-name">grotesk</span></button>
+      <button class="pg-font" data-f='"Space Mono", monospace' style='font-family:"Space Mono",monospace'>Space Mono<span class="pf-name">mono</span></button>
+      <button class="pg-font" data-f='"Syne", sans-serif' style='font-family:"Syne",sans-serif'>Syne<span class="pf-name">geometric</span></button>
+    </div>
+  </div>
+</div>
+
+<script>
+const PRODUCTS = [
+  {id:'44b', name:'44B', gpt:'', cat:'AI governance', status:'live', url:'https://44b.nysgpt.com',
+   one:'A public registry, research library, and incident record for AI — and the compliance portal for NY\'s Article 44-B. "SERFF, for AI."',
+   stats:[['532','models'],['32k','papers'],['2,561','incidents']], x:0, y:-340},
+  {id:'tariffsgpt', name:'Tariffs', gpt:'GPT', cat:'Trade & customs', status:'live', url:'https://tariffs.nysgpt.com',
+   one:'A self-serve refund engine for importers who paid IEEPA tariffs the Supreme Court invalidated — a real recoverable number before any phone call.',
+   stats:[['220k+','rulings'],['live','schedule']], x:330, y:-150},
+  {id:'childcaregpt', name:'Childcare', gpt:'GPT', cat:'Social services', status:'live', url:'https://childcare.nysgpt.com/console',
+   one:'NY childcare intelligence — every OCFS facility, county costs, and an AI-assisted subsidy form.',
+   stats:[['16,800','facilities']], x:330, y:170},
+  {id:'solargpt', name:'Solar', gpt:'GPT', cat:'Energy & grid', status:'live', url:'https://solar.nysgpt.com/map/plants-2',
+   one:'Clean-energy intelligence for every U.S. county, state, and grid region.',
+   stats:[['EIA','pipelines']], x:0, y:360},
+  {id:'policygpt', name:'Policy', gpt:'GPT', cat:'Government', status:'shipped', url:'',
+   one:'NY legislative & financial intelligence — bills, budgets, lobbying, with an advocacy layer.',
+   stats:[['full','NYS record']], x:-330, y:170},
+  {id:'nsrgpt', name:'NSR', gpt:'gpt', cat:'Scientific reference', status:'shipped', url:'',
+   one:'Semantic search & RAG over the Nuclear Science References database.',
+   stats:[['88k+','records']], x:-380, y:-120},
+  {id:'insurancegpt', name:'Insurance', gpt:'GPT', cat:'Insurance', status:'shipped', url:'',
+   one:'Auto-insurance quotes grounded in filed carrier data, Stripe checkout, agent console.',
+   stats:[['grounded','rates']], x:-150, y:-360},
+  {id:'sportsgpt', name:'Sports', gpt:'GPT', cat:'Public records', status:'shipped', url:'',
+   one:'HS sports intelligence for Section XI football on Long Island — stats, standings, choropleth maps, AI-generated highlights.',
+   stats:[['Section XI','coverage'],['AI','highlights']], x:180, y:380},
+];
+
+const world = document.getElementById('world');
+const stage = document.getElementById('stage');
+const edges = document.getElementById('edges');
+const esc = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+
+// build edges core->node
+PRODUCTS.forEach(p=>{
+  const path=document.createElementNS('http://www.w3.org/2000/svg','path');
+  // gentle curve from core(0,0) to node
+  const mx=p.x*0.5, my=p.y*0.5 - Math.sign(p.y||1)*40;
+  path.setAttribute('d',`M0,0 Q${mx},${my} ${p.x},${p.y}`);
+  path.dataset.id=p.id;
+  edges.appendChild(path);
+});
+
+// a tiny sparkline generator per node (deterministic by index)
+function sparkPath(seed){
+  let pts=[], v=15;
+  for(let i=0;i<=12;i++){ v += ((Math.sin(seed*1.7+i*1.3)+Math.cos(seed*0.9+i*0.7))*5); v=Math.max(4,Math.min(26,v)); pts.push([i*(236-40)/12, 30-v]); }
+  return 'M'+pts.map(p=>p[0].toFixed(1)+','+p[1].toFixed(1)).join(' L');
+}
+
+// CORE node
+const core=document.createElement('div'); core.className='core'; core.style.left='0px'; core.style.top='0px';
+core.innerHTML=`<div class="ring"></div><div class="ring r2"></div><div class="ci"><div class="mk">NYSGPT</div><div class="sub">core · ingest · ground · ship</div></div>`;
+core.addEventListener('click',e=>{e.stopPropagation(); focusOn(0,0,1.1); openCore();});
+world.appendChild(core);
+
+// product nodes
+PRODUCTS.forEach((p,i)=>{
+  const n=document.createElement('div'); n.className='node'; n.style.left=p.x+'px'; n.style.top=p.y+'px'; n.dataset.id=p.id;
+  const st=p.status==='live'?'<span class="st live"><span class="d"></span>LIVE</span>':'<span class="st"><span class="d"></span>SHIPPED</span>';
+  n.innerHTML=`<div class="ntop"><span class="nid">U0${i+1}</span>${st}</div>
+    <h3>${esc(p.name)}<span class="gpt">${esc(p.gpt)}</span></h3>
+    <div class="cat">${esc(p.cat)}</div>
+    <svg class="spark" viewBox="0 0 196 30" preserveAspectRatio="none"><path d="${sparkPath(i+1)}"/></svg>`;
+  n.addEventListener('mouseenter',()=>highlightEdge(p.id,true));
+  n.addEventListener('mouseleave',()=>highlightEdge(p.id,false));
+  n.addEventListener('click',e=>{e.stopPropagation(); openNode(p); focusOn(p.x,p.y,1.15);});
+  world.appendChild(n);
+});
+
+function highlightEdge(id,on){ const e=edges.querySelector(`path[data-id="${id}"]`); if(e) e.classList.toggle('hot',on); }
+
+// ===== pan / zoom transform =====
+let tx=0, ty=0, scale=1, target={tx:0,ty:0,scale:1};
+function apply(){ world.style.transform=`translate(${tx}px,${ty}px) scale(${scale})`; document.getElementById('zlvl').textContent=Math.round(scale*100)+'%'; }
+function center(){ // place world origin at viewport center
+  target.tx=innerWidth/2; target.ty=innerHeight/2; }
+function focusOn(wx,wy,s){ target.scale=s; target.tx=innerWidth/2 - wx*s; target.ty=innerHeight/2 - wy*s; }
+
+// smooth follow
+let raf;
+function animate(){
+  tx+=(target.tx-tx)*0.16; ty+=(target.ty-ty)*0.16; scale+=(target.scale-scale)*0.16;
+  apply();
+  raf=requestAnimationFrame(animate);
+}
+center(); tx=target.tx; ty=target.ty; apply(); animate();
+
+// drag to pan
+let dragging=false, sx=0, sy=0, moved=0;
+stage.addEventListener('pointerdown',e=>{ if(e.target.closest('.node,.core,.hud,.drawer,.pg-panel,.pg-launch')) return;
+  dragging=true; moved=0; sx=e.clientX-tx; sy=e.clientY-ty; stage.classList.add('grabbing'); stage.setPointerCapture(e.pointerId); });
+stage.addEventListener('pointermove',e=>{ if(!dragging) return; const nx=e.clientX-sx, ny=e.clientY-sy; moved+=Math.abs(nx-tx)+Math.abs(ny-ty); tx=nx; ty=ny; target.tx=tx; target.ty=ty; apply(); });
+stage.addEventListener('pointerup',e=>{ dragging=false; stage.classList.remove('grabbing'); });
+
+// wheel to zoom (toward cursor)
+stage.addEventListener('wheel',e=>{ e.preventDefault();
+  const d=-e.deltaY*0.0012; const ns=Math.max(0.4,Math.min(2.4, target.scale*(1+d)));
+  // zoom toward pointer
+  const wx=(e.clientX-tx)/scale, wy=(e.clientY-ty)/scale;
+  target.scale=ns; target.tx=e.clientX-wx*ns; target.ty=e.clientY-wy*ns;
+},{passive:false});
+
+document.getElementById('zin').onclick=()=>{ target.scale=Math.min(2.4,target.scale*1.25); recenterKeep(); };
+document.getElementById('zout').onclick=()=>{ target.scale=Math.max(0.4,target.scale/1.25); recenterKeep(); };
+function recenterKeep(){ const cx=innerWidth/2,cy=innerHeight/2; const wx=(cx-tx)/scale, wy=(cy-ty)/scale; target.tx=cx-wx*target.scale; target.ty=cy-wy*target.scale; }
+document.getElementById('recenter').onclick=()=>{ target.scale=1; center(); closeDrawer(); };
+
+// click empty space closes drawer
+stage.addEventListener('click',e=>{ if(!e.target.closest('.node,.core') && moved<6) closeDrawer(); });
+
+// ===== detail drawer =====
+const drawer=document.getElementById('drawer');
+function openNode(p){
+  document.getElementById('dName').innerHTML=`${esc(p.name)}<span class="gpt">${esc(p.gpt)}</span>`;
+  document.getElementById('dCat').textContent=p.cat+' · '+(p.status==='live'?'live in production':'shipped');
+  document.getElementById('dDsc').textContent=p.one;
+  document.getElementById('dStats').innerHTML=p.stats.map(s=>`<div class="s"><div class="n">${esc(s[0])}</div><div class="l">${esc(s[1])}</div></div>`).join('');
+  const go=document.getElementById('dGo');
+  if(p.url){ go.className='dgo'; go.href=p.url; go.textContent='Launch '+p.id+' ↗'; go.removeAttribute('aria-disabled'); }
+  else { go.className='dgo disabled'; go.removeAttribute('href'); go.textContent='Shipped — not publicly listed'; }
+  drawer.classList.add('open');
+  PRODUCTS.forEach(o=>highlightEdge(o.id,o.id===p.id));
+  document.querySelectorAll('.node').forEach(n=>n.classList.toggle('dim', n.dataset.id!==p.id));
+}
+function openCore(){
+  document.getElementById('dName').innerHTML='NYSGPT <span class="gpt">core</span>';
+  document.getElementById('dCat').textContent='ingest → ground → ship';
+  document.getElementById('dDsc').textContent='Public doesn\'t mean usable. The records that run government, energy, and trade are open to everyone and legible to almost no one — so we rebuild them, record by record, into software anyone can use. One architecture under all eight: crawl the primary record, ground every answer in a verifiable source, rebuild the interface.';
+  document.getElementById('dStats').innerHTML=[['8','products'],['5','live'],['1','founder']].map(s=>`<div class="s"><div class="n">${s[0]}</div><div class="l">${s[1]}</div></div>`).join('');
+  const go=document.getElementById('dGo'); go.className='dgo'; go.href='mailto:Brendan@nysgpt.com?subject=Working%20session%20—%20NYSGPT'; go.removeAttribute('target'); go.textContent='Book a working session →';
+  drawer.classList.add('open');
+  edges.querySelectorAll('path').forEach(e=>e.classList.add('hot'));
+}
+function closeDrawer(){ drawer.classList.remove('open'); edges.querySelectorAll('path').forEach(e=>e.classList.remove('hot')); document.querySelectorAll('.node').forEach(n=>n.classList.remove('dim')); }
+document.getElementById('dClose').onclick=closeDrawer;
+addEventListener('keydown',e=>{ if(e.key==='Escape') closeDrawer(); });
+
+// ===== theme + playground =====
+(function(){
+  const root=document.documentElement, btn=document.getElementById('themeToggle');
+  btn.addEventListener('click',()=>{ const light=root.getAttribute('data-theme')==='light';
+    if(light) root.removeAttribute('data-theme'); else root.setAttribute('data-theme','light');
+    try{localStorage.setItem('nysgpt-theme-e2', light?'dark':'light');}catch(e){} });
+})();
+(function(){
+  const root=document.documentElement, rs=root.style;
+  const panel=document.getElementById('pgPanel'), launch=document.getElementById('pgLaunch');
+  launch.addEventListener('click',e=>{e.stopPropagation();panel.classList.toggle('open')});
+  document.addEventListener('click',e=>{ if(!panel.contains(e.target)&&e.target!==launch&&!launch.contains(e.target)) panel.classList.remove('open'); });
+  function hexA(hex,al){ const c=hex.replace('#',''); const r=parseInt(c.substr(0,2),16),g=parseInt(c.substr(2,2),16),b=parseInt(c.substr(4,2),16); return `rgba(${r},${g},${b},${al})`; }
+  function setAccent(a,a2){ rs.setProperty('--accent',a); if(a2) rs.setProperty('--accent-2',a2);
+    rs.setProperty('--live',a); rs.setProperty('--edge-hot',hexA(a,.7)); rs.setProperty('--edge',hexA(a2||a,.22)); }
+  const accWrap=document.getElementById('pgAccent');
+  accWrap.querySelectorAll('.pg-sw[data-a]').forEach(sw=>sw.addEventListener('click',()=>{
+    accWrap.querySelectorAll('.pg-sw').forEach(s=>s.classList.remove('on')); sw.classList.add('on'); setAccent(sw.dataset.a,sw.dataset.a2); }));
+  document.getElementById('pgAccentCustom').addEventListener('input',e=>{
+    accWrap.querySelectorAll('.pg-sw').forEach(s=>s.classList.remove('on')); e.target.closest('.pg-sw').classList.add('on'); setAccent(e.target.value,e.target.value); });
+  function fontGroup(id,varName){ const w=document.getElementById(id);
+    w.querySelectorAll('.pg-font').forEach(b=>b.addEventListener('click',()=>{ w.querySelectorAll('.pg-font').forEach(x=>x.classList.remove('on')); b.classList.add('on'); rs.setProperty(varName,b.dataset.f); })); }
+  fontGroup('pgDisplay','--font-display'); fontGroup('pgBody','--font-body');
+  document.getElementById('pgReset').addEventListener('click',()=>{
+    ['--accent','--accent-2','--live','--edge-hot','--edge','--font-display','--font-body'].forEach(v=>rs.removeProperty(v));
+    accWrap.querySelectorAll('.pg-sw').forEach((s,i)=>s.classList.toggle('on',i===0));
+    ['pgDisplay','pgBody'].forEach(id=>document.getElementById(id).querySelectorAll('.pg-font').forEach((b,i)=>b.classList.toggle('on',i===0)));
+    document.getElementById('pgAccentCustom').value='#5ce0c0'; });
+})();
+
+addEventListener('resize',()=>{ if(!drawer.classList.contains('open')) center(); });
+</script>
+</body>
+</html>

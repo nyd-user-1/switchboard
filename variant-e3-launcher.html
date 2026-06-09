@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>nysgpt — launcher</title>
+<meta name="description" content="NYSGPT is an AI-first software company building domain-specific applications for complex, legacy, and regulatory systems. Eight shipped products — search and launch them." />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&family=Geist+Mono:wght@400;500&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet" />
+<script>
+  // dark is the default; go light only when explicitly chosen.
+  (function(){ try{ if(localStorage.getItem('nysgpt-theme-e3')==='light') document.documentElement.setAttribute('data-theme','light'); }catch(e){} })();
+</script>
+<style>
+  :root{
+    --bg:#0b0b0e;
+    --scrim:rgba(6,6,9,.6);
+    --panel:#141418;
+    --panel-2:#1a1a20;
+    --fg:#f0f0f3;
+    --fg-dim:#9a9aa6;
+    --fg-faint:#5a5a66;
+    --accent:#6e8bff;
+    --accent-soft:rgba(110,139,255,.14);
+    --live:#54d6a8;
+    --ship:#6a6a78;
+    --line:rgba(255,255,255,.08);
+    --line-soft:rgba(255,255,255,.05);
+    --sel:rgba(110,139,255,.16);
+    --kbd:rgba(255,255,255,.06);
+    --shadow:0 40px 120px -20px rgba(0,0,0,.7),0 0 0 1px rgba(255,255,255,.05);
+    --font-body:"Geist",system-ui,sans-serif;
+    --font-mono:"Geist Mono",ui-monospace,monospace;
+    --font-serif:"Instrument Serif",Georgia,serif;
+  }
+  :root[data-theme="light"]{
+    --bg:#e8e8ec;
+    --scrim:rgba(210,210,218,.5);
+    --panel:#ffffff;
+    --panel-2:#f4f4f7;
+    --fg:#15151b;
+    --fg-dim:#5a5a66;
+    --fg-faint:#9a9aa6;
+    --accent:#4a5ee0;
+    --accent-soft:rgba(74,94,224,.1);
+    --live:#0f9b6c;
+    --ship:#9a9aa6;
+    --line:rgba(20,20,30,.1);
+    --line-soft:rgba(20,20,30,.06);
+    --sel:rgba(74,94,224,.1);
+    --kbd:rgba(20,20,30,.05);
+    --shadow:0 40px 120px -20px rgba(40,40,60,.3),0 0 0 1px rgba(20,20,30,.06);
+  }
+  :root{color-scheme:dark} :root[data-theme="light"]{color-scheme:light}
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%}
+  body{background:var(--bg);color:var(--fg);font-family:var(--font-body);
+    -webkit-font-smoothing:antialiased;overflow:hidden;transition:background .4s ease,color .4s ease;
+    display:grid;place-items:center;padding:24px}
+  a{color:inherit;text-decoration:none}
+
+  /* faint ambient field behind the palette */
+  .field{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden}
+  .field::before{content:"";position:absolute;left:50%;top:42%;width:80vw;height:80vw;transform:translate(-50%,-50%);
+    background:radial-gradient(circle,var(--accent-soft),transparent 60%);filter:blur(40px)}
+  .field .wm{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);font-family:var(--font-serif);
+    font-size:clamp(120px,30vw,440px);color:var(--fg);opacity:.025;letter-spacing:-.04em;white-space:nowrap;font-style:italic}
+
+  /* tiny top-corner brand + theme, the only chrome */
+  .topbar{position:fixed;top:0;left:0;right:0;z-index:5;display:flex;justify-content:space-between;align-items:center;padding:22px 26px;pointer-events:none}
+  .topbar .b{font-family:var(--font-mono);font-size:12px;letter-spacing:.06em;color:var(--fg-dim);pointer-events:auto}
+  .topbar .b b{color:var(--fg);font-weight:500}
+  .topbar .r{display:flex;gap:10px;pointer-events:auto}
+  .icon-btn{width:36px;height:36px;border:1px solid var(--line);background:transparent;border-radius:9px;display:grid;place-items:center;cursor:pointer;color:var(--fg-dim);transition:border-color .2s,color .2s}
+  .icon-btn:hover{border-color:var(--accent);color:var(--fg)}
+  .icon-btn svg{width:15px;height:15px}.icon-btn .moon{display:none}
+  :root[data-theme="light"] .icon-btn .sun{display:none}
+  :root[data-theme="light"] .icon-btn .moon{display:block}
+
+  /* ===== the palette ===== */
+  .palette{position:relative;z-index:2;width:min(640px,100%);background:var(--panel);border-radius:18px;box-shadow:var(--shadow);
+    overflow:hidden;display:flex;flex-direction:column;max-height:min(620px,86vh);
+    animation:rise .5s cubic-bezier(.16,1,.3,1) both}
+  @keyframes rise{from{opacity:0;transform:translateY(16px) scale(.985)}to{opacity:1;transform:none}}
+
+  /* search row */
+  .search{display:flex;align-items:center;gap:14px;padding:20px 22px;border-bottom:1px solid var(--line-soft)}
+  .search .mag{width:20px;height:20px;color:var(--fg-faint);flex-shrink:0}
+  .search input{flex:1;background:transparent;border:none;outline:none;color:var(--fg);font-family:var(--font-body);font-size:19px;font-weight:400}
+  .search input::placeholder{color:var(--fg-faint)}
+  .search .esc{font-family:var(--font-mono);font-size:11px;color:var(--fg-faint);border:1px solid var(--line);border-radius:6px;padding:3px 8px;background:var(--kbd)}
+
+  /* results list */
+  .results{overflow-y:auto;padding:8px;flex:1;scroll-behavior:smooth}
+  .results::-webkit-scrollbar{width:8px}.results::-webkit-scrollbar-thumb{background:var(--line);border-radius:8px}
+  .grouplabel{font-family:var(--font-mono);font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--fg-faint);padding:14px 14px 7px}
+  .item{display:flex;align-items:center;gap:14px;padding:11px 14px;border-radius:11px;cursor:pointer;position:relative}
+  .item.sel{background:var(--sel)}
+  .item.sel::before{content:"";position:absolute;left:0;top:50%;transform:translateY(-50%);width:3px;height:20px;border-radius:3px;background:var(--accent)}
+  .item .ic{width:38px;height:38px;border-radius:9px;background:var(--panel-2);display:grid;place-items:center;flex-shrink:0;font-family:var(--font-mono);font-size:12px;color:var(--fg-dim);border:1px solid var(--line-soft)}
+  .item.sel .ic{border-color:var(--accent);color:var(--accent)}
+  .item .ic.action{color:var(--accent)}
+  .item .meta{flex:1;min-width:0}
+  .item .nm{font-size:15px;font-weight:500;display:flex;align-items:center;gap:9px}
+  .item .nm .gpt{color:var(--fg-dim);font-weight:400}
+  .item .nm em{font-style:normal;background:var(--accent-soft);color:var(--accent);border-radius:3px;padding:0 2px}
+  .item .nm .badge{font-family:var(--font-mono);font-size:9px;letter-spacing:.06em;padding:2px 7px;border-radius:100px;color:var(--ship);border:1px solid var(--line)}
+  .item .nm .badge.live{color:var(--live);border-color:transparent;background:color-mix(in srgb,var(--live) 14%,transparent)}
+  .item .sub{font-size:12.5px;color:var(--fg-dim);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .item .sub em{font-style:normal;color:var(--fg)}
+  .item .go{font-family:var(--font-mono);font-size:11px;color:var(--fg-faint);flex-shrink:0;display:flex;align-items:center;gap:6px;opacity:0;transition:opacity .15s}
+  .item.sel .go{opacity:1;color:var(--accent)}
+  .empty{padding:48px 20px;text-align:center;color:var(--fg-faint);font-size:14px}
+  .empty .big{font-family:var(--font-serif);font-style:italic;font-size:26px;color:var(--fg-dim);margin-bottom:8px}
+
+  /* footer hint bar */
+  .footer{display:flex;align-items:center;justify-content:space-between;padding:12px 18px;border-top:1px solid var(--line-soft);background:var(--panel-2);flex-shrink:0}
+  .footer .keys{display:flex;gap:16px;font-family:var(--font-mono);font-size:11px;color:var(--fg-faint)}
+  .footer .keys span{display:inline-flex;align-items:center;gap:6px}
+  .footer kbd{font-family:var(--font-mono);font-size:10px;background:var(--kbd);border:1px solid var(--line);border-radius:5px;padding:2px 6px;color:var(--fg-dim);min-width:20px;text-align:center}
+  .footer .brand{font-family:var(--font-mono);font-size:11px;color:var(--fg-faint)}
+  .footer .brand b{color:var(--fg-dim)}
+
+  /* result-page (when an action shows inline content, e.g. about/method) */
+  .page{padding:26px 26px 10px}
+  .page .pk{font-family:var(--font-mono);font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--accent);margin-bottom:14px}
+  .page h2{font-family:var(--font-serif);font-weight:400;font-size:30px;line-height:1.1;letter-spacing:-.01em;margin-bottom:14px}
+  .page h2 em{font-style:italic}
+  .page p{color:var(--fg-dim);font-size:15px;line-height:1.7;max-width:54ch}
+  .page p b{color:var(--fg);font-weight:500}
+  .page .steps{margin-top:18px;display:grid;gap:12px}
+  .page .step{display:flex;gap:14px}
+  .page .step .n{font-family:var(--font-mono);font-size:12px;color:var(--accent);flex-shrink:0;width:24px}
+  .page .step .t{font-size:14px;color:var(--fg-dim);line-height:1.55}
+  .page .step .t b{color:var(--fg);font-weight:500}
+  .page .back{margin-top:22px;font-family:var(--font-mono);font-size:12px;color:var(--fg-faint);cursor:pointer;display:inline-flex;align-items:center;gap:8px}
+  .page .back:hover{color:var(--fg)}
+  .page .back kbd{font-size:10px;background:var(--kbd);border:1px solid var(--line);border-radius:5px;padding:2px 6px}
+
+  /* ===== PLAYGROUND ===== */
+  .pg-launch{position:fixed;right:24px;bottom:24px;z-index:40;width:42px;height:42px;border-radius:10px;
+    background:var(--panel);color:var(--fg-dim);cursor:pointer;border:1px solid var(--line);display:grid;place-items:center;transition:border-color .2s,color .2s}
+  .pg-launch:hover{border-color:var(--accent);color:var(--fg)}.pg-launch svg{width:19px;height:19px}
+  .pg-panel{position:fixed;right:24px;bottom:76px;z-index:41;width:296px;background:var(--panel);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);padding:20px;
+    opacity:0;transform:translateY(10px) scale(.98);pointer-events:none;transform-origin:bottom right;transition:opacity .22s,transform .22s;max-height:70vh;overflow-y:auto}
+  .pg-panel.open{opacity:1;transform:none;pointer-events:auto}
+  .pg-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px}
+  .pg-title{font-family:var(--font-mono);font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--accent)}
+  .pg-reset{font-family:var(--font-mono);font-size:10px;color:var(--fg-dim);background:none;border:none;cursor:pointer;text-transform:uppercase}
+  .pg-reset:hover{color:var(--fg)}
+  .pg-grp{margin-bottom:18px}.pg-grp:last-child{margin-bottom:2px}
+  .pg-grp > label{display:block;font-family:var(--font-mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--fg-dim);margin-bottom:10px}
+  .pg-swatches{display:flex;gap:8px;flex-wrap:wrap}
+  .pg-sw{width:26px;height:26px;border-radius:7px;cursor:pointer;border:2px solid transparent;transition:transform .15s;position:relative}
+  .pg-sw:hover{transform:scale(1.12)}.pg-sw.on{border-color:var(--fg)}
+  .pg-sw.custom{display:grid;place-items:center;border:1px solid var(--line);color:var(--fg-faint);overflow:hidden}
+  .pg-sw.custom input{position:absolute;inset:0;opacity:0;cursor:pointer}
+  .pg-fonts{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  .pg-font{font-family:inherit;font-size:12px;padding:9px 10px;border-radius:7px;border:1px solid var(--line);background:transparent;color:var(--fg-dim);cursor:pointer;transition:.15s;text-align:left;line-height:1.1}
+  .pg-font:hover{border-color:var(--fg-faint);color:var(--fg)}.pg-font.on{border-color:var(--accent);color:var(--fg)}
+  .pg-font .pf-name{font-size:9px;font-family:var(--font-mono);color:var(--fg-faint);display:block;margin-top:3px}
+  @media(prefers-reduced-motion:reduce){.palette{animation:none}}
+</style>
+</head>
+<body>
+
+<div class="field"><div class="wm">nysgpt</div></div>
+
+<div class="topbar">
+  <div class="b"><b>NYSGPT</b> — AI for complex, legacy systems</div>
+  <div class="r">
+    <button class="icon-btn" id="themeToggle" title="Toggle theme" aria-label="Toggle light and dark">
+      <svg class="sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>
+      <svg class="moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+    </button>
+  </div>
+</div>
+
+<div class="palette" id="palette">
+  <div class="search">
+    <svg class="mag" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+    <input id="q" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="Search products, or try “tariff refund”, “method”, “book”…" aria-label="Search" />
+    <span class="esc">esc</span>
+  </div>
+  <div class="results" id="results"></div>
+  <div class="footer">
+    <div class="keys">
+      <span><kbd>↑</kbd><kbd>↓</kbd> navigate</span>
+      <span><kbd>↵</kbd> open</span>
+      <span><kbd>esc</kbd> clear</span>
+    </div>
+    <div class="brand"><b>8</b> products · <b>5</b> live</div>
+  </div>
+</div>
+
+<!-- ===== PLAYGROUND ===== -->
+<button class="pg-launch" id="pgLaunch" type="button" aria-label="Open the design playground" title="Play with the design">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="13.5" cy="6.5" r="2.5"/><circle cx="6" cy="11" r="2.5"/><circle cx="17.5" cy="13" r="2.5"/><circle cx="9" cy="18" r="2.5"/>
+    <path d="M13.5 9v3M8 12.5l2.5 1M15 15l-3 1.7"/>
+  </svg>
+</button>
+<div class="pg-panel" id="pgPanel" role="dialog" aria-label="Design playground">
+  <div class="pg-head"><span class="pg-title">⌘ playground</span><button class="pg-reset" id="pgReset" type="button">Reset</button></div>
+  <div class="pg-grp">
+    <label>Accent</label>
+    <div class="pg-swatches" id="pgAccent">
+      <span class="pg-sw on" data-a="#6e8bff" style="background:#6e8bff"></span>
+      <span class="pg-sw" data-a="#54d6a8" style="background:#54d6a8"></span>
+      <span class="pg-sw" data-a="#ff8f5c" style="background:#ff8f5c"></span>
+      <span class="pg-sw" data-a="#c08bff" style="background:#c08bff"></span>
+      <span class="pg-sw" data-a="#ff6b9c" style="background:#ff6b9c"></span>
+      <span class="pg-sw" data-a="#e0c050" style="background:#e0c050"></span>
+      <label class="pg-sw custom" title="Custom hue">+<input type="color" id="pgAccentCustom" value="#6e8bff" /></label>
+    </div>
+  </div>
+  <div class="pg-grp">
+    <label>Body font</label>
+    <div class="pg-fonts" id="pgBody">
+      <button class="pg-font on" data-f='"Geist", sans-serif' style='font-family:"Geist",sans-serif'>Geist<span class="pf-name">sans</span></button>
+      <button class="pg-font" data-f='"Geist Mono", monospace' style='font-family:"Geist Mono",monospace'>Geist Mono<span class="pf-name">mono</span></button>
+      <button class="pg-font" data-f='"Instrument Serif", serif' style='font-family:"Instrument Serif",serif'>Instrument<span class="pf-name">serif</span></button>
+      <button class="pg-font" data-f='system-ui, sans-serif' style='font-family:system-ui'>System<span class="pf-name">ui</span></button>
+    </div>
+  </div>
+  <div class="pg-grp">
+    <label>Title font</label>
+    <div class="pg-fonts" id="pgSerif">
+      <button class="pg-font on" data-f='"Instrument Serif", serif' style='font-family:"Instrument Serif",serif'>Instrument<span class="pf-name">serif</span></button>
+      <button class="pg-font" data-f='"Geist", sans-serif' style='font-family:"Geist",sans-serif'>Geist<span class="pf-name">sans</span></button>
+      <button class="pg-font" data-f='"Geist Mono", monospace' style='font-family:"Geist Mono",monospace'>Geist Mono<span class="pf-name">mono</span></button>
+      <button class="pg-font" data-f='Georgia, serif' style='font-family:Georgia,serif'>Georgia<span class="pf-name">serif</span></button>
+    </div>
+  </div>
+</div>
+
+<script>
+const PRODUCTS = [
+  {id:'44b', name:'44B', gpt:'', cat:'AI governance', status:'live', url:'https://44b.nysgpt.com', kw:'registry incident compliance article serff models papers',
+   one:'Public registry, research library & incident record for AI — the compliance portal for NY Article 44-B.', stats:[['532','models'],['32k','papers'],['2,561','incidents']]},
+  {id:'tariffsgpt', name:'Tariffs', gpt:'GPT', cat:'Trade & customs', status:'live', url:'https://tariffs.nysgpt.com', kw:'tariff refund importer ieepa customs rulings duties supreme court',
+   one:'Self-serve refund engine for importers who paid IEEPA tariffs the Supreme Court invalidated.', stats:[['220k+','rulings'],['live','schedule']]},
+  {id:'childcaregpt', name:'Childcare', gpt:'GPT', cat:'Social services', status:'live', url:'https://childcare.nysgpt.com/console', kw:'childcare ocfs facility subsidy county costs daycare family',
+   one:'NY childcare intelligence — every OCFS facility, county costs, and an AI-assisted subsidy form.', stats:[['16,800','facilities']]},
+  {id:'solargpt', name:'Solar', gpt:'GPT', cat:'Energy & grid', status:'live', url:'https://solar.nysgpt.com/map/plants-2', kw:'solar energy clean grid eia county plants emissions',
+   one:'Clean-energy intelligence for every U.S. county, state, and grid region.', stats:[['EIA','pipelines']]},
+  {id:'policygpt', name:'Policy', gpt:'GPT', cat:'Government', status:'shipped', url:'', kw:'policy legislative bills budget lobbying advocacy nys government',
+   one:'NY legislative & financial intelligence — bills, budgets, lobbying, with an advocacy layer.', stats:[['full','NYS record']]},
+  {id:'nsrgpt', name:'NSR', gpt:'gpt', cat:'Scientific reference', status:'shipped', url:'', kw:'nuclear science reference rag semantic search physics',
+   one:'Semantic search & RAG over the Nuclear Science References database.', stats:[['88k+','records']]},
+  {id:'insurancegpt', name:'Insurance', gpt:'GPT', cat:'Insurance', status:'shipped', url:'', kw:'insurance auto quote carrier stripe agent rates',
+   one:'Auto-insurance quotes grounded in filed carrier data, with Stripe checkout and an agent console.', stats:[['grounded','rates']]},
+  {id:'sportsgpt', name:'Sports', gpt:'GPT', cat:'Public records', status:'shipped', url:'', kw:'sports football section xi long island stats standings highlights',
+   one:'HS sports intelligence for Section XI football — stats, standings, choropleth maps, AI highlights.', stats:[['Section XI','coverage'],['AI','highlights']]},
+];
+const ACTIONS = [
+  {id:'book', name:'Book a working session', sub:'Email Brendan — pressure-test an AI-first rebuild of your data', icon:'→', kw:'book session contact email brendan call meeting hire', run:()=>{location.href='mailto:Brendan@nysgpt.com?subject=Working%20session%20—%20NYSGPT';}},
+  {id:'whoami', name:'Who is NYSGPT?', sub:'AI for complex, legacy systems — the thesis', icon:'?', kw:'about who whoami thesis company founder mission', run:()=>showPage('whoami')},
+  {id:'method', name:'How we build', sub:'Ingest → ground → ship', icon:'⚙', kw:'method how build process architecture ingest ground ship', run:()=>showPage('method')},
+  {id:'brief', name:'Send a project brief', sub:'A short brief → a concrete read, no funnel', icon:'✉', kw:'brief project email send describe system', run:()=>{location.href='mailto:Brendan@nysgpt.com?subject=Project%20brief%20—%20NYSGPT&body='+encodeURIComponent('Name:\nOrg:\nThe system / domain:\nWhat’s locked up in it:\n');}},
+];
+
+const q=document.getElementById('q'), results=document.getElementById('results');
+const esc=s=>String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+let flat=[], sel=0, mode='list';
+
+// fuzzy/substring score
+function score(item, terms){
+  const hay=(item.name+' '+(item.gpt||'')+' '+(item.cat||'')+' '+(item.sub||'')+' '+(item.one||'')+' '+(item.kw||'')+' '+item.id).toLowerCase();
+  let s=0; for(const t of terms){ const i=hay.indexOf(t); if(i<0) return -1; s += i<12?10:(i<40?5:2); s += (item.name.toLowerCase().startsWith(t)?20:0); }
+  return s;
+}
+function hl(text, terms){
+  let out=esc(text);
+  terms.forEach(t=>{ if(!t) return; const re=new RegExp('('+t.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+')','ig'); out=out.replace(re,'<em>$1</em>'); });
+  return out;
+}
+
+function render(){
+  const raw=q.value.trim(); const terms=raw.toLowerCase().split(/\s+/).filter(Boolean);
+  flat=[];
+  let prodHits = PRODUCTS.map(p=>({p,s:terms.length?score(p,terms):0})).filter(x=>x.s>=0).sort((a,b)=>b.s-a.s);
+  let actHits = ACTIONS.map(a=>({a,s:terms.length?score(a,terms):0})).filter(x=>x.s>=0).sort((a,b)=>b.s-a.s);
+
+  let html='';
+  if(actHits.length){
+    html+='<div class="grouplabel">Actions</div>';
+    actHits.forEach(({a})=>{ const idx=flat.length; flat.push({type:'action',ref:a});
+      html+=`<div class="item" data-i="${idx}"><div class="ic action">${a.icon}</div><div class="meta"><div class="nm">${hl(a.name,terms)}</div><div class="sub">${hl(a.sub,terms)}</div></div><div class="go">↵ run</div></div>`; });
+  }
+  if(prodHits.length){
+    html+='<div class="grouplabel">Products · '+prodHits.length+'</div>';
+    prodHits.forEach(({p})=>{ const idx=flat.length; flat.push({type:'product',ref:p});
+      const badge=p.status==='live'?'<span class="badge live">LIVE</span>':'<span class="badge">SHIPPED</span>';
+      const ic=p.name.slice(0,2).toUpperCase();
+      html+=`<div class="item" data-i="${idx}"><div class="ic">${ic}</div><div class="meta"><div class="nm">${hl(p.name+p.gpt,terms)} ${badge}</div><div class="sub">${hl(p.one,terms)}</div></div><div class="go">${p.url?'↵ launch':'↵ details'}</div></div>`; });
+  }
+  if(!flat.length){
+    html=`<div class="empty"><div class="big">no match for “${esc(raw)}”</div>the eight cover governance · trade · social · energy · government · science · insurance · public records. <br>try one of those — or just <b>book</b>.</div>`;
+  }
+  results.innerHTML=html; mode='list'; sel=0; markSel();
+}
+
+function markSel(){
+  const items=[...results.querySelectorAll('.item')];
+  items.forEach((el,i)=>el.classList.toggle('sel',i===sel));
+  const cur=items[sel]; if(cur) cur.scrollIntoView({block:'nearest'});
+}
+
+function activate(i){
+  const entry=flat[i]; if(!entry) return;
+  if(entry.type==='action'){ entry.ref.run(); }
+  else { const p=entry.ref; if(p.url){ window.open(p.url,'_blank','noopener'); } else { showProduct(p); } }
+}
+
+// inline pages
+function showPage(which){
+  mode='page';
+  if(which==='whoami'){
+    results.innerHTML=`<div class="page"><div class="pk">whoami</div>
+      <h2>AI for complex, <em>legacy</em> systems.</h2>
+      <p>Public doesn't mean usable. The records that run government, energy, and trade are <b>open to everyone and legible to almost no one</b> — so we rebuild them, record by record, into software anyone can use.</p>
+      <p style="margin-top:14px">NYSGPT is one founder, full-stack: <b>8 products shipped, 5 live in production</b>, all on one architecture. The most consequential systems run on the worst software — we close that gap.</p>
+      <div class="back" id="backBtn"><kbd>esc</kbd> back to search</div></div>`;
+  } else if(which==='method'){
+    results.innerHTML=`<div class="page"><div class="pk">how we build</div>
+      <h2>Ingest. Ground. <em>Ship.</em></h2>
+      <div class="steps">
+        <div class="step"><span class="n">01</span><span class="t"><b>Tame the primary record.</b> Crawl, dedupe, structure the authoritative source — even with no bulk export, no API, a pagination wall — into queryable Postgres.</span></div>
+        <div class="step"><span class="n">02</span><span class="t"><b>Make the AI accountable.</b> Retrieval over the real corpus, structured output, a visible chain back to the source. Every answer can be checked.</span></div>
+        <div class="step"><span class="n">03</span><span class="t"><b>Rebuild the interface.</b> Search, structured exploration, maps & AI on one surface — shipped to production with real users.</span></div>
+      </div>
+      <div class="back" id="backBtn"><kbd>esc</kbd> back to search</div></div>`;
+  }
+  const bb=document.getElementById('backBtn'); if(bb) bb.onclick=()=>{ q.value=''; q.focus(); render(); };
+}
+function showProduct(p){
+  mode='page';
+  const badge=p.status==='live'?'live in production':'shipped';
+  const stats=p.stats.map(s=>`<div class="step"><span class="n">${esc(s[0])}</span><span class="t">${esc(s[1])}</span></div>`).join('');
+  results.innerHTML=`<div class="page"><div class="pk">${esc(p.cat)} · ${badge}</div>
+    <h2>${esc(p.name)}${p.gpt?`<em style="font-style:normal;color:var(--fg-dim)">${esc(p.gpt)}</em>`:''}</h2>
+    <p>${esc(p.one)}</p>
+    <div class="steps">${stats}</div>
+    <div class="back" id="backBtn"><kbd>esc</kbd> back to search</div></div>`;
+  const bb=document.getElementById('backBtn'); if(bb) bb.onclick=()=>{ q.value=''; q.focus(); render(); };
+}
+
+// events
+q.addEventListener('input',render);
+q.addEventListener('keydown',e=>{
+  if(mode==='page'){ if(e.key==='Escape'){ q.value=''; render(); } return; }
+  if(e.key==='ArrowDown'){ e.preventDefault(); sel=Math.min(flat.length-1,sel+1); markSel(); }
+  else if(e.key==='ArrowUp'){ e.preventDefault(); sel=Math.max(0,sel-1); markSel(); }
+  else if(e.key==='Enter'){ e.preventDefault(); activate(sel); }
+  else if(e.key==='Escape'){ if(q.value){ q.value=''; render(); } }
+});
+results.addEventListener('click',e=>{ const it=e.target.closest('.item'); if(it){ sel=+it.dataset.i; markSel(); activate(sel); } });
+results.addEventListener('mousemove',e=>{ const it=e.target.closest('.item'); if(it){ const i=+it.dataset.i; if(i!==sel){ sel=i; markSel(); } } });
+// keep focus on the input always
+addEventListener('keydown',e=>{ if(e.metaKey||e.ctrlKey||e.altKey) return; if(document.activeElement!==q && !e.target.closest('.pg-panel,.icon-btn,.pg-launch') && mode==='list' && e.key.length===1){ q.focus(); } });
+document.addEventListener('click',e=>{ if(!e.target.closest('.pg-panel,.pg-launch,.icon-btn,.item,.back,a')) q.focus(); });
+
+// theme + playground
+(function(){
+  const root=document.documentElement, btn=document.getElementById('themeToggle');
+  btn.addEventListener('click',()=>{ const light=root.getAttribute('data-theme')==='light';
+    if(light) root.removeAttribute('data-theme'); else root.setAttribute('data-theme','light');
+    try{localStorage.setItem('nysgpt-theme-e3', light?'dark':'light');}catch(e){} });
+})();
+(function(){
+  const root=document.documentElement, rs=root.style;
+  const panel=document.getElementById('pgPanel'), launch=document.getElementById('pgLaunch');
+  launch.addEventListener('click',e=>{e.stopPropagation();panel.classList.toggle('open')});
+  document.addEventListener('click',e=>{ if(!panel.contains(e.target)&&e.target!==launch&&!launch.contains(e.target)) panel.classList.remove('open'); });
+  function hexA(hex,al){ const c=hex.replace('#',''); const r=parseInt(c.substr(0,2),16),g=parseInt(c.substr(2,2),16),b=parseInt(c.substr(4,2),16); return `rgba(${r},${g},${b},${al})`; }
+  function setAccent(a){ rs.setProperty('--accent',a); rs.setProperty('--accent-soft',hexA(a,.14)); rs.setProperty('--sel',hexA(a,.16)); }
+  const accWrap=document.getElementById('pgAccent');
+  accWrap.querySelectorAll('.pg-sw[data-a]').forEach(sw=>sw.addEventListener('click',()=>{ accWrap.querySelectorAll('.pg-sw').forEach(s=>s.classList.remove('on')); sw.classList.add('on'); setAccent(sw.dataset.a); }));
+  document.getElementById('pgAccentCustom').addEventListener('input',e=>{ accWrap.querySelectorAll('.pg-sw').forEach(s=>s.classList.remove('on')); e.target.closest('.pg-sw').classList.add('on'); setAccent(e.target.value); });
+  function fontGroup(id,varName){ const w=document.getElementById(id); w.querySelectorAll('.pg-font').forEach(b=>b.addEventListener('click',()=>{ w.querySelectorAll('.pg-font').forEach(x=>x.classList.remove('on')); b.classList.add('on'); rs.setProperty(varName,b.dataset.f); })); }
+  fontGroup('pgBody','--font-body'); fontGroup('pgSerif','--font-serif');
+  document.getElementById('pgReset').addEventListener('click',()=>{
+    ['--accent','--accent-soft','--sel','--font-body','--font-serif'].forEach(v=>rs.removeProperty(v));
+    accWrap.querySelectorAll('.pg-sw').forEach((s,i)=>s.classList.toggle('on',i===0));
+    ['pgBody','pgSerif'].forEach(id=>document.getElementById(id).querySelectorAll('.pg-font').forEach((b,i)=>b.classList.toggle('on',i===0)));
+    document.getElementById('pgAccentCustom').value='#6e8bff'; });
+})();
+
+render(); q.focus();
+</script>
+</body>
+</html>
