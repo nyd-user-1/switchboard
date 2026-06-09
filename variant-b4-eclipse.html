@@ -1,0 +1,737 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>NYSGPT — AI for complex, legacy systems</title>
+<meta name="description" content="NYSGPT is an AI-first software company building domain-specific applications for complex, legacy, and regulatory systems. Eight shipped products turning impenetrable data into navigable software." />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@400;500;600;700&family=Familjen+Grotesk:ital,wght@0,400..600;1,400&family=JetBrains+Mono:wght@400;500&family=Space+Grotesk:wght@400;500;600;700&family=Sora:wght@400;500;600&display=swap" rel="stylesheet" />
+<script>
+  // dark is the design default; go light only when explicitly chosen before.
+  (function(){ try{ if(localStorage.getItem('nysgpt-theme-b4')==='light') document.documentElement.setAttribute('data-theme','light'); }catch(e){} })();
+</script>
+<style>
+  :root{
+    /* ---- DARK (default): the eclipse — almost total dark, you carry the light ---- */
+    --bg:#040409;
+    --bg-2:#08080f;
+    --panel:rgba(255,255,255,.03);
+    --panel-brd:rgba(255,255,255,.09);
+    --panel-glass:rgba(8,8,15,.94);
+    --text:#eceaf6;
+    --text-dim:#8e8ba6;
+    --text-faint:#4f4d68;
+    --text-hover:#ffffff;
+    --ink-on-accent:#040409;
+    --pill-ink:#040409;          /* text on the (light) nav pill */
+    --accent:#7af0d6;            /* corona teal */
+    --accent-2:#c9a4ff;
+    --corona:linear-gradient(120deg,var(--accent),var(--accent-2));
+    --shroud:#040409;            /* the darkness the torch cuts through */
+    --shroud-op:.92;             /* how dark the unlit page is (live-tunable) */
+    --grain-op:.05;
+    --header-bg:rgba(4,4,9,.6);
+    --rule-faint:rgba(255,255,255,.08);
+    --card-hover:rgba(255,255,255,.045);
+    --input-bg:rgba(255,255,255,.035);
+    --font-display:"Unbounded",system-ui,sans-serif;
+    --font-body:"Familjen Grotesk",system-ui,sans-serif;
+    --font-mono:"JetBrains Mono",ui-monospace,monospace;
+    --maxw:1180px;
+    --torch:340px;               /* light radius (live-tunable) */
+    /* playground knobs */
+    --radius:1;
+    --wght:0;
+    --density:1;
+  }
+
+  /* ---- LIGHT: a solar eclipse at noon — the torch is a shadow of clarity on glare ---- */
+  :root[data-theme="light"]{
+    --bg:#eceae4;
+    --bg-2:#f6f5f1;
+    --panel:rgba(20,20,30,.03);
+    --panel-brd:rgba(20,20,40,.14);
+    --panel-glass:rgba(246,245,241,.96);
+    --text:#101019;
+    --text-dim:#54526a;
+    --text-faint:#9290a2;
+    --text-hover:#000000;
+    --ink-on-accent:#0a1410;
+    --pill-ink:#eceae4;          /* light text on the (now-dark) nav pill */
+    --accent:#0fae93;
+    --accent-2:#7a4fe0;
+    --shroud:#cfcdc6;            /* a pale glare instead of black */
+    --shroud-op:.86;
+    --grain-op:.03;
+    --header-bg:rgba(236,234,228,.7);
+    --rule-faint:rgba(20,20,40,.09);
+    --card-hover:rgba(20,20,40,.035);
+    --input-bg:rgba(20,20,40,.03);
+  }
+  :root{color-scheme:dark} :root[data-theme="light"]{color-scheme:light}
+  html,body{transition:background .4s ease,color .4s ease}
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth;-webkit-text-size-adjust:100%}
+  body{
+    background:var(--bg);color:var(--text);font-family:var(--font-body);
+    font-size:16px;line-height:1.55;-webkit-font-smoothing:antialiased;
+    text-rendering:optimizeLegibility;overflow-x:hidden;
+  }
+
+  /* ===== THE SHROUD — a fixed overlay with a hole cut where the cursor is ===== */
+  /* the torch follows the pointer via --mx/--my (set in JS, default center). */
+  .shroud{
+    position:fixed;inset:0;z-index:40;pointer-events:none;
+    background:radial-gradient(
+      circle var(--torch) at var(--mx,50%) var(--my,38%),
+      transparent 0%,
+      transparent 32%,
+      color-mix(in srgb, var(--shroud) 40%, transparent) 56%,
+      color-mix(in srgb, var(--shroud) calc(var(--shroud-op) * 100%), transparent) 82%
+    );
+    transition:background .08s linear;
+    mix-blend-mode:normal;
+  }
+  /* a faint corona ring riding the edge of the torch */
+  .corona{
+    position:fixed;z-index:41;pointer-events:none;width:calc(var(--torch) * 2);height:calc(var(--torch) * 2);
+    left:var(--mx,50%);top:var(--my,38%);transform:translate(-50%,-50%);
+    border-radius:50%;
+    background:radial-gradient(circle,transparent 47%,color-mix(in srgb,var(--accent) 22%,transparent) 49%,transparent 53%);
+    opacity:.0;transition:opacity .4s;
+  }
+  body.lit .corona{opacity:1}
+  .grain{position:fixed;inset:0;z-index:1;pointer-events:none;opacity:var(--grain-op);
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")}
+
+  .wrap{position:relative;z-index:3;max-width:var(--maxw);margin:0 auto;padding:0 28px}
+  a{color:inherit;text-decoration:none}
+  .mono{font-family:var(--font-mono)}
+  .tnum{font-variant-numeric:tabular-nums}
+  .corona-text{background:var(--corona);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+  .kicker{font-family:var(--font-mono);font-size:11px;letter-spacing:.22em;text-transform:uppercase;color:var(--accent)}
+
+  /* ===== NAV (always lit — sits above the shroud) ===== */
+  header{position:sticky;top:0;z-index:50;backdrop-filter:blur(16px);background:var(--header-bg);border-bottom:1px solid var(--rule-faint)}
+  header .wrap{display:flex;align-items:center;justify-content:space-between;height:68px}
+  .brand{display:flex;align-items:center;gap:12px;font-family:var(--font-display);font-weight:600;font-size:17px;letter-spacing:-.01em}
+  .brand .eclipse{width:22px;height:22px;border-radius:50%;background:var(--shroud);box-shadow:0 0 0 2px var(--accent),0 0 18px var(--accent);position:relative;flex-shrink:0}
+  .brand .eclipse::after{content:"";position:absolute;inset:-2px;border-radius:50%;background:radial-gradient(circle at 65% 35%,transparent 60%,var(--accent) 62%,transparent 70%)}
+  nav{display:flex;align-items:center;gap:30px}
+  nav a{font-family:var(--font-mono);font-size:12px;letter-spacing:.04em;color:var(--text-dim);transition:color .2s}
+  nav a:hover{color:var(--text)}
+  .pill{padding:9px 18px;border-radius:100px;background:var(--text);color:var(--pill-ink) !important;font-weight:600 !important;font-family:var(--font-body) !important;transition:transform .2s,box-shadow .2s}
+  .pill:hover{transform:translateY(-1px);box-shadow:0 8px 30px rgba(122,240,214,.28)}
+  .theme-toggle{width:36px;height:36px;border:1px solid var(--panel-brd);border-radius:50%;background:var(--panel);
+    display:grid;place-items:center;cursor:pointer;color:var(--text-dim);transition:border-color .2s,color .2s;flex-shrink:0}
+  .theme-toggle:hover{border-color:var(--accent);color:var(--text)}
+  .theme-toggle svg{width:15px;height:15px;display:block}
+  .theme-toggle .moon{display:none}
+  :root[data-theme="light"] .theme-toggle .sun{display:none}
+  :root[data-theme="light"] .theme-toggle .moon{display:block}
+  @media(max-width:760px){nav a:not(.pill){display:none}}
+
+  /* ===== HERO ===== */
+  .hero{padding:calc(118px * var(--density)) 0 calc(92px * var(--density));text-align:center;position:relative}
+  .hero .hint{position:absolute;left:50%;top:34px;transform:translateX(-50%);font-family:var(--font-mono);font-size:10.5px;letter-spacing:.18em;text-transform:uppercase;color:var(--text-faint);display:flex;align-items:center;gap:9px;animation:hintpulse 3s ease-in-out infinite}
+  .hero .hint .ic{width:14px;height:14px;opacity:.7}
+  @keyframes hintpulse{0%,100%{opacity:.45}50%{opacity:.9}}
+  .hero .badge{display:inline-flex;align-items:center;gap:9px;border:1px solid var(--panel-brd);background:var(--panel);
+    padding:7px 16px;border-radius:100px;font-family:var(--font-mono);font-size:11px;letter-spacing:.06em;color:var(--text-dim);
+    margin-bottom:30px;animation:pop .7s cubic-bezier(.16,1,.3,1) both}
+  .hero .badge .live{width:7px;height:7px;border-radius:50%;background:var(--accent);box-shadow:0 0 0 0 rgba(122,240,214,.6);animation:pulse 2.2s infinite}
+  @keyframes pulse{0%{box-shadow:0 0 0 0 rgba(122,240,214,.5)}70%{box-shadow:0 0 0 7px rgba(122,240,214,0)}100%{box-shadow:0 0 0 0 rgba(122,240,214,0)}}
+  .hero h1{font-family:var(--font-display);font-weight:calc(600 + var(--wght));font-size:clamp(40px,7.4vw,98px);line-height:1.0;letter-spacing:-.035em;max-width:16ch;margin:0 auto}
+  .hero h1 .ln{display:block;animation:pop .85s cubic-bezier(.16,1,.3,1) both}
+  .hero h1 .l1{animation-delay:.05s}.hero h1 .l2{animation-delay:.14s}.hero h1 .l3{animation-delay:.23s}
+  @keyframes pop{from{opacity:0;transform:translateY(26px)}to{opacity:1;transform:none}}
+  .hero p.deck{margin:30px auto 0;max-width:60ch;font-size:18px;line-height:1.62;color:var(--text-dim);animation:pop .8s ease .4s both}
+  .hero p.deck b{color:var(--text);font-weight:600}
+  .hero .cta{margin-top:38px;display:flex;gap:14px;justify-content:center;flex-wrap:wrap;animation:pop .8s ease .55s both}
+  .btn{font-family:var(--font-body);font-weight:600;font-size:15px;padding:15px 28px;border-radius:100px;display:inline-flex;align-items:center;gap:10px;transition:transform .2s,box-shadow .2s,background .2s,border-color .2s;cursor:pointer;border:1px solid transparent}
+  .btn .arr{transition:transform .25s}.btn:hover .arr{transform:translateX(4px)}
+  .btn-corona{background:var(--corona);color:var(--ink-on-accent);box-shadow:0 6px 32px rgba(122,240,214,.3)}
+  .btn-corona:hover{transform:translateY(-2px);box-shadow:0 10px 44px rgba(201,164,255,.42)}
+  .btn-line{border-color:var(--panel-brd);background:var(--panel);color:var(--text)}
+  .btn-line:hover{border-color:var(--accent);color:var(--text-hover)}
+
+  .hero .stats{margin-top:72px;display:flex;justify-content:center;gap:0;flex-wrap:wrap;animation:pop .9s ease .7s both}
+  .hero .stats .s{padding:0 38px;text-align:center;border-right:1px solid var(--rule-faint)}
+  .hero .stats .s:last-child{border-right:none}
+  .hero .stats .n{font-family:var(--font-display);font-weight:600;font-size:42px;letter-spacing:-.02em;line-height:1}
+  .hero .stats .n .u{font-size:21px}
+  .hero .stats .l{font-family:var(--font-mono);font-size:10px;letter-spacing:.13em;text-transform:uppercase;color:var(--text-faint);margin-top:12px}
+  @media(max-width:680px){.hero .stats .s{padding:14px 26px;border-right:none}}
+
+  /* ===== THESIS ===== */
+  .thesis{padding:calc(86px * var(--density)) 0}
+  .thesis .inner{max-width:880px;margin:0 auto;text-align:center}
+  .thesis .kicker{margin-bottom:22px}
+  .thesis h2{font-family:var(--font-display);font-weight:calc(500 + var(--wght));font-size:clamp(26px,4vw,44px);line-height:1.12;letter-spacing:-.022em}
+  .thesis p{margin:28px auto 0;max-width:62ch;color:var(--text-dim);font-size:17.5px;line-height:1.7}
+  .thesis p b{color:var(--text);font-weight:600}
+
+  /* ===== PRODUCTS — bloom into view as the torch passes ===== */
+  .work{padding:calc(64px * var(--density)) 0 calc(86px * var(--density))}
+  .work .head{text-align:center;margin-bottom:42px}
+  .work .head .kicker{margin-bottom:16px}
+  .work .head h2{font-family:var(--font-display);font-weight:calc(600 + var(--wght));font-size:clamp(28px,5vw,56px);letter-spacing:-.03em;line-height:1.02}
+  .work .head p{margin-top:16px;color:var(--text-dim);font-size:16px}
+  .grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}
+  .grid .card{
+    grid-column:span 1;position:relative;border:1px solid var(--panel-brd);border-radius:calc(18px * var(--radius));
+    background:var(--panel);padding:24px 22px;overflow:hidden;
+    transition:transform .3s cubic-bezier(.16,1,.3,1),border-color .35s,background .3s,box-shadow .4s;
+    display:flex;flex-direction:column;min-height:212px;
+  }
+  .grid .card.feat{grid-column:span 2}
+  /* when lit by the torch, the card glows awake */
+  .grid .card.aglow{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent),0 0 40px -8px var(--accent);background:var(--card-hover)}
+  .grid .card::after{content:"";position:absolute;inset:0;border-radius:calc(18px * var(--radius));padding:1px;background:var(--corona);
+    -webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask-composite:exclude;
+    opacity:0;transition:opacity .35s}
+  .grid .card:hover{transform:translateY(-5px)}
+  .grid .card:hover::after,.grid .card.aglow::after{opacity:.85}
+  .grid .card .glow{position:absolute;width:150px;height:150px;border-radius:50%;filter:blur(54px);opacity:0;transition:opacity .4s;top:-46px;right:-46px;background:var(--accent)}
+  .grid .card:hover .glow,.grid .card.aglow .glow{opacity:.4}
+  .card .top{display:flex;align-items:center;justify-content:space-between;margin-bottom:auto}
+  .card .idx{font-family:var(--font-mono);font-size:10.5px;color:var(--text-faint)}
+  .card .status{font-family:var(--font-mono);font-size:9px;letter-spacing:.1em;display:inline-flex;align-items:center;gap:6px;padding:4px 9px;border-radius:100px;border:1px solid var(--panel-brd)}
+  .card .status.live{color:var(--accent)}
+  .card .status.live .d{width:5px;height:5px;border-radius:50%;background:var(--accent)}
+  .card .status.shipped{color:var(--text-faint)}
+  .card .status.shipped .d{width:5px;height:5px;border-radius:50%;background:var(--text-faint)}
+  .card h3{font-family:var(--font-display);font-weight:calc(600 + var(--wght));font-size:21px;letter-spacing:-.015em;margin:16px 0 8px}
+  .card h3 .gpt{color:var(--text-dim);font-weight:400}
+  .card .dsc{color:var(--text-dim);font-size:13.5px;line-height:1.5}
+  .card.feat .dsc{font-size:14.5px;max-width:46ch}
+  .card .metric{margin-top:16px;font-family:var(--font-mono);font-size:11.5px;color:var(--text);display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+  .card .metric .sep{color:var(--text-faint)}
+  .card.link:hover h3,.card.link.aglow h3{color:var(--text-hover)}
+  .card.link h3::after{content:"↗";font-size:14px;margin-left:7px;color:var(--accent);opacity:0;transition:opacity .2s}
+  .card.link:hover h3::after,.card.link.aglow h3::after{opacity:1}
+  @media(max-width:960px){.grid{grid-template-columns:repeat(2,1fr)} .grid .card.feat{grid-column:span 2}}
+  @media(max-width:560px){.grid{grid-template-columns:1fr} .grid .card,.grid .card.feat{grid-column:span 1}}
+
+  /* ===== METHOD ===== */
+  .method{padding:calc(78px * var(--density)) 0}
+  .method .head{text-align:center;margin-bottom:46px}
+  .method .head .kicker{margin-bottom:14px}
+  .method .head h2{font-family:var(--font-display);font-weight:calc(600 + var(--wght));font-size:clamp(26px,4vw,44px);letter-spacing:-.025em}
+  .msteps{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
+  .mstep{border:1px solid var(--panel-brd);background:var(--panel);border-radius:calc(18px * var(--radius));padding:30px 26px;position:relative;overflow:hidden;transition:transform .3s,background .3s,box-shadow .4s,border-color .35s}
+  .mstep.aglow{border-color:var(--accent);box-shadow:0 0 32px -10px var(--accent);background:var(--card-hover)}
+  .mstep:hover{transform:translateY(-4px);background:var(--card-hover)}
+  .mstep .num{font-family:var(--font-display);font-weight:700;font-size:42px;line-height:1;letter-spacing:-.03em;background:var(--corona);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;opacity:.92;margin-bottom:16px}
+  .mstep h3{font-family:var(--font-display);font-weight:600;font-size:19px;margin-bottom:10px}
+  .mstep p{color:var(--text-dim);font-size:14px;line-height:1.6}
+  @media(max-width:820px){.msteps{grid-template-columns:1fr}}
+
+  /* ===== DOMAINS marquee ===== */
+  .domains{padding:44px 0;border-top:1px solid var(--rule-faint);border-bottom:1px solid var(--rule-faint);overflow:hidden}
+  .marquee{display:flex;gap:42px;white-space:nowrap;animation:scroll 34s linear infinite;width:max-content}
+  .marquee:hover{animation-play-state:paused}
+  .marquee span{font-family:var(--font-display);font-weight:500;font-size:21px;color:var(--text-faint);display:inline-flex;align-items:center;gap:42px}
+  .marquee span::after{content:"●";color:var(--accent);font-size:9px}
+  @keyframes scroll{to{transform:translateX(-50%)}}
+
+  /* ===== CTA ===== */
+  .cta{padding:calc(90px * var(--density)) 0}
+  .cta .panel{position:relative;border:1px solid var(--panel-brd);border-radius:calc(26px * var(--radius));overflow:hidden;background:var(--bg-2);
+    display:grid;grid-template-columns:1.02fr .98fr}
+  .cta .panel::before{content:"";position:absolute;inset:0;background:
+    radial-gradient(80% 120% at 0% 0%,rgba(122,240,214,.16),transparent 50%),
+    radial-gradient(80% 120% at 100% 100%,rgba(201,164,255,.16),transparent 50%);pointer-events:none}
+  .cta .left{position:relative;padding:54px 48px;border-right:1px solid var(--panel-brd)}
+  .cta .left .kicker{margin-bottom:20px}
+  .cta .left h2{font-family:var(--font-display);font-weight:600;font-size:clamp(28px,3.6vw,42px);line-height:1.08;letter-spacing:-.025em}
+  .cta .left p{margin-top:20px;color:var(--text-dim);font-size:16px;line-height:1.65;max-width:42ch}
+  .cta .direct{margin-top:32px;display:grid;gap:13px}
+  .cta .direct a{display:inline-flex;align-items:center;gap:12px;font-family:var(--font-mono);font-size:13px;color:var(--text);transition:color .2s;width:fit-content}
+  .cta .direct a:hover{color:var(--accent)}
+  .cta .direct .ico{width:34px;height:34px;border-radius:calc(9px * var(--radius));border:1px solid var(--panel-brd);display:grid;place-items:center;color:var(--accent)}
+  form.brief{position:relative;padding:54px 48px;display:grid;gap:17px}
+  form.brief .fld{display:grid;gap:7px}
+  form.brief label{font-family:var(--font-mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--text-faint)}
+  form.brief input,form.brief textarea,form.brief select{background:var(--input-bg);border:1px solid var(--panel-brd);border-radius:calc(11px * var(--radius));padding:13px 15px;color:var(--text);font-family:var(--font-body);font-size:14.5px;transition:border-color .2s,background .2s}
+  form.brief input:focus,form.brief textarea:focus,form.brief select:focus{outline:none;border-color:var(--accent);background:rgba(122,240,214,.04)}
+  form.brief textarea{resize:vertical;min-height:82px}
+  form.brief .row2{display:grid;grid-template-columns:1fr 1fr;gap:13px}
+  form.brief button{margin-top:4px;width:100%;justify-content:center}
+  form.brief .note{font-family:var(--font-mono);font-size:10px;color:var(--text-faint);text-align:center}
+  @media(max-width:860px){.cta .panel{grid-template-columns:1fr}.cta .left{border-right:none;border-bottom:1px solid var(--panel-brd);padding:40px 28px}form.brief{padding:40px 28px}}
+
+  /* ===== FOOTER ===== */
+  footer{padding:44px 0;border-top:1px solid var(--rule-faint)}
+  footer .wrap{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:16px}
+  footer .c{font-family:var(--font-mono);font-size:11px;color:var(--text-faint)}
+  footer .c b{color:var(--text-dim);font-weight:500}
+  footer a:hover{color:var(--accent)}
+
+  /* ===== PLAYGROUND (above the shroud) ===== */
+  .pg-launch{position:fixed;right:22px;bottom:22px;z-index:90;width:50px;height:50px;border-radius:50%;
+    background:var(--corona);color:var(--ink-on-accent);cursor:pointer;border:none;display:grid;place-items:center;
+    box-shadow:0 10px 34px rgba(122,240,214,.4);transition:transform .25s,box-shadow .2s}
+  .pg-launch:hover{transform:translateY(-3px) rotate(-8deg);box-shadow:0 14px 44px rgba(201,164,255,.5)}
+  .pg-launch svg{width:22px;height:22px}
+  .pg-panel{position:fixed;right:22px;bottom:84px;z-index:91;width:320px;
+    background:var(--panel-glass);backdrop-filter:blur(20px);border:1px solid var(--panel-brd);
+    border-radius:calc(20px * var(--radius));box-shadow:0 24px 64px rgba(0,0,0,.6);padding:22px;
+    opacity:0;transform:translateY(12px) scale(.97);pointer-events:none;transform-origin:bottom right;
+    transition:opacity .26s cubic-bezier(.16,1,.3,1),transform .26s cubic-bezier(.16,1,.3,1);max-height:80vh;overflow-y:auto}
+  .pg-panel.open{opacity:1;transform:none;pointer-events:auto}
+  .pg-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px}
+  .pg-title{font-family:var(--font-mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--accent)}
+  .pg-reset{font-family:var(--font-mono);font-size:10px;letter-spacing:.06em;color:var(--text-dim);background:none;border:none;cursor:pointer;text-transform:uppercase}
+  .pg-reset:hover{color:var(--text)}
+  .pg-grp{margin-bottom:20px}.pg-grp:last-child{margin-bottom:4px}
+  .pg-grp > label{display:block;font-family:var(--font-mono);font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--text-dim);margin-bottom:11px}
+  .pg-grp > label .v{color:var(--text-faint);float:right;text-transform:none;letter-spacing:0}
+  .pg-swatches{display:flex;gap:9px;flex-wrap:wrap}
+  .pg-sw{width:28px;height:28px;border-radius:calc(9px * var(--radius));cursor:pointer;border:2px solid transparent;transition:transform .15s,border-color .15s;position:relative}
+  .pg-sw:hover{transform:scale(1.12)}
+  .pg-sw.on{border-color:var(--text)}
+  .pg-sw.custom{display:grid;place-items:center;background:var(--panel);border:1px solid var(--panel-brd);color:var(--text-faint);overflow:hidden}
+  .pg-sw.custom input{position:absolute;inset:0;opacity:0;cursor:pointer}
+  .pg-fonts{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  .pg-font{font-family:inherit;font-size:13px;padding:9px 10px;border-radius:calc(9px * var(--radius));border:1px solid var(--panel-brd);background:var(--panel);color:var(--text-dim);cursor:pointer;transition:.15s;text-align:left;line-height:1.1}
+  .pg-font:hover{border-color:var(--text-faint);color:var(--text)}
+  .pg-font.on{border-color:var(--accent);color:var(--text)}
+  .pg-font .pf-name{font-size:9px;font-family:var(--font-mono);letter-spacing:.04em;color:var(--text-faint);display:block;margin-top:3px}
+  input[type=range].pg-range{-webkit-appearance:none;appearance:none;width:100%;height:3px;border-radius:3px;background:var(--panel-brd);outline:none;cursor:pointer}
+  input[type=range].pg-range::-webkit-slider-thumb{-webkit-appearance:none;width:16px;height:16px;border-radius:50%;background:var(--accent);cursor:pointer;border:2px solid var(--bg-2)}
+  input[type=range].pg-range::-moz-range-thumb{width:14px;height:14px;border-radius:50%;background:var(--accent);cursor:pointer;border:2px solid var(--bg-2)}
+  @media(max-width:560px){.pg-panel{width:calc(100vw - 44px)}}
+
+  .reveal{opacity:0;transform:translateY(26px);transition:opacity .75s cubic-bezier(.16,1,.3,1),transform .75s cubic-bezier(.16,1,.3,1)}
+  .reveal.in{opacity:1;transform:none}
+  /* touch / reduced-motion / no-pointer: lift the shroud so the page is fully usable */
+  .no-torch .shroud,.no-torch .corona{display:none}
+  @media(prefers-reduced-motion:reduce){*{animation:none !important;transition:none !important}.reveal{opacity:1;transform:none}.shroud,.corona{display:none}}
+  @media(hover:none){.shroud,.corona{display:none}}
+</style>
+</head>
+<body>
+
+<div class="shroud" id="shroud"></div>
+<div class="corona" id="corona"></div>
+<div class="grain"></div>
+
+<header>
+  <div class="wrap">
+    <a href="#top" class="brand"><span class="eclipse"></span>NYSGPT</a>
+    <nav>
+      <a href="#thesis">Thesis</a>
+      <a href="#work">Products</a>
+      <a href="#how">Method</a>
+      <button class="theme-toggle" id="themeToggle" type="button" aria-label="Toggle light and dark mode" title="Toggle theme">
+        <svg class="sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>
+        <svg class="moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+      </button>
+      <a href="#contact" class="pill">Book a session</a>
+    </nav>
+  </div>
+</header>
+
+<main id="top">
+
+  <!-- HERO -->
+  <section class="hero">
+    <div class="hint" id="hint">
+      <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4l7 16 2.5-7L20 11 4 4z"/></svg>
+      Move your cursor — you carry the only light
+    </div>
+    <div class="wrap">
+      <div class="badge"><span class="live"></span>AI-FIRST SOFTWARE · 8 PRODUCTS SHIPPED</div>
+      <h1>
+        <span class="ln l1">AI for complex,</span>
+        <span class="ln l2">legacy</span>
+        <span class="ln l3 corona-text">systems.</span>
+      </h1>
+      <p class="deck">
+        NYSGPT builds domain-specific AI applications for the systems ordinary software won't touch —
+        <b>impenetrable government databases, statutory regimes, and industrial records.</b>
+        We turn data nobody could read into software anyone can use.
+      </p>
+      <div class="cta">
+        <a href="#contact" class="btn btn-corona">Book a working session <span class="arr">→</span></a>
+        <a href="#work" class="btn btn-line">Bring them to light <span class="arr">→</span></a>
+      </div>
+      <div class="stats">
+        <div class="s"><div class="n corona-text tnum">8</div><div class="l">Products shipped</div></div>
+        <div class="s"><div class="n tnum">350<span class="u">k+</span></div><div class="l">Records navigable</div></div>
+        <div class="s"><div class="n tnum">5</div><div class="l">Live in production</div></div>
+        <div class="s"><div class="n tnum">∞</div><div class="l">Legacy systems left</div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- THESIS -->
+  <section class="thesis" id="thesis">
+    <div class="wrap">
+      <div class="inner reveal">
+        <div class="kicker">The thesis</div>
+        <h2>The most consequential systems run on the <span class="corona-text">worst software.</span></h2>
+        <p>
+          Legislative records, customs rulings, energy filings, licensing registries, nuclear references —
+          the data is public, authoritative, and locked behind portals built two decades ago for nobody
+          in particular. <b>NYSGPT closes that gap.</b> We ingest the primary record, ground every answer
+          in a verifiable source, and rebuild the interface from the data up — so the person who actually
+          needs the answer gets one, not a 40-page PDF.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- PRODUCTS -->
+  <section class="work" id="work">
+    <div class="wrap">
+      <div class="head reveal">
+        <div class="kicker">The portfolio</div>
+        <h2>Eight products, out of the dark.</h2>
+        <p>Sweep the light across them — every one ingests a hard public record and rebuilds the interface.</p>
+      </div>
+
+      <div class="grid">
+        <a class="card feat link reveal" href="https://44b.nysgpt.com" target="_blank" rel="noopener">
+          <span class="glow"></span>
+          <div class="top"><span class="idx">01</span><span class="status live"><span class="d"></span>LIVE</span></div>
+          <h3>44B</h3>
+          <div class="dsc">A public registry, research library, and incident record for AI — and the compliance portal for NY's Article 44-B. "SERFF, for AI."</div>
+          <div class="metric tnum">532 models<span class="sep">·</span>32k papers<span class="sep">·</span>2,561 incidents</div>
+        </a>
+
+        <a class="card feat link reveal" href="https://tariffs.nysgpt.com" target="_blank" rel="noopener">
+          <span class="glow"></span>
+          <div class="top"><span class="idx">02</span><span class="status live"><span class="d"></span>LIVE</span></div>
+          <h3>Tariffs<span class="gpt">GPT</span></h3>
+          <div class="dsc">A self-serve refund engine for importers who paid IEEPA tariffs the Supreme Court invalidated — a real recoverable number before any phone call.</div>
+          <div class="metric tnum">220k+ customs rulings<span class="sep">·</span>live schedule</div>
+        </a>
+
+        <a class="card link reveal" href="https://childcare.nysgpt.com/console" target="_blank" rel="noopener">
+          <span class="glow"></span>
+          <div class="top"><span class="idx">03</span><span class="status live"><span class="d"></span>LIVE</span></div>
+          <h3>Childcare<span class="gpt">GPT</span></h3>
+          <div class="dsc">NY childcare intelligence — every OCFS facility, county costs, and an AI-assisted subsidy form.</div>
+          <div class="metric tnum">16,800 facilities</div>
+        </a>
+
+        <a class="card link reveal" href="https://solar.nysgpt.com/map/plants-2" target="_blank" rel="noopener">
+          <span class="glow"></span>
+          <div class="top"><span class="idx">04</span><span class="status live"><span class="d"></span>LIVE</span></div>
+          <h3>Solar<span class="gpt">GPT</span></h3>
+          <div class="dsc">Clean-energy intelligence for every U.S. county, state, and grid region.</div>
+          <div class="metric tnum">EIA data pipelines</div>
+        </a>
+
+        <div class="card reveal">
+          <span class="glow"></span>
+          <div class="top"><span class="idx">05</span><span class="status shipped"><span class="d"></span>SHIPPED</span></div>
+          <h3>Policy<span class="gpt">GPT</span></h3>
+          <div class="dsc">NY legislative &amp; financial intelligence — bills, budgets, lobbying, with an advocacy layer.</div>
+          <div class="metric tnum">Full NYS record</div>
+        </div>
+
+        <div class="card reveal">
+          <span class="glow"></span>
+          <div class="top"><span class="idx">06</span><span class="status shipped"><span class="d"></span>SHIPPED</span></div>
+          <h3>NSR<span class="gpt">gpt</span></h3>
+          <div class="dsc">Semantic search &amp; RAG over the Nuclear Science References database.</div>
+          <div class="metric tnum">88,000+ records</div>
+        </div>
+
+        <div class="card reveal">
+          <span class="glow"></span>
+          <div class="top"><span class="idx">07</span><span class="status shipped"><span class="d"></span>SHIPPED</span></div>
+          <h3>Insurance<span class="gpt">GPT</span></h3>
+          <div class="dsc">Auto-insurance quotes grounded in filed carrier data, Stripe checkout, agent console.</div>
+          <div class="metric tnum">Grounded rates</div>
+        </div>
+
+        <div class="card feat reveal">
+          <span class="glow"></span>
+          <div class="top"><span class="idx">08</span><span class="status shipped"><span class="d"></span>SHIPPED</span></div>
+          <h3>Sports<span class="gpt">GPT</span></h3>
+          <div class="dsc">High-school sports intelligence for Section XI football on Long Island — team and player stats, standings, choropleth maps, and AI-generated game highlights.</div>
+          <div class="metric tnum">Section XI<span class="sep">·</span>AI highlights</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- DOMAINS marquee -->
+  <section class="domains">
+    <div class="marquee">
+      <span>Government&nbsp;&amp;&nbsp;legislative</span><span>Trade&nbsp;&amp;&nbsp;customs</span><span>Energy&nbsp;&amp;&nbsp;grid</span><span>Social&nbsp;services</span><span>Insurance</span><span>Scientific&nbsp;reference</span><span>AI&nbsp;governance</span><span>Public&nbsp;records</span>
+      <span>Government&nbsp;&amp;&nbsp;legislative</span><span>Trade&nbsp;&amp;&nbsp;customs</span><span>Energy&nbsp;&amp;&nbsp;grid</span><span>Social&nbsp;services</span><span>Insurance</span><span>Scientific&nbsp;reference</span><span>AI&nbsp;governance</span><span>Public&nbsp;records</span>
+    </div>
+  </section>
+
+  <!-- METHOD -->
+  <section class="method" id="how">
+    <div class="wrap">
+      <div class="head reveal">
+        <div class="kicker">How we build</div>
+        <h2>Ingest. Ground. Ship.</h2>
+      </div>
+      <div class="msteps">
+        <div class="mstep reveal">
+          <div class="num">01</div>
+          <h3>Tame the primary record</h3>
+          <p>We crawl, dedupe, and structure the authoritative source — even with no bulk export, no API, or a pagination wall — into clean, queryable Postgres. The hard part nobody else does.</p>
+        </div>
+        <div class="mstep reveal">
+          <div class="num">02</div>
+          <h3>Make the AI accountable</h3>
+          <p>Retrieval over the real corpus, structured output, and a visible chain back to the source. The model reasons over primary data — and every answer can be checked.</p>
+        </div>
+        <div class="mstep reveal">
+          <div class="num">03</div>
+          <h3>Rebuild the interface</h3>
+          <p>Search, structured exploration, maps, and AI on one surface — designed for the human who needs the answer, and pushed to production with real users.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA -->
+  <section class="cta" id="contact">
+    <div class="wrap">
+      <div class="panel reveal">
+        <div class="left">
+          <div class="kicker">Let's build</div>
+          <h2>Got a system too complex for ordinary software?</h2>
+          <p>That's exactly what we build for. Book a working session and we'll pressure-test what an AI-first rebuild looks like for your data — or send a short brief and we'll come back with a concrete read.</p>
+          <div class="direct">
+            <a href="mailto:Brendan@nysgpt.com?subject=Working%20session%20—%20NYSGPT"><span class="ico">✉</span> Brendan@nysgpt.com</a>
+            <a href="mailto:Brendan@nysgpt.com?subject=Book%20a%20working%20session"><span class="ico">↗</span> Book a working session</a>
+          </div>
+        </div>
+        <form class="brief" onsubmit="return submitBrief(event)">
+          <div class="fld"><label for="b-name">Your name</label><input id="b-name" name="name" required placeholder="Jane Rivera" /></div>
+          <div class="row2">
+            <div class="fld"><label for="b-email">Email</label><input id="b-email" name="email" type="email" required placeholder="jane@org.gov" /></div>
+            <div class="fld"><label for="b-org">Organization</label><input id="b-org" name="org" placeholder="Agency / company" /></div>
+          </div>
+          <div class="fld"><label for="b-domain">The system / domain</label>
+            <select id="b-domain" name="domain">
+              <option>Government / legislative</option><option>Trade / customs</option><option>Energy / utilities</option>
+              <option>Social services</option><option>Insurance / regulatory</option><option>Scientific / technical reference</option><option>Other legacy system</option>
+            </select>
+          </div>
+          <div class="fld"><label for="b-brief">What's locked up in it?</label><textarea id="b-brief" name="brief" placeholder="The data, who needs it, and why it's hard to use today…"></textarea></div>
+          <button type="submit" class="btn btn-corona">Send the brief <span class="arr">→</span></button>
+          <div class="note">Goes straight to Brendan@nysgpt.com — no funnel, no sales bot.</div>
+        </form>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <div class="c"><b>NYSGPT</b> — AI-first software for legacy systems · Long Island, NY</div>
+    <div class="c"><a href="mailto:Brendan@nysgpt.com">Brendan@nysgpt.com</a> · <a href="https://github.com/nyd-user-1" target="_blank" rel="noopener">GitHub</a></div>
+    <div class="c">© 2026</div>
+  </div>
+</footer>
+
+<!-- ============ PLAYGROUND ============ -->
+<button class="pg-launch" id="pgLaunch" type="button" aria-label="Open the design playground" title="Play with the design">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="13.5" cy="6.5" r="2.5"/><circle cx="6" cy="11" r="2.5"/><circle cx="17.5" cy="13" r="2.5"/><circle cx="9" cy="18" r="2.5"/>
+    <path d="M13.5 9v3M8 12.5l2.5 1M15 15l-3 1.7"/>
+  </svg>
+</button>
+<div class="pg-panel" id="pgPanel" role="dialog" aria-label="Design playground">
+  <div class="pg-head">
+    <span class="pg-title">◐ Design playground</span>
+    <button class="pg-reset" id="pgReset" type="button">Reset</button>
+  </div>
+
+  <div class="pg-grp">
+    <label>Corona</label>
+    <div class="pg-swatches" id="pgAccent">
+      <span class="pg-sw on" data-a="#7af0d6" data-a2="#c9a4ff" style="background:linear-gradient(120deg,#7af0d6,#c9a4ff)"></span>
+      <span class="pg-sw" data-a="#8fd0ff" data-a2="#c9a4ff" style="background:linear-gradient(120deg,#8fd0ff,#c9a4ff)"></span>
+      <span class="pg-sw" data-a="#ffd27a" data-a2="#ff8db0" style="background:linear-gradient(120deg,#ffd27a,#ff8db0)"></span>
+      <span class="pg-sw" data-a="#a0f0a8" data-a2="#7af0d6" style="background:linear-gradient(120deg,#a0f0a8,#7af0d6)"></span>
+      <span class="pg-sw" data-a="#ff9d7a" data-a2="#ff6ea9" style="background:linear-gradient(120deg,#ff9d7a,#ff6ea9)"></span>
+      <span class="pg-sw" data-a="#c9a4ff" data-a2="#8fd0ff" style="background:linear-gradient(120deg,#c9a4ff,#8fd0ff)"></span>
+      <label class="pg-sw custom" title="Custom hue">+<input type="color" id="pgAccentCustom" value="#7af0d6" /></label>
+    </div>
+  </div>
+
+  <div class="pg-grp">
+    <label>Display font</label>
+    <div class="pg-fonts" id="pgDisplay">
+      <button class="pg-font on" data-f='"Unbounded", sans-serif' style='font-family:"Unbounded",sans-serif'>Unbounded<span class="pf-name">display</span></button>
+      <button class="pg-font" data-f='"Space Grotesk", sans-serif' style='font-family:"Space Grotesk",sans-serif'>Space G.<span class="pf-name">grotesk</span></button>
+      <button class="pg-font" data-f='"Sora", sans-serif' style='font-family:"Sora",sans-serif'>Sora<span class="pf-name">sans</span></button>
+      <button class="pg-font" data-f='"Familjen Grotesk", sans-serif' style='font-family:"Familjen Grotesk",sans-serif'>Familjen<span class="pf-name">grotesk</span></button>
+    </div>
+  </div>
+
+  <div class="pg-grp">
+    <label>Body font</label>
+    <div class="pg-fonts" id="pgBody">
+      <button class="pg-font on" data-f='"Familjen Grotesk", sans-serif' style='font-family:"Familjen Grotesk",sans-serif'>Familjen<span class="pf-name">grotesk</span></button>
+      <button class="pg-font" data-f='"Sora", sans-serif' style='font-family:"Sora",sans-serif'>Sora<span class="pf-name">sans</span></button>
+      <button class="pg-font" data-f='"Space Grotesk", sans-serif' style='font-family:"Space Grotesk",sans-serif'>Space G.<span class="pf-name">grotesk</span></button>
+      <button class="pg-font" data-f='"Unbounded", sans-serif' style='font-family:"Unbounded",sans-serif'>Unbounded<span class="pf-name">display</span></button>
+    </div>
+  </div>
+
+  <div class="pg-grp">
+    <label>Torch radius <span class="v" id="pgTorchVal">340px</span></label>
+    <input type="range" class="pg-range" id="pgTorch" min="180" max="640" step="20" value="340" />
+  </div>
+
+  <div class="pg-grp">
+    <label>Darkness <span class="v" id="pgDarkVal">0.92</span></label>
+    <input type="range" class="pg-range" id="pgDark" min="0.4" max="1" step="0.02" value="0.92" />
+  </div>
+
+  <div class="pg-grp">
+    <label>Corner rounding <span class="v" id="pgRadVal">1.0×</span></label>
+    <input type="range" class="pg-range" id="pgRadius" min="0" max="2" step="0.1" value="1" />
+  </div>
+
+  <div class="pg-grp">
+    <label>Heading weight <span class="v" id="pgWghtVal">0</span></label>
+    <input type="range" class="pg-range" id="pgWght" min="-160" max="160" step="10" value="0" />
+  </div>
+
+  <div class="pg-grp">
+    <label>Density <span class="v" id="pgDensVal">1.0×</span></label>
+    <input type="range" class="pg-range" id="pgDensity" min="0.8" max="1.25" step="0.05" value="1" />
+  </div>
+</div>
+
+<script>
+  // ---- theme toggle + persistence ----
+  (function(){
+    const root=document.documentElement, btn=document.getElementById('themeToggle');
+    btn.addEventListener('click',()=>{
+      const light=root.getAttribute('data-theme')==='light';
+      if(light) root.removeAttribute('data-theme'); else root.setAttribute('data-theme','light');
+      try{localStorage.setItem('nysgpt-theme-b4', light?'dark':'light');}catch(e){}
+    });
+  })();
+
+  // ============ THE TORCH — cursor is the only light ============
+  (function(){
+    const root=document.documentElement, rs=root.style, body=document.body;
+    const reduce=matchMedia('(prefers-reduced-motion:reduce)').matches;
+    const noHover=matchMedia('(hover:none)').matches;
+    // if we can't track a pointer, lift the shroud entirely and bail.
+    if(reduce || noHover){ body.classList.add('no-torch'); return; }
+
+    let tx=innerWidth*0.5, ty=innerHeight*0.38;   // torch target
+    let cx=tx, cy=ty;                              // eased current
+    let lit=false, raf=0;
+    const hint=document.getElementById('hint');
+
+    function onMove(e){
+      tx=e.clientX; ty=e.clientY;
+      if(!lit){ lit=true; body.classList.add('lit'); if(hint) hint.style.opacity='0'; }
+    }
+    addEventListener('pointermove',onMove,{passive:true});
+
+    // intersection-style "bloom": light up any card/mstep the torch overlaps
+    const targets=[...document.querySelectorAll('.card,.mstep')];
+    function checkGlow(){
+      for(const el of targets){
+        const r=el.getBoundingClientRect();
+        // is the torch center within an expanded box?
+        const pad=parseFloat(getComputedStyle(root).getPropertyValue('--torch'))*0.45 || 150;
+        const inside = cx > r.left-pad && cx < r.right+pad && cy > r.top-pad && cy < r.bottom+pad;
+        el.classList.toggle('aglow', inside && lit);
+      }
+    }
+
+    function loop(){
+      // ease toward target for a smooth, weighty light
+      cx += (tx-cx)*0.18; cy += (ty-cy)*0.18;
+      rs.setProperty('--mx', cx+'px');
+      rs.setProperty('--my', cy+'px');
+      checkGlow();
+      raf=requestAnimationFrame(loop);
+    }
+    rs.setProperty('--mx', cx+'px'); rs.setProperty('--my', cy+'px');
+    raf=requestAnimationFrame(loop);
+
+    // pause torch tracking while the playground panel is open (so users can read it)
+  })();
+
+  // ---- playground (session-only) ----
+  (function(){
+    const root=document.documentElement, rs=root.style;
+    const panel=document.getElementById('pgPanel'), launch=document.getElementById('pgLaunch');
+    launch.addEventListener('click',e=>{e.stopPropagation();panel.classList.toggle('open')});
+    document.addEventListener('click',e=>{ if(!panel.contains(e.target) && e.target!==launch && !launch.contains(e.target)) panel.classList.remove('open'); });
+
+    function setCorona(a,a2){
+      rs.setProperty('--accent',a);
+      if(a2) rs.setProperty('--accent-2',a2);
+      rs.setProperty('--corona',`linear-gradient(120deg,${a},${a2||a})`);
+    }
+    const accWrap=document.getElementById('pgAccent');
+    accWrap.querySelectorAll('.pg-sw[data-a]').forEach(sw=>sw.addEventListener('click',()=>{
+      accWrap.querySelectorAll('.pg-sw').forEach(s=>s.classList.remove('on'));
+      sw.classList.add('on'); setCorona(sw.dataset.a,sw.dataset.a2);
+    }));
+    document.getElementById('pgAccentCustom').addEventListener('input',e=>{
+      accWrap.querySelectorAll('.pg-sw').forEach(s=>s.classList.remove('on'));
+      e.target.closest('.pg-sw').classList.add('on'); setCorona(e.target.value,e.target.value);
+    });
+
+    function fontGroup(id,varName){
+      const wrap=document.getElementById(id);
+      wrap.querySelectorAll('.pg-font').forEach(b=>b.addEventListener('click',()=>{
+        wrap.querySelectorAll('.pg-font').forEach(x=>x.classList.remove('on'));
+        b.classList.add('on'); rs.setProperty(varName,b.dataset.f);
+      }));
+    }
+    fontGroup('pgDisplay','--font-display');
+    fontGroup('pgBody','--font-body');
+
+    function rng(id,valId,varName,fmt){
+      const r=document.getElementById(id),v=document.getElementById(valId);
+      r.addEventListener('input',()=>{rs.setProperty(varName,fmt.unit?r.value+'px':r.value);v.textContent=fmt.disp(r.value)});
+    }
+    rng('pgTorch','pgTorchVal','--torch',{unit:true,disp:x=>x+'px'});
+    rng('pgDark','pgDarkVal','--shroud-op',{disp:x=>parseFloat(x).toFixed(2)});
+    rng('pgRadius','pgRadVal','--radius',{disp:x=>parseFloat(x).toFixed(1)+'×'});
+    rng('pgWght','pgWghtVal','--wght',{disp:x=>(x>0?'+':'')+x});
+    rng('pgDensity','pgDensVal','--density',{disp:x=>parseFloat(x).toFixed(2)+'×'});
+
+    document.getElementById('pgReset').addEventListener('click',()=>{
+      ['--accent','--accent-2','--corona','--font-display','--font-body','--torch','--shroud-op','--radius','--wght','--density'].forEach(v=>rs.removeProperty(v));
+      accWrap.querySelectorAll('.pg-sw').forEach((s,i)=>s.classList.toggle('on',i===0));
+      ['pgDisplay','pgBody'].forEach(id=>document.getElementById(id).querySelectorAll('.pg-font').forEach((b,i)=>b.classList.toggle('on',i===0)));
+      document.getElementById('pgTorch').value=340;document.getElementById('pgTorchVal').textContent='340px';
+      document.getElementById('pgDark').value=0.92;document.getElementById('pgDarkVal').textContent='0.92';
+      document.getElementById('pgRadius').value=1;document.getElementById('pgRadVal').textContent='1.0×';
+      document.getElementById('pgWght').value=0;document.getElementById('pgWghtVal').textContent='0';
+      document.getElementById('pgDensity').value=1;document.getElementById('pgDensVal').textContent='1.0×';
+      document.getElementById('pgAccentCustom').value='#7af0d6';
+    });
+  })();
+
+  // reveal on scroll
+  const io=new IntersectionObserver((es)=>{es.forEach(e=>{if(e.isIntersecting){e.target.classList.add('in');io.unobserve(e.target)}})},{threshold:.12,rootMargin:'0px 0px -6% 0px'});
+  document.querySelectorAll('.reveal').forEach((el,i)=>{el.style.transitionDelay=(i%4*60)+'ms';io.observe(el)});
+
+  function submitBrief(e){
+    e.preventDefault();const f=e.target;
+    const body=encodeURIComponent(`Name: ${f.name.value}\nEmail: ${f.email.value}\nOrg: ${f.org.value}\nDomain: ${f.domain.value}\n\nBrief:\n${f.brief.value}`);
+    window.location.href=`mailto:Brendan@nysgpt.com?subject=${encodeURIComponent('Project brief — '+(f.org.value||f.name.value))}&body=${body}`;
+    return false;
+  }
+</script>
+</body>
+</html>

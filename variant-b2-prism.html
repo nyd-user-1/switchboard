@@ -1,0 +1,855 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>NYSGPT — AI for complex, legacy systems</title>
+<meta name="description" content="NYSGPT is an AI-first software company building domain-specific applications for complex, legacy, and regulatory systems. Eight shipped products turning impenetrable data into navigable software." />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Clash+Display:wght@400;500;600;700&family=Hanken+Grotesk:ital,wght@0,400..700;1,400..600&family=Space+Mono:wght@400;700&family=Syne:wght@500;600;700;800&family=Sora:wght@400;500;600;700&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&display=swap" rel="stylesheet" />
+<!-- Clash Display via Fontshare (the spectral-display headliner) -->
+<link href="https://api.fontshare.com/v2/css?f[]=clash-display@400,500,600,700&display=swap" rel="stylesheet" />
+<script>
+  // dark is the design default; go light only when explicitly chosen before.
+  (function(){ try{ if(localStorage.getItem('nysgpt-theme-b2')==='light') document.documentElement.setAttribute('data-theme','light'); }catch(e){} })();
+</script>
+<style>
+  :root{
+    /* ---- DARK (default): black glass · spectral ---- */
+    --bg:#05060a;
+    --bg-2:#0a0c13;
+    --panel:rgba(255,255,255,.026);
+    --panel-brd:rgba(255,255,255,.085);
+    --panel-glass:rgba(10,12,19,.93);
+    --text:#f0f1f6;
+    --text-dim:#9498ab;
+    --text-faint:#585d72;
+    --text-hover:#ffffff;
+    --ink-on-accent:#05060a;
+    --pill-ink:#05060a;          /* text on the (light) nav pill */
+    /* the spectrum — drives EVERYTHING */
+    --c-r:#ff5470;   /* 680nm */
+    --c-o:#ff9d52;
+    --c-y:#ffe14d;
+    --c-g:#46e3a0;   /* mid */
+    --c-c:#3fd8e8;
+    --c-b:#5b8cff;
+    --c-v:#a06bff;   /* 420nm */
+    --spectrum:linear-gradient(100deg,var(--c-r),var(--c-o),var(--c-y),var(--c-g),var(--c-c),var(--c-b),var(--c-v));
+    --accent:var(--c-c);          /* single pull-color for solo accents */
+    --accent-2:var(--c-v);
+    --veil:radial-gradient(130% 90% at 50% -8%,transparent,rgba(5,6,10,.5) 58%,rgba(5,6,10,.92));
+    --grain-op:.045;
+    --header-bg:rgba(5,6,10,.5);
+    --rule-faint:rgba(255,255,255,.07);
+    --card-hover:rgba(255,255,255,.04);
+    --input-bg:rgba(255,255,255,.03);
+    --glass-tint:rgba(255,255,255,.015);
+    --prism-stroke:rgba(255,255,255,.5);
+    --beam-col:rgba(255,255,255,.85);
+    --font-display:"Clash Display","Syne",system-ui,sans-serif;
+    --font-body:"Hanken Grotesk",system-ui,sans-serif;
+    --font-mono:"Space Mono",ui-monospace,monospace;
+    --maxw:1180px;
+    /* playground knobs */
+    --radius:1;
+    --wght:0;
+    --density:1;
+    --split:1;            /* chromatic-aberration intensity multiplier */
+  }
+
+  /* ---- LIGHT: white-light study (paper + ink-split) ---- */
+  :root[data-theme="light"]{
+    --bg:#f4f2ee;
+    --bg-2:#fbfaf7;
+    --panel:rgba(18,20,34,.022);
+    --panel-brd:rgba(18,20,40,.13);
+    --panel-glass:rgba(251,250,247,.95);
+    --text:#13141b;
+    --text-dim:#52546a;
+    --text-faint:#8a8c9e;
+    --text-hover:#000000;
+    --ink-on-accent:#0a0b12;
+    --pill-ink:#f4f2ee;          /* light text on the (now-dark) nav pill */
+    /* deepen the spectrum so it reads on paper */
+    --c-r:#e8324f;
+    --c-o:#f07a1e;
+    --c-y:#e0b400;
+    --c-g:#13b377;
+    --c-c:#13a8c4;
+    --c-b:#3f63e8;
+    --c-v:#7e3ff0;
+    --accent:#13a8c4;
+    --accent-2:#7e3ff0;
+    --veil:radial-gradient(130% 90% at 50% -8%,transparent,rgba(244,242,238,.36) 56%,rgba(244,242,238,.84));
+    --grain-op:.028;
+    --header-bg:rgba(244,242,238,.64);
+    --rule-faint:rgba(18,20,40,.085);
+    --card-hover:rgba(18,20,40,.03);
+    --input-bg:rgba(18,20,40,.022);
+    --glass-tint:rgba(18,20,40,.012);
+    --prism-stroke:rgba(18,20,40,.55);
+    --beam-col:rgba(18,20,40,.6);
+  }
+  :root{color-scheme:dark} :root[data-theme="light"]{color-scheme:light}
+  html,body{transition:background .4s ease,color .4s ease}
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth;-webkit-text-size-adjust:100%}
+  body{
+    background:var(--bg);color:var(--text);font-family:var(--font-body);
+    font-size:16px;line-height:1.55;-webkit-font-smoothing:antialiased;
+    text-rendering:optimizeLegibility;overflow-x:hidden;
+  }
+
+  /* ===== ambient spectral fog (very low, just depth) ===== */
+  .fog{position:fixed;inset:-20vh -20vw;z-index:0;pointer-events:none;filter:blur(110px) saturate(150%);opacity:.5}
+  .fog .f{position:absolute;border-radius:50%;mix-blend-mode:screen;will-change:transform}
+  :root[data-theme="light"] .fog .f{mix-blend-mode:multiply}
+  :root[data-theme="light"] .fog{opacity:.28}
+  .fog .f1{width:48vw;height:48vw;left:-8vw;top:-6vh;background:radial-gradient(circle at 40% 40%,var(--c-v),transparent 62%);animation:fdrift1 28s ease-in-out infinite}
+  .fog .f2{width:42vw;height:42vw;right:-6vw;top:8vh;background:radial-gradient(circle at 50% 50%,var(--c-c),transparent 62%);animation:fdrift2 32s ease-in-out infinite}
+  .fog .f3{width:38vw;height:38vw;left:30vw;top:40vh;background:radial-gradient(circle at 50% 50%,var(--c-r),transparent 60%);animation:fdrift3 36s ease-in-out infinite}
+  @keyframes fdrift1{0%,100%{transform:translate(0,0)}50%{transform:translate(6vw,7vh)}}
+  @keyframes fdrift2{0%,100%{transform:translate(0,0)}50%{transform:translate(-7vw,5vh)}}
+  @keyframes fdrift3{0%,100%{transform:translate(0,0)}50%{transform:translate(4vw,-6vh)}}
+  .grain{position:fixed;inset:0;z-index:1;pointer-events:none;opacity:var(--grain-op);
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")}
+  .veil{position:fixed;inset:0;z-index:1;pointer-events:none;background:var(--veil)}
+
+  .wrap{position:relative;z-index:3;max-width:var(--maxw);margin:0 auto;padding:0 28px}
+  a{color:inherit;text-decoration:none}
+  .mono{font-family:var(--font-mono)}
+  .tnum{font-variant-numeric:tabular-nums}
+  .spec-text{background:var(--spectrum);background-size:140% 100%;-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;animation:specshift 14s linear infinite}
+  @keyframes specshift{to{background-position:140% 0}}
+  .kicker{font-family:var(--font-mono);font-size:11px;letter-spacing:.22em;text-transform:uppercase;color:var(--accent)}
+
+  /* ===== chromatic-aberration text — the signature move ===== */
+  /* a glyph painted 3 times: red ghost left, blue ghost right, white core.
+     intensity scales with --split (live-tunable) and a per-element --amp. */
+  .chroma{position:relative;display:inline-block;color:var(--text)}
+  .chroma::before,.chroma::after{
+    content:attr(data-t);position:absolute;inset:0;pointer-events:none;
+    -webkit-text-fill-color:initial;mix-blend-mode:screen;opacity:.9;
+  }
+  :root[data-theme="light"] .chroma::before,
+  :root[data-theme="light"] .chroma::after{mix-blend-mode:multiply;opacity:.78}
+  .chroma::before{color:var(--c-r);transform:translateX(calc(var(--amp,3px) * var(--split) * -1));animation:chroma-l 5.5s ease-in-out infinite}
+  .chroma::after{color:var(--c-b);transform:translateX(calc(var(--amp,3px) * var(--split)));animation:chroma-r 5.5s ease-in-out infinite}
+  @keyframes chroma-l{0%,100%{transform:translateX(calc(var(--amp,3px) * var(--split) * -1))}50%{transform:translateX(calc(var(--amp,3px) * var(--split) * -1.9)) translateY(.5px)}}
+  @keyframes chroma-r{0%,100%{transform:translateX(calc(var(--amp,3px) * var(--split)))}50%{transform:translateX(calc(var(--amp,3px) * var(--split) * 1.9)) translateY(-.5px)}}
+
+  /* ===== NAV ===== */
+  header{position:sticky;top:0;z-index:50;backdrop-filter:blur(16px);background:var(--header-bg);border-bottom:1px solid var(--rule-faint)}
+  header .wrap{display:flex;align-items:center;justify-content:space-between;height:68px}
+  .brand{display:flex;align-items:center;gap:12px;font-family:var(--font-display);font-weight:600;font-size:19px;letter-spacing:-.01em}
+  .brand .prismico{width:24px;height:24px;flex-shrink:0}
+  nav{display:flex;align-items:center;gap:30px}
+  nav a{font-family:var(--font-mono);font-size:12px;letter-spacing:.04em;color:var(--text-dim);transition:color .2s}
+  nav a:hover{color:var(--text)}
+  .pill{padding:9px 18px;border-radius:100px;background:var(--text);color:var(--pill-ink) !important;font-weight:600 !important;font-family:var(--font-body) !important;transition:transform .2s,box-shadow .2s}
+  .pill:hover{transform:translateY(-1px);box-shadow:0 8px 30px rgba(63,216,232,.28)}
+  .theme-toggle{width:36px;height:36px;border:1px solid var(--panel-brd);border-radius:50%;background:var(--panel);
+    display:grid;place-items:center;cursor:pointer;color:var(--text-dim);transition:border-color .2s,color .2s;flex-shrink:0}
+  .theme-toggle:hover{border-color:var(--accent);color:var(--text)}
+  .theme-toggle svg{width:15px;height:15px;display:block}
+  .theme-toggle .moon{display:none}
+  :root[data-theme="light"] .theme-toggle .sun{display:none}
+  :root[data-theme="light"] .theme-toggle .moon{display:block}
+  @media(max-width:760px){nav a:not(.pill){display:none}}
+
+  /* ===== HERO ===== */
+  .hero{position:relative;padding:calc(96px * var(--density)) 0 calc(86px * var(--density));text-align:center}
+  /* the live prism stage sits behind the headline */
+  .prism-stage{position:absolute;inset:0;z-index:0;pointer-events:none;overflow:hidden}
+  .prism-stage canvas{position:absolute;top:0;left:50%;transform:translateX(-50%);width:min(1180px,100%);height:100%}
+  .hero .wrap{position:relative;z-index:2}
+  .hero .badge{display:inline-flex;align-items:center;gap:9px;border:1px solid var(--panel-brd);background:var(--panel);
+    padding:7px 16px;border-radius:100px;font-family:var(--font-mono);font-size:11px;letter-spacing:.06em;color:var(--text-dim);
+    margin-bottom:32px;animation:pop .7s cubic-bezier(.16,1,.3,1) both}
+  .hero .badge .live{width:7px;height:7px;border-radius:50%;background:var(--accent);box-shadow:0 0 0 0 rgba(63,216,232,.6);animation:pulse 2.2s infinite}
+  @keyframes pulse{0%{box-shadow:0 0 0 0 rgba(63,216,232,.5)}70%{box-shadow:0 0 0 7px rgba(63,216,232,0)}100%{box-shadow:0 0 0 0 rgba(63,216,232,0)}}
+  .hero h1{font-family:var(--font-display);font-weight:calc(600 + var(--wght));font-size:clamp(46px,8.6vw,116px);line-height:.92;letter-spacing:-.04em;max-width:15ch;margin:0 auto}
+  .hero h1 .ln{display:block;animation:pop .85s cubic-bezier(.16,1,.3,1) both}
+  .hero h1 .l1{animation-delay:.05s}.hero h1 .l2{animation-delay:.14s}.hero h1 .l3{animation-delay:.23s}
+  .hero h1 .chroma{--amp:4px}
+  .hero h1 .l3 .chroma{--amp:6px}
+  @keyframes pop{from{opacity:0;transform:translateY(26px)}to{opacity:1;transform:none}}
+  .hero p.deck{margin:30px auto 0;max-width:60ch;font-size:18.5px;line-height:1.62;color:var(--text-dim);animation:pop .8s ease .4s both}
+  .hero p.deck b{color:var(--text);font-weight:600}
+  .hero .cta{margin-top:38px;display:flex;gap:14px;justify-content:center;flex-wrap:wrap;animation:pop .8s ease .55s both}
+  .btn{font-family:var(--font-body);font-weight:600;font-size:15px;padding:15px 28px;border-radius:100px;display:inline-flex;align-items:center;gap:10px;transition:transform .2s,box-shadow .2s,background .2s,border-color .2s;cursor:pointer;border:1px solid transparent;position:relative}
+  .btn .arr{transition:transform .25s}.btn:hover .arr{transform:translateX(4px)}
+  /* primary = a slab of pure white light, with a spectral fringe that flares on hover */
+  .btn-prism{background:#fff;color:#05060a;box-shadow:0 6px 30px rgba(255,255,255,.14)}
+  :root[data-theme="light"] .btn-prism{background:#13141b;color:#fff}
+  .btn-prism::before{content:"";position:absolute;inset:-1px;border-radius:100px;padding:1.5px;background:var(--spectrum);
+    -webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask-composite:exclude;
+    opacity:0;transition:opacity .3s}
+  .btn-prism:hover{transform:translateY(-2px);box-shadow:0 10px 40px rgba(63,216,232,.32),0 0 26px rgba(160,107,255,.22)}
+  .btn-prism:hover::before{opacity:1}
+  .btn-line{border-color:var(--panel-brd);background:var(--panel);color:var(--text)}
+  .btn-line:hover{border-color:var(--accent);color:var(--text-hover)}
+
+  /* proof-bar — refracted: each cell is a wavelength band */
+  .hero .stats{margin-top:70px;display:flex;justify-content:center;gap:0;flex-wrap:wrap;animation:pop .9s ease .7s both;position:relative}
+  .hero .stats::before{content:"";position:absolute;left:8%;right:8%;top:-18px;height:2px;border-radius:2px;background:var(--spectrum);opacity:.5}
+  .hero .stats .s{padding:0 40px;text-align:center;position:relative}
+  .hero .stats .s::after{content:"";position:absolute;right:0;top:14%;bottom:14%;width:1px;background:var(--rule-faint)}
+  .hero .stats .s:last-child::after{display:none}
+  .hero .stats .n{font-family:var(--font-display);font-weight:600;font-size:44px;letter-spacing:-.02em;line-height:1}
+  .hero .stats .n .u{font-size:22px}
+  .hero .stats .l{font-family:var(--font-mono);font-size:10px;letter-spacing:.13em;text-transform:uppercase;color:var(--text-faint);margin-top:11px}
+  @media(max-width:680px){.hero .stats .s{padding:14px 26px}.hero .stats .s::after{display:none}}
+
+  /* ===== THESIS ===== */
+  .thesis{padding:calc(86px * var(--density)) 0}
+  .thesis .inner{max-width:880px;margin:0 auto;text-align:center}
+  .thesis .kicker{margin-bottom:22px}
+  .thesis h2{font-family:var(--font-display);font-weight:calc(500 + var(--wght));font-size:clamp(28px,4.4vw,48px);line-height:1.08;letter-spacing:-.022em}
+  .thesis p{margin:28px auto 0;max-width:62ch;color:var(--text-dim);font-size:17.5px;line-height:1.7}
+  .thesis p b{color:var(--text);font-weight:600}
+
+  /* ===== PRODUCTS — the dispersion band ===== */
+  .work{padding:calc(66px * var(--density)) 0 calc(86px * var(--density))}
+  .work .head{text-align:center;margin-bottom:30px}
+  .work .head .kicker{margin-bottom:16px}
+  .work .head h2{font-family:var(--font-display);font-weight:calc(600 + var(--wght));font-size:clamp(30px,5vw,58px);letter-spacing:-.03em;line-height:1}
+  .work .head p{margin-top:16px;color:var(--text-dim);font-size:16px}
+  /* the spectral ruler the products are pinned to */
+  .spectrum-rule{position:relative;height:6px;border-radius:6px;background:var(--spectrum);margin:34px 0 8px;opacity:.85;box-shadow:0 0 22px rgba(63,216,232,.18)}
+  .spectrum-rule .tick{position:absolute;top:-22px;font-family:var(--font-mono);font-size:9.5px;letter-spacing:.08em;color:var(--text-faint);transform:translateX(-50%)}
+  .spectrum-rule .tick::after{content:"";position:absolute;left:50%;top:24px;width:1px;height:8px;background:var(--text-faint);opacity:.5}
+  .grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-top:30px}
+  .grid .card{
+    grid-column:span 1;position:relative;border:1px solid var(--panel-brd);border-radius:calc(18px * var(--radius));
+    background:linear-gradient(180deg,var(--glass-tint),transparent);padding:24px 22px;overflow:hidden;
+    transition:transform .3s cubic-bezier(.16,1,.3,1),border-color .3s,background .3s;
+    display:flex;flex-direction:column;min-height:214px;
+  }
+  .grid .card.feat{grid-column:span 2}
+  /* each card carries its own wavelength color via --wl, set inline */
+  .grid .card .edge{position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--wl,var(--accent));opacity:.65;transition:opacity .3s,width .3s}
+  .grid .card:hover .edge{opacity:1;width:5px}
+  /* dichroic ring appears on hover */
+  .grid .card::after{content:"";position:absolute;inset:0;border-radius:calc(18px * var(--radius));padding:1px;
+    background:linear-gradient(135deg,var(--wl,var(--accent)),transparent 40%,transparent 60%,var(--accent-2));
+    -webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask-composite:exclude;
+    opacity:0;transition:opacity .3s}
+  .grid .card:hover{transform:translateY(-5px);background:var(--card-hover)}
+  .grid .card:hover::after{opacity:.85}
+  .grid .card .glow{position:absolute;width:150px;height:150px;border-radius:50%;filter:blur(52px);opacity:0;transition:opacity .35s;top:-46px;right:-46px;background:var(--wl,var(--accent))}
+  .grid .card:hover .glow{opacity:.42}
+  .card .top{display:flex;align-items:center;justify-content:space-between;margin-bottom:auto}
+  .card .idx{font-family:var(--font-mono);font-size:10.5px;color:var(--text-faint)}
+  .card .wl{font-family:var(--font-mono);font-size:9px;letter-spacing:.06em;color:var(--wl,var(--accent));opacity:.85}
+  .card .status{font-family:var(--font-mono);font-size:9px;letter-spacing:.1em;display:inline-flex;align-items:center;gap:6px;padding:4px 9px;border-radius:100px;border:1px solid var(--panel-brd)}
+  .card .status.live{color:var(--wl,var(--accent))}
+  .card .status.live .d{width:5px;height:5px;border-radius:50%;background:var(--wl,var(--accent))}
+  .card .status.shipped{color:var(--text-faint)}
+  .card .status.shipped .d{width:5px;height:5px;border-radius:50%;background:var(--text-faint)}
+  .card h3{font-family:var(--font-display);font-weight:calc(600 + var(--wght));font-size:23px;letter-spacing:-.015em;margin:16px 0 8px}
+  .card h3 .gpt{color:var(--text-dim);font-weight:400}
+  .card .dsc{color:var(--text-dim);font-size:13.5px;line-height:1.5}
+  .card.feat .dsc{font-size:14.5px;max-width:46ch}
+  .card .metric{margin-top:16px;font-family:var(--font-mono);font-size:11.5px;color:var(--text);display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+  .card .metric .sep{color:var(--text-faint)}
+  .card.link:hover h3{color:var(--text-hover)}
+  .card.link h3::after{content:"↗";font-size:14px;margin-left:7px;color:var(--wl,var(--accent));opacity:0;transition:opacity .2s}
+  .card.link:hover h3::after{opacity:1}
+  @media(max-width:960px){.grid{grid-template-columns:repeat(2,1fr)} .grid .card.feat{grid-column:span 2} .spectrum-rule{display:none}}
+  @media(max-width:560px){.grid{grid-template-columns:1fr} .grid .card,.grid .card.feat{grid-column:span 1}}
+
+  /* ===== METHOD — the three rays ===== */
+  .method{padding:calc(78px * var(--density)) 0}
+  .method .head{text-align:center;margin-bottom:46px}
+  .method .head .kicker{margin-bottom:14px}
+  .method .head h2{font-family:var(--font-display);font-weight:calc(600 + var(--wght));font-size:clamp(28px,4.4vw,48px);letter-spacing:-.025em}
+  .msteps{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
+  .mstep{border:1px solid var(--panel-brd);background:var(--panel);border-radius:calc(18px * var(--radius));padding:30px 26px;position:relative;overflow:hidden;transition:transform .3s,background .3s}
+  .mstep::before{content:"";position:absolute;left:0;right:0;top:0;height:2px;background:var(--ray,var(--accent));opacity:.75}
+  .mstep:hover{transform:translateY(-4px);background:var(--card-hover)}
+  .mstep .num{font-family:var(--font-display);font-weight:700;font-size:46px;line-height:1;letter-spacing:-.03em;color:var(--ray,var(--accent));opacity:.92;margin-bottom:16px}
+  .mstep h3{font-family:var(--font-display);font-weight:600;font-size:20px;margin-bottom:10px}
+  .mstep p{color:var(--text-dim);font-size:14px;line-height:1.6}
+  @media(max-width:820px){.msteps{grid-template-columns:1fr}}
+
+  /* ===== DOMAINS marquee ===== */
+  .domains{padding:44px 0;border-top:1px solid var(--rule-faint);border-bottom:1px solid var(--rule-faint);overflow:hidden}
+  .marquee{display:flex;gap:42px;white-space:nowrap;animation:scroll 34s linear infinite;width:max-content}
+  .marquee:hover{animation-play-state:paused}
+  .marquee span{font-family:var(--font-display);font-weight:500;font-size:22px;color:var(--text-faint);display:inline-flex;align-items:center;gap:42px}
+  .marquee span::after{content:"◇";color:var(--accent);font-size:12px}
+  @keyframes scroll{to{transform:translateX(-50%)}}
+
+  /* ===== CTA ===== */
+  .cta{padding:calc(92px * var(--density)) 0}
+  .cta .panel{position:relative;border:1px solid var(--panel-brd);border-radius:calc(26px * var(--radius));overflow:hidden;background:var(--bg-2);
+    display:grid;grid-template-columns:1.02fr .98fr}
+  .cta .panel::before{content:"";position:absolute;inset:0;background:
+    radial-gradient(80% 120% at 0% 0%,rgba(160,107,255,.16),transparent 50%),
+    radial-gradient(80% 120% at 100% 100%,rgba(63,216,232,.16),transparent 50%);pointer-events:none}
+  .cta .panel::after{content:"";position:absolute;left:0;right:0;top:0;height:3px;background:var(--spectrum);opacity:.8}
+  .cta .left{position:relative;padding:54px 48px;border-right:1px solid var(--panel-brd)}
+  .cta .left .kicker{margin-bottom:20px}
+  .cta .left h2{font-family:var(--font-display);font-weight:600;font-size:clamp(30px,3.8vw,46px);line-height:1.04;letter-spacing:-.025em}
+  .cta .left p{margin-top:20px;color:var(--text-dim);font-size:16px;line-height:1.65;max-width:42ch}
+  .cta .direct{margin-top:32px;display:grid;gap:13px}
+  .cta .direct a{display:inline-flex;align-items:center;gap:12px;font-family:var(--font-mono);font-size:13px;color:var(--text);transition:color .2s;width:fit-content}
+  .cta .direct a:hover{color:var(--accent)}
+  .cta .direct .ico{width:34px;height:34px;border-radius:calc(9px * var(--radius));border:1px solid var(--panel-brd);display:grid;place-items:center;color:var(--accent)}
+  form.brief{position:relative;padding:54px 48px;display:grid;gap:17px}
+  form.brief .fld{display:grid;gap:7px}
+  form.brief label{font-family:var(--font-mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--text-faint)}
+  form.brief input,form.brief textarea,form.brief select{background:var(--input-bg);border:1px solid var(--panel-brd);border-radius:calc(11px * var(--radius));padding:13px 15px;color:var(--text);font-family:var(--font-body);font-size:14.5px;transition:border-color .2s,background .2s}
+  form.brief input:focus,form.brief textarea:focus,form.brief select:focus{outline:none;border-color:var(--accent);background:rgba(63,216,232,.04)}
+  form.brief textarea{resize:vertical;min-height:82px}
+  form.brief .row2{display:grid;grid-template-columns:1fr 1fr;gap:13px}
+  form.brief button{margin-top:4px;width:100%;justify-content:center}
+  form.brief .note{font-family:var(--font-mono);font-size:10px;color:var(--text-faint);text-align:center}
+  @media(max-width:860px){.cta .panel{grid-template-columns:1fr}.cta .left{border-right:none;border-bottom:1px solid var(--panel-brd);padding:40px 28px}form.brief{padding:40px 28px}}
+
+  /* ===== FOOTER ===== */
+  footer{padding:44px 0;border-top:1px solid var(--rule-faint)}
+  footer .wrap{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:16px}
+  footer .c{font-family:var(--font-mono);font-size:11px;color:var(--text-faint)}
+  footer .c b{color:var(--text-dim);font-weight:500}
+  footer a:hover{color:var(--accent)}
+
+  /* ===== PLAYGROUND ===== */
+  .pg-launch{position:fixed;right:22px;bottom:22px;z-index:90;width:50px;height:50px;border-radius:50%;
+    background:#fff;color:#05060a;cursor:pointer;border:none;display:grid;place-items:center;
+    box-shadow:0 10px 34px rgba(63,216,232,.32);transition:transform .25s,box-shadow .2s;overflow:hidden}
+  :root[data-theme="light"] .pg-launch{background:#13141b;color:#fff}
+  .pg-launch::before{content:"";position:absolute;inset:0;background:var(--spectrum);opacity:.0;transition:opacity .25s;mix-blend-mode:screen}
+  .pg-launch:hover{transform:translateY(-3px) rotate(-8deg);box-shadow:0 14px 44px rgba(160,107,255,.45)}
+  .pg-launch:hover::before{opacity:.5}
+  .pg-launch svg{width:22px;height:22px;position:relative;z-index:1}
+  .pg-panel{position:fixed;right:22px;bottom:84px;z-index:91;width:320px;
+    background:var(--panel-glass);backdrop-filter:blur(20px);border:1px solid var(--panel-brd);
+    border-radius:calc(20px * var(--radius));box-shadow:0 24px 64px rgba(0,0,0,.6);padding:22px;
+    opacity:0;transform:translateY(12px) scale(.97);pointer-events:none;transform-origin:bottom right;
+    transition:opacity .26s cubic-bezier(.16,1,.3,1),transform .26s cubic-bezier(.16,1,.3,1);max-height:80vh;overflow-y:auto}
+  .pg-panel.open{opacity:1;transform:none;pointer-events:auto}
+  .pg-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px}
+  .pg-title{font-family:var(--font-mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--accent)}
+  .pg-reset{font-family:var(--font-mono);font-size:10px;letter-spacing:.06em;color:var(--text-dim);background:none;border:none;cursor:pointer;text-transform:uppercase}
+  .pg-reset:hover{color:var(--text)}
+  .pg-grp{margin-bottom:20px}.pg-grp:last-child{margin-bottom:4px}
+  .pg-grp > label{display:block;font-family:var(--font-mono);font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--text-dim);margin-bottom:11px}
+  .pg-grp > label .v{color:var(--text-faint);float:right;text-transform:none;letter-spacing:0}
+  .pg-swatches{display:flex;gap:9px;flex-wrap:wrap}
+  .pg-sw{width:28px;height:28px;border-radius:calc(9px * var(--radius));cursor:pointer;border:2px solid transparent;transition:transform .15s,border-color .15s;position:relative}
+  .pg-sw:hover{transform:scale(1.12)}
+  .pg-sw.on{border-color:var(--text)}
+  .pg-sw.custom{display:grid;place-items:center;background:var(--panel);border:1px solid var(--panel-brd);color:var(--text-faint);overflow:hidden}
+  .pg-sw.custom input{position:absolute;inset:0;opacity:0;cursor:pointer}
+  .pg-fonts{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  .pg-font{font-family:inherit;font-size:13px;padding:9px 10px;border-radius:calc(9px * var(--radius));border:1px solid var(--panel-brd);background:var(--panel);color:var(--text-dim);cursor:pointer;transition:.15s;text-align:left;line-height:1.1}
+  .pg-font:hover{border-color:var(--text-faint);color:var(--text)}
+  .pg-font.on{border-color:var(--accent);color:var(--text)}
+  .pg-font .pf-name{font-size:9px;font-family:var(--font-mono);letter-spacing:.04em;color:var(--text-faint);display:block;margin-top:3px}
+  input[type=range].pg-range{-webkit-appearance:none;appearance:none;width:100%;height:3px;border-radius:3px;background:var(--panel-brd);outline:none;cursor:pointer}
+  input[type=range].pg-range::-webkit-slider-thumb{-webkit-appearance:none;width:16px;height:16px;border-radius:50%;background:var(--accent);cursor:pointer;border:2px solid var(--bg-2)}
+  input[type=range].pg-range::-moz-range-thumb{width:14px;height:14px;border-radius:50%;background:var(--accent);cursor:pointer;border:2px solid var(--bg-2)}
+  @media(max-width:560px){.pg-panel{width:calc(100vw - 44px)}}
+
+  .reveal{opacity:0;transform:translateY(26px);transition:opacity .75s cubic-bezier(.16,1,.3,1),transform .75s cubic-bezier(.16,1,.3,1)}
+  .reveal.in{opacity:1;transform:none}
+  @media(prefers-reduced-motion:reduce){*{animation:none !important;transition:none !important}.reveal{opacity:1;transform:none}.fog{opacity:.35}.chroma::before,.chroma::after{display:none}}
+</style>
+</head>
+<body>
+
+<div class="fog"><div class="f f1"></div><div class="f f2"></div><div class="f f3"></div></div>
+<div class="grain"></div>
+<div class="veil"></div>
+
+<header>
+  <div class="wrap">
+    <a href="#top" class="brand">
+      <svg class="prismico" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+        <path d="M12 3 L21 19 H3 Z" stroke="url(#pg)" stroke-width="1.6" stroke-linejoin="round"/>
+        <path d="M2 11 L9 12.5" stroke="currentColor" stroke-width="1.2" opacity=".5"/>
+        <path d="M14 11.6 L23 9.4" stroke="#ff5470" stroke-width="1.1"/>
+        <path d="M14 12.4 L23 12.4" stroke="#46e3a0" stroke-width="1.1"/>
+        <path d="M14 13.2 L23 15.4" stroke="#5b8cff" stroke-width="1.1"/>
+        <defs><linearGradient id="pg" x1="3" y1="3" x2="21" y2="19"><stop stop-color="#a06bff"/><stop offset="1" stop-color="#3fd8e8"/></linearGradient></defs>
+      </svg>NYSGPT</a>
+    <nav>
+      <a href="#thesis">Thesis</a>
+      <a href="#work">Products</a>
+      <a href="#how">Method</a>
+      <button class="theme-toggle" id="themeToggle" type="button" aria-label="Toggle light and dark mode" title="Toggle theme">
+        <svg class="sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>
+        <svg class="moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+      </button>
+      <a href="#contact" class="pill">Book a session</a>
+    </nav>
+  </div>
+</header>
+
+<main id="top">
+
+  <!-- HERO -->
+  <section class="hero">
+    <div class="prism-stage"><canvas id="prismCanvas"></canvas></div>
+    <div class="wrap">
+      <div class="badge"><span class="live"></span>AI-FIRST SOFTWARE · 8 PRODUCTS SHIPPED</div>
+      <h1>
+        <span class="ln l1"><span class="chroma" data-t="AI for complex,">AI for complex,</span></span>
+        <span class="ln l2"><span class="chroma" data-t="legacy">legacy</span></span>
+        <span class="ln l3"><span class="chroma spec-text" data-t="systems.">systems.</span></span>
+      </h1>
+      <p class="deck">
+        NYSGPT builds domain-specific AI applications for the systems ordinary software won't touch —
+        <b>impenetrable government databases, statutory regimes, and industrial records.</b>
+        We turn data nobody could read into software anyone can use.
+      </p>
+      <div class="cta">
+        <a href="#contact" class="btn btn-prism">Book a working session <span class="arr">→</span></a>
+        <a href="#work" class="btn btn-line">Disperse the portfolio <span class="arr">→</span></a>
+      </div>
+      <div class="stats">
+        <div class="s"><div class="n spec-text tnum">8</div><div class="l">Products shipped</div></div>
+        <div class="s"><div class="n tnum">350<span class="u">k+</span></div><div class="l">Records navigable</div></div>
+        <div class="s"><div class="n tnum">5</div><div class="l">Live in production</div></div>
+        <div class="s"><div class="n tnum">∞</div><div class="l">Legacy systems left</div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- THESIS -->
+  <section class="thesis" id="thesis">
+    <div class="wrap">
+      <div class="inner reveal">
+        <div class="kicker">The thesis</div>
+        <h2>The most consequential systems run on the <span class="spec-text">worst software.</span></h2>
+        <p>
+          Legislative records, customs rulings, energy filings, licensing registries, nuclear references —
+          the data is public, authoritative, and locked behind portals built two decades ago for nobody
+          in particular. <b>NYSGPT closes that gap.</b> We ingest the primary record, ground every answer
+          in a verifiable source, and rebuild the interface from the data up — so the person who actually
+          needs the answer gets one, not a 40-page PDF.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- PRODUCTS -->
+  <section class="work" id="work">
+    <div class="wrap">
+      <div class="head reveal">
+        <div class="kicker">The portfolio</div>
+        <h2>Eight products. One white light.</h2>
+        <p>One architecture, refracted into eight domains — each its own wavelength.</p>
+      </div>
+
+      <div class="spectrum-rule reveal" aria-hidden="true">
+        <span class="tick" style="left:6%">420nm</span>
+        <span class="tick" style="left:50%">visible</span>
+        <span class="tick" style="left:94%">680nm</span>
+      </div>
+
+      <div class="grid">
+        <a class="card feat link reveal" style="--wl:var(--c-v)" href="https://44b.nysgpt.com" target="_blank" rel="noopener">
+          <span class="edge"></span><span class="glow"></span>
+          <div class="top"><span class="idx">01</span><span class="wl">420nm</span><span class="status live"><span class="d"></span>LIVE</span></div>
+          <h3>44B</h3>
+          <div class="dsc">A public registry, research library, and incident record for AI — and the compliance portal for NY's Article 44-B. "SERFF, for AI."</div>
+          <div class="metric tnum">532 models<span class="sep">·</span>32k papers<span class="sep">·</span>2,561 incidents</div>
+        </a>
+
+        <a class="card feat link reveal" style="--wl:var(--c-b)" href="https://tariffs.nysgpt.com" target="_blank" rel="noopener">
+          <span class="edge"></span><span class="glow"></span>
+          <div class="top"><span class="idx">02</span><span class="wl">455nm</span><span class="status live"><span class="d"></span>LIVE</span></div>
+          <h3>Tariffs<span class="gpt">GPT</span></h3>
+          <div class="dsc">A self-serve refund engine for importers who paid IEEPA tariffs the Supreme Court invalidated — a real recoverable number before any phone call.</div>
+          <div class="metric tnum">220k+ customs rulings<span class="sep">·</span>live schedule</div>
+        </a>
+
+        <a class="card link reveal" style="--wl:var(--c-c)" href="https://childcare.nysgpt.com/console" target="_blank" rel="noopener">
+          <span class="edge"></span><span class="glow"></span>
+          <div class="top"><span class="idx">03</span><span class="wl">490nm</span><span class="status live"><span class="d"></span>LIVE</span></div>
+          <h3>Childcare<span class="gpt">GPT</span></h3>
+          <div class="dsc">NY childcare intelligence — every OCFS facility, county costs, and an AI-assisted subsidy form.</div>
+          <div class="metric tnum">16,800 facilities</div>
+        </a>
+
+        <a class="card link reveal" style="--wl:var(--c-g)" href="https://solar.nysgpt.com/map/plants-2" target="_blank" rel="noopener">
+          <span class="edge"></span><span class="glow"></span>
+          <div class="top"><span class="idx">04</span><span class="wl">530nm</span><span class="status live"><span class="d"></span>LIVE</span></div>
+          <h3>Solar<span class="gpt">GPT</span></h3>
+          <div class="dsc">Clean-energy intelligence for every U.S. county, state, and grid region.</div>
+          <div class="metric tnum">EIA data pipelines</div>
+        </a>
+
+        <div class="card reveal" style="--wl:var(--c-y)">
+          <span class="edge"></span><span class="glow"></span>
+          <div class="top"><span class="idx">05</span><span class="wl">575nm</span><span class="status shipped"><span class="d"></span>SHIPPED</span></div>
+          <h3>Policy<span class="gpt">GPT</span></h3>
+          <div class="dsc">NY legislative &amp; financial intelligence — bills, budgets, lobbying, with an advocacy layer.</div>
+          <div class="metric tnum">Full NYS record</div>
+        </div>
+
+        <div class="card reveal" style="--wl:var(--c-o)">
+          <span class="edge"></span><span class="glow"></span>
+          <div class="top"><span class="idx">06</span><span class="wl">605nm</span><span class="status shipped"><span class="d"></span>SHIPPED</span></div>
+          <h3>NSR<span class="gpt">gpt</span></h3>
+          <div class="dsc">Semantic search &amp; RAG over the Nuclear Science References database.</div>
+          <div class="metric tnum">88,000+ records</div>
+        </div>
+
+        <div class="card reveal" style="--wl:var(--c-r)">
+          <span class="edge"></span><span class="glow"></span>
+          <div class="top"><span class="idx">07</span><span class="wl">650nm</span><span class="status shipped"><span class="d"></span>SHIPPED</span></div>
+          <h3>Insurance<span class="gpt">GPT</span></h3>
+          <div class="dsc">Auto-insurance quotes grounded in filed carrier data, Stripe checkout, agent console.</div>
+          <div class="metric tnum">Grounded rates</div>
+        </div>
+
+        <div class="card feat reveal" style="--wl:var(--c-r)">
+          <span class="edge"></span><span class="glow"></span>
+          <div class="top"><span class="idx">08</span><span class="wl">680nm</span><span class="status shipped"><span class="d"></span>SHIPPED</span></div>
+          <h3>Sports<span class="gpt">GPT</span></h3>
+          <div class="dsc">High-school sports intelligence for Section XI football on Long Island — team and player stats, standings, choropleth maps, and AI-generated game highlights.</div>
+          <div class="metric tnum">Section XI<span class="sep">·</span>AI highlights</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- DOMAINS marquee -->
+  <section class="domains">
+    <div class="marquee">
+      <span>Government&nbsp;&amp;&nbsp;legislative</span><span>Trade&nbsp;&amp;&nbsp;customs</span><span>Energy&nbsp;&amp;&nbsp;grid</span><span>Social&nbsp;services</span><span>Insurance</span><span>Scientific&nbsp;reference</span><span>AI&nbsp;governance</span><span>Public&nbsp;records</span>
+      <span>Government&nbsp;&amp;&nbsp;legislative</span><span>Trade&nbsp;&amp;&nbsp;customs</span><span>Energy&nbsp;&amp;&nbsp;grid</span><span>Social&nbsp;services</span><span>Insurance</span><span>Scientific&nbsp;reference</span><span>AI&nbsp;governance</span><span>Public&nbsp;records</span>
+    </div>
+  </section>
+
+  <!-- METHOD -->
+  <section class="method" id="how">
+    <div class="wrap">
+      <div class="head reveal">
+        <div class="kicker">How we build</div>
+        <h2>Ingest. Ground. Ship.</h2>
+      </div>
+      <div class="msteps">
+        <div class="mstep reveal" style="--ray:var(--c-v)">
+          <div class="num">01</div>
+          <h3>Tame the primary record</h3>
+          <p>We crawl, dedupe, and structure the authoritative source — even with no bulk export, no API, or a pagination wall — into clean, queryable Postgres. The hard part nobody else does.</p>
+        </div>
+        <div class="mstep reveal" style="--ray:var(--c-c)">
+          <div class="num">02</div>
+          <h3>Make the AI accountable</h3>
+          <p>Retrieval over the real corpus, structured output, and a visible chain back to the source. The model reasons over primary data — and every answer can be checked.</p>
+        </div>
+        <div class="mstep reveal" style="--ray:var(--c-r)">
+          <div class="num">03</div>
+          <h3>Rebuild the interface</h3>
+          <p>Search, structured exploration, maps, and AI on one surface — designed for the human who needs the answer, and pushed to production with real users.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA -->
+  <section class="cta" id="contact">
+    <div class="wrap">
+      <div class="panel reveal">
+        <div class="left">
+          <div class="kicker">Let's build</div>
+          <h2>Got a system too complex for ordinary software?</h2>
+          <p>That's exactly what we build for. Book a working session and we'll pressure-test what an AI-first rebuild looks like for your data — or send a short brief and we'll come back with a concrete read.</p>
+          <div class="direct">
+            <a href="mailto:Brendan@nysgpt.com?subject=Working%20session%20—%20NYSGPT"><span class="ico">✉</span> Brendan@nysgpt.com</a>
+            <a href="mailto:Brendan@nysgpt.com?subject=Book%20a%20working%20session"><span class="ico">↗</span> Book a working session</a>
+          </div>
+        </div>
+        <form class="brief" onsubmit="return submitBrief(event)">
+          <div class="fld"><label for="b-name">Your name</label><input id="b-name" name="name" required placeholder="Jane Rivera" /></div>
+          <div class="row2">
+            <div class="fld"><label for="b-email">Email</label><input id="b-email" name="email" type="email" required placeholder="jane@org.gov" /></div>
+            <div class="fld"><label for="b-org">Organization</label><input id="b-org" name="org" placeholder="Agency / company" /></div>
+          </div>
+          <div class="fld"><label for="b-domain">The system / domain</label>
+            <select id="b-domain" name="domain">
+              <option>Government / legislative</option><option>Trade / customs</option><option>Energy / utilities</option>
+              <option>Social services</option><option>Insurance / regulatory</option><option>Scientific / technical reference</option><option>Other legacy system</option>
+            </select>
+          </div>
+          <div class="fld"><label for="b-brief">What's locked up in it?</label><textarea id="b-brief" name="brief" placeholder="The data, who needs it, and why it's hard to use today…"></textarea></div>
+          <button type="submit" class="btn btn-prism">Send the brief <span class="arr">→</span></button>
+          <div class="note">Goes straight to Brendan@nysgpt.com — no funnel, no sales bot.</div>
+        </form>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <div class="c"><b>NYSGPT</b> — AI-first software for legacy systems · Long Island, NY</div>
+    <div class="c"><a href="mailto:Brendan@nysgpt.com">Brendan@nysgpt.com</a> · <a href="https://github.com/nyd-user-1" target="_blank" rel="noopener">GitHub</a></div>
+    <div class="c">© 2026</div>
+  </div>
+</footer>
+
+<!-- ============ PLAYGROUND ============ -->
+<button class="pg-launch" id="pgLaunch" type="button" aria-label="Open the design playground" title="Play with the design">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="13.5" cy="6.5" r="2.5"/><circle cx="6" cy="11" r="2.5"/><circle cx="17.5" cy="13" r="2.5"/><circle cx="9" cy="18" r="2.5"/>
+    <path d="M13.5 9v3M8 12.5l2.5 1M15 15l-3 1.7"/>
+  </svg>
+</button>
+<div class="pg-panel" id="pgPanel" role="dialog" aria-label="Design playground">
+  <div class="pg-head">
+    <span class="pg-title">◇ Design playground</span>
+    <button class="pg-reset" id="pgReset" type="button">Reset</button>
+  </div>
+
+  <div class="pg-grp">
+    <label>Pull-accent</label>
+    <div class="pg-swatches" id="pgAccent">
+      <span class="pg-sw on" data-a="#3fd8e8" data-a2="#a06bff" style="background:linear-gradient(120deg,#3fd8e8,#a06bff)"></span>
+      <span class="pg-sw" data-a="#46e3a0" data-a2="#3fd8e8" style="background:linear-gradient(120deg,#46e3a0,#3fd8e8)"></span>
+      <span class="pg-sw" data-a="#ff9d52" data-a2="#ff5470" style="background:linear-gradient(120deg,#ff9d52,#ff5470)"></span>
+      <span class="pg-sw" data-a="#a06bff" data-a2="#ff5470" style="background:linear-gradient(120deg,#a06bff,#ff5470)"></span>
+      <span class="pg-sw" data-a="#5b8cff" data-a2="#3fd8e8" style="background:linear-gradient(120deg,#5b8cff,#3fd8e8)"></span>
+      <span class="pg-sw" data-a="#ffe14d" data-a2="#ff9d52" style="background:linear-gradient(120deg,#ffe14d,#ff9d52)"></span>
+      <label class="pg-sw custom" title="Custom hue">+<input type="color" id="pgAccentCustom" value="#3fd8e8" /></label>
+    </div>
+  </div>
+
+  <div class="pg-grp">
+    <label>Display font</label>
+    <div class="pg-fonts" id="pgDisplay">
+      <button class="pg-font on" data-f='"Clash Display", sans-serif' style='font-family:"Clash Display",sans-serif'>Clash<span class="pf-name">display</span></button>
+      <button class="pg-font" data-f='"Syne", sans-serif' style='font-family:"Syne",sans-serif'>Syne<span class="pf-name">geometric</span></button>
+      <button class="pg-font" data-f='"Sora", sans-serif' style='font-family:"Sora",sans-serif'>Sora<span class="pf-name">sans</span></button>
+      <button class="pg-font" data-f='"Hanken Grotesk", sans-serif' style='font-family:"Hanken Grotesk",sans-serif'>Hanken<span class="pf-name">grotesk</span></button>
+    </div>
+  </div>
+
+  <div class="pg-grp">
+    <label>Body font</label>
+    <div class="pg-fonts" id="pgBody">
+      <button class="pg-font on" data-f='"Hanken Grotesk", sans-serif' style='font-family:"Hanken Grotesk",sans-serif'>Hanken<span class="pf-name">grotesk</span></button>
+      <button class="pg-font" data-f='"DM Sans", sans-serif' style='font-family:"DM Sans",sans-serif'>DM Sans<span class="pf-name">sans</span></button>
+      <button class="pg-font" data-f='"Sora", sans-serif' style='font-family:"Sora",sans-serif'>Sora<span class="pf-name">sans</span></button>
+      <button class="pg-font" data-f='"Syne", sans-serif' style='font-family:"Syne",sans-serif'>Syne<span class="pf-name">geometric</span></button>
+    </div>
+  </div>
+
+  <div class="pg-grp">
+    <label>Chromatic split <span class="v" id="pgSplitVal">1.0×</span></label>
+    <input type="range" class="pg-range" id="pgSplit" min="0" max="3" step="0.1" value="1" />
+  </div>
+
+  <div class="pg-grp">
+    <label>Corner rounding <span class="v" id="pgRadVal">1.0×</span></label>
+    <input type="range" class="pg-range" id="pgRadius" min="0" max="2" step="0.1" value="1" />
+  </div>
+
+  <div class="pg-grp">
+    <label>Heading weight <span class="v" id="pgWghtVal">0</span></label>
+    <input type="range" class="pg-range" id="pgWght" min="-160" max="160" step="10" value="0" />
+  </div>
+
+  <div class="pg-grp">
+    <label>Density <span class="v" id="pgDensVal">1.0×</span></label>
+    <input type="range" class="pg-range" id="pgDensity" min="0.8" max="1.25" step="0.05" value="1" />
+  </div>
+</div>
+
+<script>
+  // ---- theme toggle + persistence ----
+  (function(){
+    const root=document.documentElement, btn=document.getElementById('themeToggle');
+    btn.addEventListener('click',()=>{
+      const light=root.getAttribute('data-theme')==='light';
+      if(light) root.removeAttribute('data-theme'); else root.setAttribute('data-theme','light');
+      try{localStorage.setItem('nysgpt-theme-b2', light?'dark':'light');}catch(e){}
+    });
+  })();
+
+  // ============ LIVE PRISM — white beam → triangular prism → dispersed spectrum ============
+  (function(){
+    const cv=document.getElementById('prismCanvas');
+    if(!cv) return;
+    const ctx=cv.getContext('2d');
+    const reduce=matchMedia('(prefers-reduced-motion:reduce)').matches;
+    let W=0,H=0,dpr=Math.min(devicePixelRatio||1,2),t=0,raf=0;
+    let pointer={x:.5,y:.5};
+
+    function resize(){
+      const r=cv.getBoundingClientRect();
+      W=r.width;H=r.height;
+      cv.width=W*dpr;cv.height=H*dpr;
+      ctx.setTransform(dpr,0,0,dpr,0,0);
+    }
+    new ResizeObserver(resize).observe(cv);
+    resize();
+
+    addEventListener('pointermove',e=>{
+      const r=cv.getBoundingClientRect();
+      pointer.x=(e.clientX-r.left)/r.width;
+      pointer.y=(e.clientY-r.top)/r.height;
+    },{passive:true});
+
+    // the 7-band spectrum (dark vs light read off CSS vars indirectly — fixed for canvas vibrancy)
+    const bands=['#ff5470','#ff9d52','#ffe14d','#46e3a0','#3fd8e8','#5b8cff','#a06bff'];
+
+    function isLight(){return document.documentElement.getAttribute('data-theme')==='light';}
+
+    function draw(){
+      t+=reduce?0:.006;
+      ctx.clearRect(0,0,W,H);
+      const light=isLight();
+      // prism apex roughly centered, a touch above the headline
+      const px=W*0.5, py=H*0.30;
+      const size=Math.min(W,H)*0.18;
+      // gentle breathing + subtle pointer tilt
+      const tilt=(pointer.x-0.5)*0.18 + Math.sin(t*0.7)*0.04;
+      // --- incoming white beam from the left ---
+      const beamY=py+size*0.15;
+      ctx.save();
+      ctx.globalCompositeOperation=light?'multiply':'screen';
+      ctx.lineCap='round';
+      const bGrad=ctx.createLinearGradient(0,0,px-size*0.6,0);
+      const wc=light?'rgba(20,22,40,':'rgba(255,255,255,';
+      bGrad.addColorStop(0,wc+'0)');
+      bGrad.addColorStop(1,wc+(light?'.30)':'.5)'));
+      ctx.strokeStyle=bGrad;
+      ctx.lineWidth=2.2;
+      ctx.beginPath();ctx.moveTo(-10,beamY);ctx.lineTo(px-size*0.5,beamY);ctx.stroke();
+      ctx.restore();
+
+      // --- the dispersed fan exiting to the right ---
+      const ox=px+size*0.42, oy=beamY+size*0.05;
+      const fanLen=W*0.46;
+      ctx.save();
+      ctx.globalCompositeOperation=light?'multiply':'screen';
+      ctx.lineWidth=light?3.0:5.5;
+      ctx.lineCap='round';
+      bands.forEach((col,i)=>{
+        const spread=(i-(bands.length-1)/2);          // -3..3
+        const ang=tilt + spread*0.052 + Math.sin(t*0.5+i*0.4)*0.006;
+        const ex=ox+Math.cos(ang)*fanLen;
+        const ey=oy+Math.sin(ang)*fanLen + spread*4;
+        const g=ctx.createLinearGradient(ox,oy,ex,ey);
+        g.addColorStop(0,col+'00');
+        g.addColorStop(.12,col+(light?'cc':'ff'));
+        g.addColorStop(.7,col+(light?'66':'aa'));
+        g.addColorStop(1,col+'00');
+        ctx.strokeStyle=g;
+        ctx.shadowColor=col;ctx.shadowBlur=light?6:18;
+        ctx.beginPath();ctx.moveTo(ox,oy);
+        // slight curve for refracted feel
+        const mx=ox+(ex-ox)*0.5, my=oy+(ey-oy)*0.5 - spread*6;
+        ctx.quadraticCurveTo(mx,my,ex,ey);
+        ctx.stroke();
+      });
+      ctx.restore();
+
+      // --- the glass prism itself (triangle) ---
+      const a={x:px,y:py-size*0.95};
+      const b={x:px-size*0.92,y:py+size*0.7};
+      const c={x:px+size*0.92,y:py+size*0.7};
+      ctx.save();
+      // faint glass fill
+      const gg=ctx.createLinearGradient(b.x,a.y,c.x,c.y);
+      gg.addColorStop(0,light?'rgba(20,22,40,.05)':'rgba(255,255,255,.06)');
+      gg.addColorStop(1,light?'rgba(20,22,40,.01)':'rgba(255,255,255,.015)');
+      ctx.fillStyle=gg;
+      ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);ctx.lineTo(c.x,c.y);ctx.closePath();ctx.fill();
+      ctx.strokeStyle=light?'rgba(20,22,40,.5)':'rgba(255,255,255,.55)';
+      ctx.lineWidth=1.4;ctx.lineJoin='round';
+      ctx.stroke();
+      // a spectral edge-glint on the exit face
+      const eg=ctx.createLinearGradient(a.x,a.y,c.x,c.y);
+      bands.forEach((col,i)=>eg.addColorStop(i/(bands.length-1),col));
+      ctx.strokeStyle=eg;ctx.globalAlpha=light?.5:.75;ctx.lineWidth=2;
+      ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(c.x,c.y);ctx.stroke();
+      ctx.restore();
+
+      raf=requestAnimationFrame(draw);
+    }
+    if(reduce){ draw(); /* one static frame */ }
+    else raf=requestAnimationFrame(draw);
+  })();
+
+  // ---- playground (session-only) ----
+  (function(){
+    const root=document.documentElement, rs=root.style;
+    const panel=document.getElementById('pgPanel'), launch=document.getElementById('pgLaunch');
+    launch.addEventListener('click',e=>{e.stopPropagation();panel.classList.toggle('open')});
+    document.addEventListener('click',e=>{ if(!panel.contains(e.target) && e.target!==launch && !launch.contains(e.target)) panel.classList.remove('open'); });
+
+    const accWrap=document.getElementById('pgAccent');
+    accWrap.querySelectorAll('.pg-sw[data-a]').forEach(sw=>sw.addEventListener('click',()=>{
+      accWrap.querySelectorAll('.pg-sw').forEach(s=>s.classList.remove('on'));
+      sw.classList.add('on');
+      rs.setProperty('--accent',sw.dataset.a); rs.setProperty('--accent-2',sw.dataset.a2);
+    }));
+    document.getElementById('pgAccentCustom').addEventListener('input',e=>{
+      accWrap.querySelectorAll('.pg-sw').forEach(s=>s.classList.remove('on'));
+      e.target.closest('.pg-sw').classList.add('on');
+      rs.setProperty('--accent',e.target.value);
+    });
+
+    function fontGroup(id,varName){
+      const wrap=document.getElementById(id);
+      wrap.querySelectorAll('.pg-font').forEach(b=>b.addEventListener('click',()=>{
+        wrap.querySelectorAll('.pg-font').forEach(x=>x.classList.remove('on'));
+        b.classList.add('on'); rs.setProperty(varName,b.dataset.f);
+      }));
+    }
+    fontGroup('pgDisplay','--font-display');
+    fontGroup('pgBody','--font-body');
+
+    function rng(id,valId,varName,fmt){
+      const r=document.getElementById(id),v=document.getElementById(valId);
+      r.addEventListener('input',()=>{rs.setProperty(varName,r.value);v.textContent=fmt(r.value)});
+    }
+    rng('pgSplit','pgSplitVal','--split',x=>parseFloat(x).toFixed(1)+'×');
+    rng('pgRadius','pgRadVal','--radius',x=>parseFloat(x).toFixed(1)+'×');
+    rng('pgWght','pgWghtVal','--wght',x=>(x>0?'+':'')+x);
+    rng('pgDensity','pgDensVal','--density',x=>parseFloat(x).toFixed(2)+'×');
+
+    document.getElementById('pgReset').addEventListener('click',()=>{
+      ['--accent','--accent-2','--font-display','--font-body','--split','--radius','--wght','--density'].forEach(v=>rs.removeProperty(v));
+      accWrap.querySelectorAll('.pg-sw').forEach((s,i)=>s.classList.toggle('on',i===0));
+      ['pgDisplay','pgBody'].forEach(id=>document.getElementById(id).querySelectorAll('.pg-font').forEach((b,i)=>b.classList.toggle('on',i===0)));
+      const set=(id,val,txt)=>{document.getElementById(id).value=val;document.getElementById(id.replace('pg','pg')+'Val')&&0;};
+      document.getElementById('pgSplit').value=1;document.getElementById('pgSplitVal').textContent='1.0×';
+      document.getElementById('pgRadius').value=1;document.getElementById('pgRadVal').textContent='1.0×';
+      document.getElementById('pgWght').value=0;document.getElementById('pgWghtVal').textContent='0';
+      document.getElementById('pgDensity').value=1;document.getElementById('pgDensVal').textContent='1.0×';
+      document.getElementById('pgAccentCustom').value='#3fd8e8';
+    });
+  })();
+
+  // reveal on scroll
+  const io=new IntersectionObserver((es)=>{es.forEach(e=>{if(e.isIntersecting){e.target.classList.add('in');io.unobserve(e.target)}})},{threshold:.12,rootMargin:'0px 0px -6% 0px'});
+  document.querySelectorAll('.reveal').forEach((el,i)=>{el.style.transitionDelay=(i%4*60)+'ms';io.observe(el)});
+
+  // subtle parallax on the fog
+  if(!matchMedia('(prefers-reduced-motion:reduce)').matches){
+    addEventListener('pointermove',e=>{
+      const x=(e.clientX/innerWidth-.5),y=(e.clientY/innerHeight-.5);
+      document.querySelector('.fog').style.transform=`translate(${x*-20}px,${y*-20}px)`;
+    },{passive:true});
+  }
+
+  function submitBrief(e){
+    e.preventDefault();const f=e.target;
+    const body=encodeURIComponent(`Name: ${f.name.value}\nEmail: ${f.email.value}\nOrg: ${f.org.value}\nDomain: ${f.domain.value}\n\nBrief:\n${f.brief.value}`);
+    window.location.href=`mailto:Brendan@nysgpt.com?subject=${encodeURIComponent('Project brief — '+(f.org.value||f.name.value))}&body=${body}`;
+    return false;
+  }
+</script>
+</body>
+</html>

@@ -1,0 +1,673 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>NYSGPT — AI for complex, legacy systems</title>
+<meta name="description" content="NYSGPT is an AI-first software company building domain-specific applications for complex, legacy, and regulatory systems. Eight shipped products turning impenetrable data into navigable software." />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..600;1,9..144,300..500&family=Newsreader:ital,opsz,wght@0,6..72,300..500;1,6..72,300..400&family=Geist:wght@300;400;500;600&family=Geist+Mono:wght@400;500&family=Spectral:ital,wght@0,300;0,400;0,500;1,400&display=swap" rel="stylesheet" />
+<script>
+  // dark is the design default; go light only when explicitly chosen before.
+  (function(){ try{ if(localStorage.getItem('nysgpt-theme-b3')==='light') document.documentElement.setAttribute('data-theme','light'); }catch(e){} })();
+</script>
+<style>
+  :root{
+    /* ---- DARK (default): one lamp in a dark room ---- */
+    --bg:#0a0a0c;
+    --bg-2:#0f0f12;
+    --panel:rgba(255,255,255,.022);
+    --panel-brd:rgba(255,255,255,.07);
+    --panel-glass:rgba(15,15,18,.94);
+    --text:#f2f1ee;
+    --text-dim:#9b9a96;
+    --text-faint:#5c5c60;
+    --text-hover:#ffffff;
+    --ink-on-accent:#0a0a0c;
+    --pill-ink:#0a0a0c;          /* text on the (light) nav pill */
+    --accent:#e8c98a;            /* warm lamplight — the single accent */
+    --accent-soft:rgba(232,201,138,.5);
+    --halo:rgba(232,201,138,.16); /* the volumetric glow color */
+    --halo-2:rgba(255,255,255,.05);
+    --grain-op:.04;
+    --header-bg:rgba(10,10,12,.55);
+    --rule-faint:rgba(255,255,255,.065);
+    --rule:rgba(255,255,255,.1);
+    --card-hover:rgba(255,255,255,.03);
+    --input-bg:rgba(255,255,255,.025);
+    --font-display:"Fraunces",Georgia,serif;
+    --font-body:"Geist",system-ui,sans-serif;
+    --font-serif:"Newsreader",Georgia,serif;
+    --font-mono:"Geist Mono",ui-monospace,monospace;
+    --maxw:1080px;
+    /* playground knobs */
+    --radius:1;
+    --wght:0;
+    --density:1;
+    --halo-size:1;              /* spotlight radius scale */
+  }
+
+  /* ---- LIGHT: soft daylight, one diffused window ---- */
+  :root[data-theme="light"]{
+    --bg:#f7f5f1;
+    --bg-2:#fdfcfa;
+    --panel:rgba(20,18,14,.018);
+    --panel-brd:rgba(20,18,14,.11);
+    --panel-glass:rgba(253,252,250,.96);
+    --text:#15140f;
+    --text-dim:#56544c;
+    --text-faint:#9a988f;
+    --text-hover:#000000;
+    --ink-on-accent:#15140f;
+    --pill-ink:#f7f5f1;          /* light text on the (now-dark) nav pill */
+    --accent:#b8862e;            /* deeper ochre on paper */
+    --accent-soft:rgba(184,134,46,.45);
+    --halo:rgba(255,238,200,.55);
+    --halo-2:rgba(255,255,255,.5);
+    --grain-op:.025;
+    --header-bg:rgba(247,245,241,.68);
+    --rule-faint:rgba(20,18,14,.075);
+    --rule:rgba(20,18,14,.12);
+    --card-hover:rgba(20,18,14,.025);
+    --input-bg:rgba(20,18,14,.018);
+  }
+  :root{color-scheme:dark} :root[data-theme="light"]{color-scheme:light}
+  html,body{transition:background .5s ease,color .5s ease}
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth;-webkit-text-size-adjust:100%}
+  body{
+    background:var(--bg);color:var(--text);font-family:var(--font-body);
+    font-size:16px;line-height:1.6;-webkit-font-smoothing:antialiased;
+    text-rendering:optimizeLegibility;overflow-x:hidden;font-weight:400;
+  }
+
+  /* ===== THE HALO — a single soft volumetric light that breathes ===== */
+  .halo-layer{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden}
+  .halo-core{
+    position:absolute;left:50%;top:8%;
+    width:calc(min(92vw,1000px) * var(--halo-size));
+    height:calc(min(92vw,1000px) * var(--halo-size));
+    transform:translate(-50%,-30%);
+    background:radial-gradient(circle at 50% 50%,var(--halo) 0%,transparent 62%);
+    filter:blur(8px);
+    animation:breathe 11s ease-in-out infinite;
+    will-change:transform,opacity;
+  }
+  .halo-rim{
+    position:absolute;left:50%;top:8%;
+    width:calc(min(60vw,640px) * var(--halo-size));
+    height:calc(min(60vw,640px) * var(--halo-size));
+    transform:translate(-50%,-30%);
+    background:radial-gradient(circle at 50% 45%,var(--halo-2) 0%,transparent 58%);
+    animation:breathe 11s ease-in-out infinite reverse;
+  }
+  @keyframes breathe{0%,100%{transform:translate(-50%,-30%) scale(1);opacity:.92}50%{transform:translate(-50%,-26%) scale(1.06);opacity:1}}
+  .grain{position:fixed;inset:0;z-index:1;pointer-events:none;opacity:var(--grain-op);
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")}
+
+  .wrap{position:relative;z-index:3;max-width:var(--maxw);margin:0 auto;padding:0 30px}
+  a{color:inherit;text-decoration:none}
+  .mono{font-family:var(--font-mono)}
+  .tnum{font-variant-numeric:tabular-nums}
+  .kicker{font-family:var(--font-mono);font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:var(--text-faint)}
+  .acc{color:var(--accent)}
+  em{font-family:var(--font-display);font-style:italic;font-weight:400;color:var(--text)}
+
+  /* ===== NAV ===== */
+  header{position:sticky;top:0;z-index:50;backdrop-filter:blur(14px);background:var(--header-bg);border-bottom:1px solid var(--rule-faint)}
+  header .wrap{display:flex;align-items:center;justify-content:space-between;height:72px}
+  .brand{display:flex;align-items:center;gap:12px;font-family:var(--font-display);font-weight:500;font-size:20px;letter-spacing:-.01em}
+  .brand .lamp{width:11px;height:11px;border-radius:50%;background:var(--accent);box-shadow:0 0 0 4px var(--halo),0 0 22px var(--accent);flex-shrink:0}
+  nav{display:flex;align-items:center;gap:32px}
+  nav a{font-family:var(--font-mono);font-size:12px;letter-spacing:.03em;color:var(--text-dim);transition:color .25s}
+  nav a:hover{color:var(--text)}
+  .pill{padding:9px 19px;border-radius:100px;background:var(--text);color:var(--pill-ink) !important;font-weight:500 !important;font-family:var(--font-body) !important;font-size:13.5px;transition:transform .25s,box-shadow .25s}
+  .pill:hover{transform:translateY(-1px);box-shadow:0 8px 28px rgba(0,0,0,.3)}
+  .theme-toggle{width:36px;height:36px;border:1px solid var(--panel-brd);border-radius:50%;background:var(--panel);
+    display:grid;place-items:center;cursor:pointer;color:var(--text-dim);transition:border-color .25s,color .25s;flex-shrink:0}
+  .theme-toggle:hover{border-color:var(--accent-soft);color:var(--text)}
+  .theme-toggle svg{width:15px;height:15px;display:block}
+  .theme-toggle .moon{display:none}
+  :root[data-theme="light"] .theme-toggle .sun{display:none}
+  :root[data-theme="light"] .theme-toggle .moon{display:block}
+  @media(max-width:760px){nav a:not(.pill){display:none}}
+
+  /* ===== HERO — vast quiet, one light, centered ===== */
+  .hero{padding:calc(150px * var(--density)) 0 calc(120px * var(--density));text-align:center}
+  .hero .eyebrow{display:inline-flex;align-items:center;gap:10px;font-family:var(--font-mono);font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--text-dim);margin-bottom:42px;animation:rise .9s cubic-bezier(.16,1,.3,1) both}
+  .hero .eyebrow .dot{width:6px;height:6px;border-radius:50%;background:var(--accent);box-shadow:0 0 12px var(--accent)}
+  .hero h1{font-family:var(--font-display);font-weight:calc(340 + var(--wght));font-size:clamp(44px,7.4vw,92px);line-height:1.02;letter-spacing:-.025em;max-width:17ch;margin:0 auto}
+  .hero h1 .ln{display:block;animation:rise 1s cubic-bezier(.16,1,.3,1) both}
+  .hero h1 .l1{animation-delay:.08s}.hero h1 .l2{animation-delay:.18s}
+  .hero h1 em{font-size:1.02em;letter-spacing:-.01em}
+  @keyframes rise{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:none}}
+  .hero p.deck{margin:34px auto 0;max-width:54ch;font-size:18px;line-height:1.7;color:var(--text-dim);animation:rise 1s ease .42s both;font-family:var(--font-serif)}
+  .hero p.deck b{color:var(--text);font-weight:500;font-family:var(--font-body)}
+  .hero .cta{margin-top:44px;display:flex;gap:16px;justify-content:center;flex-wrap:wrap;animation:rise 1s ease .56s both}
+  .btn{font-family:var(--font-body);font-weight:500;font-size:15px;padding:15px 30px;border-radius:100px;display:inline-flex;align-items:center;gap:10px;transition:transform .25s,box-shadow .25s,background .25s,border-color .25s,color .25s;cursor:pointer;border:1px solid transparent}
+  .btn .arr{transition:transform .25s}.btn:hover .arr{transform:translateX(4px)}
+  .btn-lamp{background:var(--accent);color:var(--ink-on-accent);box-shadow:0 4px 28px var(--halo)}
+  .btn-lamp:hover{transform:translateY(-2px);box-shadow:0 8px 40px var(--accent-soft)}
+  .btn-quiet{border-color:var(--rule);background:transparent;color:var(--text)}
+  .btn-quiet:hover{border-color:var(--accent-soft);color:var(--text-hover)}
+
+  /* proof-bar — hushed: thin serif rules, lots of air */
+  .hero .stats{margin-top:86px;display:flex;justify-content:center;gap:0;flex-wrap:wrap;animation:rise 1.1s ease .7s both}
+  .hero .stats .s{padding:0 44px;text-align:center;position:relative}
+  .hero .stats .s::after{content:"";position:absolute;right:0;top:24%;bottom:24%;width:1px;background:var(--rule-faint)}
+  .hero .stats .s:last-child::after{display:none}
+  .hero .stats .n{font-family:var(--font-display);font-weight:380;font-size:42px;letter-spacing:-.01em;line-height:1}
+  .hero .stats .n .u{font-size:21px;color:var(--text-dim)}
+  .hero .stats .l{font-family:var(--font-mono);font-size:10px;letter-spacing:.13em;text-transform:uppercase;color:var(--text-faint);margin-top:13px}
+  @media(max-width:680px){.hero .stats .s{padding:16px 28px}.hero .stats .s::after{display:none}}
+
+  /* a hairline that fades at the edges — recurring divider motif */
+  .div-soft{height:1px;border:none;max-width:var(--maxw);margin:0 auto;
+    background:linear-gradient(90deg,transparent,var(--rule),transparent)}
+
+  /* ===== THESIS ===== */
+  .thesis{padding:calc(100px * var(--density)) 0}
+  .thesis .inner{max-width:780px;margin:0 auto;text-align:center}
+  .thesis .kicker{margin-bottom:26px}
+  .thesis h2{font-family:var(--font-display);font-weight:calc(340 + var(--wght));font-size:clamp(28px,4.2vw,46px);line-height:1.16;letter-spacing:-.018em}
+  .thesis p{margin:32px auto 0;max-width:60ch;color:var(--text-dim);font-size:17px;line-height:1.8;font-family:var(--font-serif)}
+  .thesis p b{color:var(--text);font-weight:500;font-family:var(--font-body)}
+
+  /* ===== PRODUCTS — a calm, restrained index (not flashy cards) ===== */
+  .work{padding:calc(80px * var(--density)) 0}
+  .work .head{text-align:center;margin-bottom:54px}
+  .work .head .kicker{margin-bottom:18px}
+  .work .head h2{font-family:var(--font-display);font-weight:calc(360 + var(--wght));font-size:clamp(28px,4.4vw,52px);letter-spacing:-.022em;line-height:1.05}
+  .work .head p{margin-top:18px;color:var(--text-dim);font-size:16px;font-family:var(--font-serif)}
+  .ledger{max-width:920px;margin:0 auto;border-top:1px solid var(--rule-faint)}
+  .row{display:grid;grid-template-columns:42px 1fr auto;gap:24px;align-items:baseline;
+    padding:26px 14px;border-bottom:1px solid var(--rule-faint);position:relative;transition:background .3s,padding .3s}
+  .row::before{content:"";position:absolute;left:0;top:0;bottom:0;width:0;background:var(--halo);transition:width .35s ease;pointer-events:none}
+  .row.link:hover{background:var(--card-hover)}
+  .row.link:hover::before{width:3px;background:var(--accent)}
+  .row .idx{font-family:var(--font-mono);font-size:12px;color:var(--text-faint);padding-top:7px}
+  .row .body{min-width:0}
+  .row .name{font-family:var(--font-display);font-weight:440;font-size:24px;letter-spacing:-.012em;display:inline-flex;align-items:baseline;gap:1px}
+  .row .name .gpt{color:var(--text-dim);font-weight:340}
+  .row.link:hover .name{color:var(--text-hover)}
+  .row.link .name::after{content:"↗";font-family:var(--font-body);font-size:14px;margin-left:9px;color:var(--accent);opacity:0;transition:opacity .25s}
+  .row.link:hover .name::after{opacity:1}
+  .row .dsc{margin-top:7px;color:var(--text-dim);font-size:14.5px;line-height:1.55;max-width:62ch;font-family:var(--font-serif)}
+  .row .meta{margin-top:11px;font-family:var(--font-mono);font-size:11.5px;color:var(--text-faint);display:flex;gap:8px;flex-wrap:wrap}
+  .row .meta .sep{opacity:.5}
+  .row .right{text-align:right;padding-top:6px;white-space:nowrap}
+  .row .status{font-family:var(--font-mono);font-size:9.5px;letter-spacing:.1em;display:inline-flex;align-items:center;gap:7px;color:var(--text-faint)}
+  .row .status .d{width:6px;height:6px;border-radius:50%;background:var(--text-faint)}
+  .row .status.live{color:var(--accent)}
+  .row .status.live .d{background:var(--accent);box-shadow:0 0 10px var(--accent)}
+  @media(max-width:640px){.row{grid-template-columns:30px 1fr;gap:16px}.row .right{grid-column:2;text-align:left;margin-top:4px}}
+
+  /* ===== METHOD — three quiet movements ===== */
+  .method{padding:calc(90px * var(--density)) 0}
+  .method .head{text-align:center;margin-bottom:56px}
+  .method .head .kicker{margin-bottom:16px}
+  .method .head h2{font-family:var(--font-display);font-weight:calc(360 + var(--wght));font-size:clamp(28px,4.2vw,46px);letter-spacing:-.02em}
+  .msteps{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--rule-faint);border:1px solid var(--rule-faint);border-radius:calc(2px * var(--radius));overflow:hidden}
+  .mstep{background:var(--bg);padding:40px 34px;transition:background .35s;position:relative}
+  .mstep:hover{background:var(--card-hover)}
+  .mstep .num{font-family:var(--font-mono);font-size:12px;letter-spacing:.1em;color:var(--accent);margin-bottom:24px}
+  .mstep h3{font-family:var(--font-display);font-weight:440;font-size:21px;margin-bottom:12px;letter-spacing:-.01em}
+  .mstep p{color:var(--text-dim);font-size:14.5px;line-height:1.7;font-family:var(--font-serif)}
+  @media(max-width:820px){.msteps{grid-template-columns:1fr}}
+
+  /* ===== CTA — the lamp brought close ===== */
+  .cta{padding:calc(100px * var(--density)) 0}
+  .cta .panel{position:relative;border:1px solid var(--rule-faint);border-radius:calc(4px * var(--radius));overflow:hidden;background:var(--bg-2);
+    display:grid;grid-template-columns:1fr 1fr}
+  .cta .panel::before{content:"";position:absolute;left:50%;top:-30%;width:60%;height:120%;transform:translateX(-50%);
+    background:radial-gradient(circle at 50% 50%,var(--halo),transparent 60%);pointer-events:none;opacity:.8}
+  .cta .left{position:relative;padding:56px 50px;border-right:1px solid var(--rule-faint)}
+  .cta .left .kicker{margin-bottom:22px}
+  .cta .left h2{font-family:var(--font-display);font-weight:380;font-size:clamp(28px,3.6vw,42px);line-height:1.12;letter-spacing:-.02em}
+  .cta .left p{margin-top:22px;color:var(--text-dim);font-size:16px;line-height:1.7;max-width:40ch;font-family:var(--font-serif)}
+  .cta .direct{margin-top:34px;display:grid;gap:14px}
+  .cta .direct a{display:inline-flex;align-items:center;gap:13px;font-family:var(--font-mono);font-size:13px;color:var(--text);transition:color .25s;width:fit-content}
+  .cta .direct a:hover{color:var(--accent)}
+  .cta .direct .ico{width:34px;height:34px;border-radius:50%;border:1px solid var(--rule);display:grid;place-items:center;color:var(--accent)}
+  form.brief{position:relative;padding:56px 50px;display:grid;gap:18px}
+  form.brief .fld{display:grid;gap:8px}
+  form.brief label{font-family:var(--font-mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--text-faint)}
+  form.brief input,form.brief textarea,form.brief select{background:var(--input-bg);border:1px solid var(--rule-faint);border-radius:calc(3px * var(--radius));padding:13px 15px;color:var(--text);font-family:var(--font-body);font-size:14.5px;transition:border-color .25s,background .25s}
+  form.brief input:focus,form.brief textarea:focus,form.brief select:focus{outline:none;border-color:var(--accent-soft);background:var(--panel)}
+  form.brief textarea{resize:vertical;min-height:84px}
+  form.brief .row2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  form.brief button{margin-top:6px;width:100%;justify-content:center}
+  form.brief .note{font-family:var(--font-mono);font-size:10px;color:var(--text-faint);text-align:center}
+  @media(max-width:860px){.cta .panel{grid-template-columns:1fr}.cta .left{border-right:none;border-bottom:1px solid var(--rule-faint);padding:42px 30px}form.brief{padding:42px 30px}}
+
+  /* ===== FOOTER ===== */
+  footer{padding:48px 0;border-top:1px solid var(--rule-faint)}
+  footer .wrap{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:16px}
+  footer .c{font-family:var(--font-mono);font-size:11px;color:var(--text-faint)}
+  footer .c b{color:var(--text-dim);font-weight:400}
+  footer a:hover{color:var(--accent)}
+
+  /* ===== PLAYGROUND ===== */
+  .pg-launch{position:fixed;right:24px;bottom:24px;z-index:90;width:50px;height:50px;border-radius:50%;
+    background:var(--accent);color:var(--ink-on-accent);cursor:pointer;border:none;display:grid;place-items:center;
+    box-shadow:0 8px 30px var(--halo);transition:transform .28s,box-shadow .25s}
+  .pg-launch:hover{transform:translateY(-3px) rotate(-8deg);box-shadow:0 12px 42px var(--accent-soft)}
+  .pg-launch svg{width:22px;height:22px}
+  .pg-panel{position:fixed;right:24px;bottom:86px;z-index:91;width:318px;
+    background:var(--panel-glass);backdrop-filter:blur(22px);border:1px solid var(--rule-faint);
+    border-radius:calc(6px * var(--radius));box-shadow:0 24px 64px rgba(0,0,0,.5);padding:22px;
+    opacity:0;transform:translateY(12px) scale(.97);pointer-events:none;transform-origin:bottom right;
+    transition:opacity .28s cubic-bezier(.16,1,.3,1),transform .28s cubic-bezier(.16,1,.3,1);max-height:80vh;overflow-y:auto}
+  .pg-panel.open{opacity:1;transform:none;pointer-events:auto}
+  .pg-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px}
+  .pg-title{font-family:var(--font-mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--accent)}
+  .pg-reset{font-family:var(--font-mono);font-size:10px;letter-spacing:.06em;color:var(--text-dim);background:none;border:none;cursor:pointer;text-transform:uppercase}
+  .pg-reset:hover{color:var(--text)}
+  .pg-grp{margin-bottom:20px}.pg-grp:last-child{margin-bottom:4px}
+  .pg-grp > label{display:block;font-family:var(--font-mono);font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--text-dim);margin-bottom:11px}
+  .pg-grp > label .v{color:var(--text-faint);float:right;text-transform:none;letter-spacing:0}
+  .pg-swatches{display:flex;gap:9px;flex-wrap:wrap}
+  .pg-sw{width:28px;height:28px;border-radius:50%;cursor:pointer;border:2px solid transparent;transition:transform .15s,border-color .15s;position:relative}
+  .pg-sw:hover{transform:scale(1.12)}
+  .pg-sw.on{border-color:var(--text)}
+  .pg-sw.custom{display:grid;place-items:center;background:var(--panel);border:1px solid var(--panel-brd);color:var(--text-faint);overflow:hidden}
+  .pg-sw.custom input{position:absolute;inset:0;opacity:0;cursor:pointer}
+  .pg-fonts{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  .pg-font{font-family:inherit;font-size:13px;padding:9px 10px;border-radius:calc(4px * var(--radius));border:1px solid var(--panel-brd);background:var(--panel);color:var(--text-dim);cursor:pointer;transition:.15s;text-align:left;line-height:1.1}
+  .pg-font:hover{border-color:var(--text-faint);color:var(--text)}
+  .pg-font.on{border-color:var(--accent-soft);color:var(--text)}
+  .pg-font .pf-name{font-size:9px;font-family:var(--font-mono);letter-spacing:.04em;color:var(--text-faint);display:block;margin-top:3px}
+  input[type=range].pg-range{-webkit-appearance:none;appearance:none;width:100%;height:3px;border-radius:3px;background:var(--panel-brd);outline:none;cursor:pointer}
+  input[type=range].pg-range::-webkit-slider-thumb{-webkit-appearance:none;width:16px;height:16px;border-radius:50%;background:var(--accent);cursor:pointer;border:2px solid var(--bg-2)}
+  input[type=range].pg-range::-moz-range-thumb{width:14px;height:14px;border-radius:50%;background:var(--accent);cursor:pointer;border:2px solid var(--bg-2)}
+  @media(max-width:560px){.pg-panel{width:calc(100vw - 48px)}}
+
+  .reveal{opacity:0;transform:translateY(22px);transition:opacity .85s cubic-bezier(.16,1,.3,1),transform .85s cubic-bezier(.16,1,.3,1)}
+  .reveal.in{opacity:1;transform:none}
+  @media(prefers-reduced-motion:reduce){*{animation:none !important;transition:none !important}.reveal{opacity:1;transform:none}}
+</style>
+</head>
+<body>
+
+<div class="halo-layer"><div class="halo-core"></div><div class="halo-rim"></div></div>
+<div class="grain"></div>
+
+<header>
+  <div class="wrap">
+    <a href="#top" class="brand"><span class="lamp"></span>NYSGPT</a>
+    <nav>
+      <a href="#thesis">Thesis</a>
+      <a href="#work">Products</a>
+      <a href="#how">Method</a>
+      <button class="theme-toggle" id="themeToggle" type="button" aria-label="Toggle light and dark mode" title="Toggle theme">
+        <svg class="sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>
+        <svg class="moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+      </button>
+      <a href="#contact" class="pill">Book a session</a>
+    </nav>
+  </div>
+</header>
+
+<main id="top">
+
+  <!-- HERO -->
+  <section class="hero">
+    <div class="wrap">
+      <div class="eyebrow"><span class="dot"></span>AI-first software · 8 products shipped</div>
+      <h1>
+        <span class="ln l1">AI for complex,</span>
+        <span class="ln l2"><em>legacy</em> systems.</span>
+      </h1>
+      <p class="deck">
+        NYSGPT builds domain-specific AI applications for the systems ordinary software won't touch —
+        <b>impenetrable government databases, statutory regimes, and industrial records.</b>
+        We turn data nobody could read into software anyone can use.
+      </p>
+      <div class="cta">
+        <a href="#contact" class="btn btn-lamp">Book a working session <span class="arr">→</span></a>
+        <a href="#work" class="btn btn-quiet">See the products <span class="arr">→</span></a>
+      </div>
+      <div class="stats">
+        <div class="s"><div class="n tnum">8</div><div class="l">Products shipped</div></div>
+        <div class="s"><div class="n tnum">350<span class="u">k+</span></div><div class="l">Records navigable</div></div>
+        <div class="s"><div class="n tnum">5</div><div class="l">Live in production</div></div>
+        <div class="s"><div class="n tnum">∞</div><div class="l">Legacy systems left</div></div>
+      </div>
+    </div>
+  </section>
+
+  <hr class="div-soft" />
+
+  <!-- THESIS -->
+  <section class="thesis" id="thesis">
+    <div class="wrap">
+      <div class="inner reveal">
+        <div class="kicker">The thesis</div>
+        <h2>The most consequential systems run on the <em>worst software.</em></h2>
+        <p>
+          Legislative records, customs rulings, energy filings, licensing registries, nuclear references —
+          the data is public, authoritative, and locked behind portals built two decades ago for nobody
+          in particular. <b>NYSGPT closes that gap.</b> We ingest the primary record, ground every answer
+          in a verifiable source, and rebuild the interface from the data up — so the person who actually
+          needs the answer gets one, not a 40-page PDF.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <hr class="div-soft" />
+
+  <!-- PRODUCTS -->
+  <section class="work" id="work">
+    <div class="wrap">
+      <div class="head reveal">
+        <div class="kicker">The portfolio</div>
+        <h2>Eight products. One architecture.</h2>
+        <p>Every one ingests a hard public record and rebuilds the interface around it.</p>
+      </div>
+
+      <div class="ledger">
+        <a class="row link reveal" href="https://44b.nysgpt.com" target="_blank" rel="noopener">
+          <div class="idx">01</div>
+          <div class="body">
+            <div class="name">44B</div>
+            <div class="dsc">A public registry, research library, and incident record for AI — and the compliance portal for NY's Article 44-B. "SERFF, for AI."</div>
+            <div class="meta tnum">532 models<span class="sep">·</span>32k papers<span class="sep">·</span>2,561 incidents</div>
+          </div>
+          <div class="right"><span class="status live"><span class="d"></span>LIVE</span></div>
+        </a>
+
+        <a class="row link reveal" href="https://tariffs.nysgpt.com" target="_blank" rel="noopener">
+          <div class="idx">02</div>
+          <div class="body">
+            <div class="name">Tariffs<span class="gpt">GPT</span></div>
+            <div class="dsc">A self-serve refund engine for importers who paid IEEPA tariffs the Supreme Court invalidated — a real recoverable number before any phone call.</div>
+            <div class="meta tnum">220k+ customs rulings<span class="sep">·</span>live schedule</div>
+          </div>
+          <div class="right"><span class="status live"><span class="d"></span>LIVE</span></div>
+        </a>
+
+        <a class="row link reveal" href="https://childcare.nysgpt.com/console" target="_blank" rel="noopener">
+          <div class="idx">03</div>
+          <div class="body">
+            <div class="name">Childcare<span class="gpt">GPT</span></div>
+            <div class="dsc">NY childcare intelligence — every OCFS facility, county costs, and an AI-assisted subsidy form.</div>
+            <div class="meta tnum">16,800 facilities</div>
+          </div>
+          <div class="right"><span class="status live"><span class="d"></span>LIVE</span></div>
+        </a>
+
+        <a class="row link reveal" href="https://solar.nysgpt.com/map/plants-2" target="_blank" rel="noopener">
+          <div class="idx">04</div>
+          <div class="body">
+            <div class="name">Solar<span class="gpt">GPT</span></div>
+            <div class="dsc">Clean-energy intelligence for every U.S. county, state, and grid region.</div>
+            <div class="meta tnum">EIA data pipelines</div>
+          </div>
+          <div class="right"><span class="status live"><span class="d"></span>LIVE</span></div>
+        </a>
+
+        <div class="row reveal">
+          <div class="idx">05</div>
+          <div class="body">
+            <div class="name">Policy<span class="gpt">GPT</span></div>
+            <div class="dsc">NY legislative &amp; financial intelligence — bills, budgets, lobbying, with an advocacy layer.</div>
+            <div class="meta tnum">Full NYS record</div>
+          </div>
+          <div class="right"><span class="status"><span class="d"></span>SHIPPED</span></div>
+        </div>
+
+        <div class="row reveal">
+          <div class="idx">06</div>
+          <div class="body">
+            <div class="name">NSR<span class="gpt">gpt</span></div>
+            <div class="dsc">Semantic search &amp; RAG over the Nuclear Science References database.</div>
+            <div class="meta tnum">88,000+ records</div>
+          </div>
+          <div class="right"><span class="status"><span class="d"></span>SHIPPED</span></div>
+        </div>
+
+        <div class="row reveal">
+          <div class="idx">07</div>
+          <div class="body">
+            <div class="name">Insurance<span class="gpt">GPT</span></div>
+            <div class="dsc">Auto-insurance quotes grounded in filed carrier data, Stripe checkout, agent console.</div>
+            <div class="meta tnum">Grounded rates</div>
+          </div>
+          <div class="right"><span class="status"><span class="d"></span>SHIPPED</span></div>
+        </div>
+
+        <div class="row reveal">
+          <div class="idx">08</div>
+          <div class="body">
+            <div class="name">Sports<span class="gpt">GPT</span></div>
+            <div class="dsc">High-school sports intelligence for Section XI football on Long Island — team and player stats, standings, choropleth maps, and AI-generated game highlights.</div>
+            <div class="meta tnum">Section XI<span class="sep">·</span>AI highlights</div>
+          </div>
+          <div class="right"><span class="status"><span class="d"></span>SHIPPED</span></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <hr class="div-soft" />
+
+  <!-- METHOD -->
+  <section class="method" id="how">
+    <div class="wrap">
+      <div class="head reveal">
+        <div class="kicker">How we build</div>
+        <h2>Ingest. Ground. Ship.</h2>
+      </div>
+      <div class="msteps reveal">
+        <div class="mstep">
+          <div class="num">01</div>
+          <h3>Tame the primary record</h3>
+          <p>We crawl, dedupe, and structure the authoritative source — even with no bulk export, no API, or a pagination wall — into clean, queryable Postgres. The hard part nobody else does.</p>
+        </div>
+        <div class="mstep">
+          <div class="num">02</div>
+          <h3>Make the AI accountable</h3>
+          <p>Retrieval over the real corpus, structured output, and a visible chain back to the source. The model reasons over primary data — and every answer can be checked.</p>
+        </div>
+        <div class="mstep">
+          <div class="num">03</div>
+          <h3>Rebuild the interface</h3>
+          <p>Search, structured exploration, maps, and AI on one surface — designed for the human who needs the answer, and pushed to production with real users.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA -->
+  <section class="cta" id="contact">
+    <div class="wrap">
+      <div class="panel reveal">
+        <div class="left">
+          <div class="kicker">Let's build</div>
+          <h2>Got a system too complex for ordinary software?</h2>
+          <p>That's exactly what we build for. Book a working session and we'll pressure-test what an AI-first rebuild looks like for your data — or send a short brief and we'll come back with a concrete read.</p>
+          <div class="direct">
+            <a href="mailto:Brendan@nysgpt.com?subject=Working%20session%20—%20NYSGPT"><span class="ico">✉</span> Brendan@nysgpt.com</a>
+            <a href="mailto:Brendan@nysgpt.com?subject=Book%20a%20working%20session"><span class="ico">↗</span> Book a working session</a>
+          </div>
+        </div>
+        <form class="brief" onsubmit="return submitBrief(event)">
+          <div class="fld"><label for="b-name">Your name</label><input id="b-name" name="name" required placeholder="Jane Rivera" /></div>
+          <div class="row2">
+            <div class="fld"><label for="b-email">Email</label><input id="b-email" name="email" type="email" required placeholder="jane@org.gov" /></div>
+            <div class="fld"><label for="b-org">Organization</label><input id="b-org" name="org" placeholder="Agency / company" /></div>
+          </div>
+          <div class="fld"><label for="b-domain">The system / domain</label>
+            <select id="b-domain" name="domain">
+              <option>Government / legislative</option><option>Trade / customs</option><option>Energy / utilities</option>
+              <option>Social services</option><option>Insurance / regulatory</option><option>Scientific / technical reference</option><option>Other legacy system</option>
+            </select>
+          </div>
+          <div class="fld"><label for="b-brief">What's locked up in it?</label><textarea id="b-brief" name="brief" placeholder="The data, who needs it, and why it's hard to use today…"></textarea></div>
+          <button type="submit" class="btn btn-lamp">Send the brief <span class="arr">→</span></button>
+          <div class="note">Goes straight to Brendan@nysgpt.com — no funnel, no sales bot.</div>
+        </form>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <div class="c"><b>NYSGPT</b> — AI-first software for legacy systems · Long Island, NY</div>
+    <div class="c"><a href="mailto:Brendan@nysgpt.com">Brendan@nysgpt.com</a> · <a href="https://github.com/nyd-user-1" target="_blank" rel="noopener">GitHub</a></div>
+    <div class="c">© 2026</div>
+  </div>
+</footer>
+
+<!-- ============ PLAYGROUND ============ -->
+<button class="pg-launch" id="pgLaunch" type="button" aria-label="Open the design playground" title="Play with the design">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="13.5" cy="6.5" r="2.5"/><circle cx="6" cy="11" r="2.5"/><circle cx="17.5" cy="13" r="2.5"/><circle cx="9" cy="18" r="2.5"/>
+    <path d="M13.5 9v3M8 12.5l2.5 1M15 15l-3 1.7"/>
+  </svg>
+</button>
+<div class="pg-panel" id="pgPanel" role="dialog" aria-label="Design playground">
+  <div class="pg-head">
+    <span class="pg-title">◦ Design playground</span>
+    <button class="pg-reset" id="pgReset" type="button">Reset</button>
+  </div>
+
+  <div class="pg-grp">
+    <label>Lamplight</label>
+    <div class="pg-swatches" id="pgAccent">
+      <span class="pg-sw on" data-a="#e8c98a" style="background:#e8c98a"></span>
+      <span class="pg-sw" data-a="#d6a96a" style="background:#d6a96a"></span>
+      <span class="pg-sw" data-a="#9fb8d8" style="background:#9fb8d8"></span>
+      <span class="pg-sw" data-a="#b8d8c0" style="background:#b8d8c0"></span>
+      <span class="pg-sw" data-a="#e0a8a0" style="background:#e0a8a0"></span>
+      <span class="pg-sw" data-a="#c8c4d8" style="background:#c8c4d8"></span>
+      <label class="pg-sw custom" title="Custom hue">+<input type="color" id="pgAccentCustom" value="#e8c98a" /></label>
+    </div>
+  </div>
+
+  <div class="pg-grp">
+    <label>Display font</label>
+    <div class="pg-fonts" id="pgDisplay">
+      <button class="pg-font on" data-f='"Fraunces", serif' style='font-family:"Fraunces",serif'>Fraunces<span class="pf-name">serif</span></button>
+      <button class="pg-font" data-f='"Newsreader", serif' style='font-family:"Newsreader",serif'>Newsreader<span class="pf-name">serif</span></button>
+      <button class="pg-font" data-f='"Spectral", serif' style='font-family:"Spectral",serif'>Spectral<span class="pf-name">serif</span></button>
+      <button class="pg-font" data-f='"Geist", sans-serif' style='font-family:"Geist",sans-serif'>Geist<span class="pf-name">sans</span></button>
+    </div>
+  </div>
+
+  <div class="pg-grp">
+    <label>Body font</label>
+    <div class="pg-fonts" id="pgBody">
+      <button class="pg-font on" data-f='"Geist", sans-serif' style='font-family:"Geist",sans-serif'>Geist<span class="pf-name">sans</span></button>
+      <button class="pg-font" data-f='"Newsreader", serif' style='font-family:"Newsreader",serif'>Newsreader<span class="pf-name">serif</span></button>
+      <button class="pg-font" data-f='"Spectral", serif' style='font-family:"Spectral",serif'>Spectral<span class="pf-name">serif</span></button>
+      <button class="pg-font" data-f='"Fraunces", serif' style='font-family:"Fraunces",serif'>Fraunces<span class="pf-name">serif</span></button>
+    </div>
+  </div>
+
+  <div class="pg-grp">
+    <label>Halo size <span class="v" id="pgHaloVal">1.0×</span></label>
+    <input type="range" class="pg-range" id="pgHalo" min="0.5" max="1.6" step="0.05" value="1" />
+  </div>
+
+  <div class="pg-grp">
+    <label>Corner rounding <span class="v" id="pgRadVal">1.0×</span></label>
+    <input type="range" class="pg-range" id="pgRadius" min="0" max="4" step="0.2" value="1" />
+  </div>
+
+  <div class="pg-grp">
+    <label>Heading weight <span class="v" id="pgWghtVal">0</span></label>
+    <input type="range" class="pg-range" id="pgWght" min="-60" max="120" step="10" value="0" />
+  </div>
+
+  <div class="pg-grp">
+    <label>Density <span class="v" id="pgDensVal">1.0×</span></label>
+    <input type="range" class="pg-range" id="pgDensity" min="0.8" max="1.3" step="0.05" value="1" />
+  </div>
+</div>
+
+<script>
+  // ---- theme toggle + persistence ----
+  (function(){
+    const root=document.documentElement, btn=document.getElementById('themeToggle');
+    btn.addEventListener('click',()=>{
+      const light=root.getAttribute('data-theme')==='light';
+      if(light) root.removeAttribute('data-theme'); else root.setAttribute('data-theme','light');
+      try{localStorage.setItem('nysgpt-theme-b3', light?'dark':'light');}catch(e){}
+    });
+  })();
+
+  // ---- playground (session-only) ----
+  (function(){
+    const root=document.documentElement, rs=root.style;
+    const panel=document.getElementById('pgPanel'), launch=document.getElementById('pgLaunch');
+    launch.addEventListener('click',e=>{e.stopPropagation();panel.classList.toggle('open')});
+    document.addEventListener('click',e=>{ if(!panel.contains(e.target) && e.target!==launch && !launch.contains(e.target)) panel.classList.remove('open'); });
+
+    // shift the whole halo + accent system off one chosen hue.
+    function setAccent(hex){
+      rs.setProperty('--accent',hex);
+      // derive soft + halo from the hue using rgba — read channels
+      const c=hex.replace('#','');
+      const r=parseInt(c.substr(0,2),16),g=parseInt(c.substr(2,2),16),b=parseInt(c.substr(4,2),16);
+      const light=root.getAttribute('data-theme')==='light';
+      rs.setProperty('--accent-soft',`rgba(${r},${g},${b},${light?0.45:0.5})`);
+      rs.setProperty('--halo',`rgba(${r},${g},${b},${light?0.5:0.16})`);
+    }
+    const accWrap=document.getElementById('pgAccent');
+    accWrap.querySelectorAll('.pg-sw[data-a]').forEach(sw=>sw.addEventListener('click',()=>{
+      accWrap.querySelectorAll('.pg-sw').forEach(s=>s.classList.remove('on'));
+      sw.classList.add('on'); setAccent(sw.dataset.a);
+    }));
+    document.getElementById('pgAccentCustom').addEventListener('input',e=>{
+      accWrap.querySelectorAll('.pg-sw').forEach(s=>s.classList.remove('on'));
+      e.target.closest('.pg-sw').classList.add('on'); setAccent(e.target.value);
+    });
+
+    function fontGroup(id,varName){
+      const wrap=document.getElementById(id);
+      wrap.querySelectorAll('.pg-font').forEach(b=>b.addEventListener('click',()=>{
+        wrap.querySelectorAll('.pg-font').forEach(x=>x.classList.remove('on'));
+        b.classList.add('on'); rs.setProperty(varName,b.dataset.f);
+      }));
+    }
+    fontGroup('pgDisplay','--font-display');
+    fontGroup('pgBody','--font-body');
+
+    function rng(id,valId,varName,fmt){
+      const r=document.getElementById(id),v=document.getElementById(valId);
+      r.addEventListener('input',()=>{rs.setProperty(varName,r.value);v.textContent=fmt(r.value)});
+    }
+    rng('pgHalo','pgHaloVal','--halo-size',x=>parseFloat(x).toFixed(1)+'×');
+    rng('pgRadius','pgRadVal','--radius',x=>parseFloat(x).toFixed(1)+'×');
+    rng('pgWght','pgWghtVal','--wght',x=>(x>0?'+':'')+x);
+    rng('pgDensity','pgDensVal','--density',x=>parseFloat(x).toFixed(2)+'×');
+
+    document.getElementById('pgReset').addEventListener('click',()=>{
+      ['--accent','--accent-soft','--halo','--font-display','--font-body','--halo-size','--radius','--wght','--density'].forEach(v=>rs.removeProperty(v));
+      accWrap.querySelectorAll('.pg-sw').forEach((s,i)=>s.classList.toggle('on',i===0));
+      ['pgDisplay','pgBody'].forEach(id=>document.getElementById(id).querySelectorAll('.pg-font').forEach((b,i)=>b.classList.toggle('on',i===0)));
+      document.getElementById('pgHalo').value=1;document.getElementById('pgHaloVal').textContent='1.0×';
+      document.getElementById('pgRadius').value=1;document.getElementById('pgRadVal').textContent='1.0×';
+      document.getElementById('pgWght').value=0;document.getElementById('pgWghtVal').textContent='0';
+      document.getElementById('pgDensity').value=1;document.getElementById('pgDensVal').textContent='1.0×';
+      document.getElementById('pgAccentCustom').value='#e8c98a';
+    });
+  })();
+
+  // reveal on scroll
+  const io=new IntersectionObserver((es)=>{es.forEach(e=>{if(e.isIntersecting){e.target.classList.add('in');io.unobserve(e.target)}})},{threshold:.1,rootMargin:'0px 0px -5% 0px'});
+  document.querySelectorAll('.reveal').forEach((el,i)=>{el.style.transitionDelay=(i%4*70)+'ms';io.observe(el)});
+
+  function submitBrief(e){
+    e.preventDefault();const f=e.target;
+    const body=encodeURIComponent(`Name: ${f.name.value}\nEmail: ${f.email.value}\nOrg: ${f.org.value}\nDomain: ${f.domain.value}\n\nBrief:\n${f.brief.value}`);
+    window.location.href=`mailto:Brendan@nysgpt.com?subject=${encodeURIComponent('Project brief — '+(f.org.value||f.name.value))}&body=${body}`;
+    return false;
+  }
+</script>
+</body>
+</html>
