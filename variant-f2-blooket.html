@@ -120,7 +120,7 @@
   /* ===== MODE SELECT ===== */
   .modes h2{font-family:var(--font-display);font-weight:800;font-size:28px;text-align:center;margin-bottom:4px}
   .modes .sub{text-align:center;color:var(--ink-dim);font-weight:700;margin-bottom:24px}
-  .modegrid{display:grid;grid-template-columns:repeat(2,1fr);gap:16px}
+  .modegrid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
   .mode{border-radius:20px;padding:22px;color:#fff;text-align:left;position:relative;overflow:hidden;top:0;
     box-shadow:0 6px 0 var(--msh);transition:top .1s,box-shadow .1s;min-height:130px;display:flex;flex-direction:column;justify-content:flex-end}
   .mode:hover{top:-3px;box-shadow:0 9px 0 var(--msh)}
@@ -130,18 +130,14 @@
   .mode .mdesc{font-size:13px;opacity:.92;font-weight:700;margin-top:3px}
   .mode.classic{background:var(--blue);--msh:#2d6fd6}
   .mode.gold{background:var(--yellow);--msh:#d9a800;color:#5a4500}
-  .mode.speed{background:var(--pink);--msh:#d83b6c}
   .mode.boss{background:var(--purple);--msh:#6a3cb0}
   @media(max-width:560px){.modegrid{grid-template-columns:1fr}}
 
   /* ===== QUIZ ===== */
-  .quiz{max-width:920px}
+  .quiz{max-width:640px;margin:0 auto}
   .qhead{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;color:#fff;font-family:var(--font-display);font-weight:800}
   .qhead .pill{background:rgba(255,255,255,.18);padding:8px 16px;border-radius:100px;font-size:15px;display:flex;align-items:center;gap:8px;backdrop-filter:blur(6px)}
   .qhead .pill .mini{width:22px;height:22px}
-  .timer{height:14px;background:rgba(255,255,255,.18);border-radius:100px;overflow:hidden;margin-bottom:18px;box-shadow:inset 0 -2px 0 rgba(0,0,0,.1)}
-  .timer .fill{height:100%;background:var(--teal);border-radius:100px;width:100%;transition:width .12s linear}
-  .timer .fill.low{background:var(--red)}
   .qcard{background:var(--panel);border-radius:24px;box-shadow:0 10px 0 var(--shadow);padding:30px 34px;text-align:center;margin-bottom:18px}
   .qcard .qcat{font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:var(--ink-faint);margin-bottom:10px}
   .qcard .qtext{font-family:var(--font-display);font-weight:800;font-size:clamp(20px,3.2vw,30px);color:var(--ink);line-height:1.2}
@@ -258,9 +254,8 @@
       <h2>Pick a mode</h2>
       <div class="sub">same questions, different way to win</div>
       <div class="modegrid">
-        <button class="mode classic" data-mode="classic"><span class="emoji">🎯</span><div class="mname">Classic</div><div class="mdesc">Answer fast, build a streak. Pure points.</div></button>
+        <button class="mode classic" data-mode="classic"><span class="emoji">🎯</span><div class="mname">Classic</div><div class="mdesc">Build a streak. Pure points.</div></button>
         <button class="mode gold" data-mode="gold"><span class="emoji">🪙</span><div class="mname">Gold Quest</div><div class="mdesc">Right answers mine gold. Don't lose it all.</div></button>
-        <button class="mode speed" data-mode="speed"><span class="emoji">⚡</span><div class="mname">Speed Run</div><div class="mdesc">Half the clock. Double the pressure.</div></button>
         <button class="mode boss" data-mode="boss"><span class="emoji">👑</span><div class="mname">Boss Battle</div><div class="mdesc">Every question counts double. No mercy.</div></button>
       </div>
     </div>
@@ -273,7 +268,6 @@
       <span class="pill" id="qProgress">1 / 8</span>
       <span class="pill">⭐ <span id="qScore">0</span><span id="qGold" style="display:none">&nbsp;· 🪙 <span id="qGoldN">0</span></span></span>
     </div>
-    <div class="timer"><div class="fill" id="timerFill"></div></div>
     <div class="qcard">
       <div class="qcat" id="qCat">NYSGPT</div>
       <div class="qtext" id="qText">Loading…</div>
@@ -385,7 +379,7 @@ const QUESTIONS = [
 ];
 
 //// ===== state =====
-const S = { mode:'classic', i:0, order:[], score:0, gold:0, correct:0, streak:0, best:0, timer:null, t:0, tmax:0, locked:false };
+const S = { mode:'classic', i:0, order:[], score:0, gold:0, correct:0, streak:0, best:0, locked:false };
 const $ = id=>document.getElementById(id);
 function show(id){ document.querySelectorAll('.screen').forEach(s=>s.classList.remove('on')); $(id).classList.add('on'); }
 const ANS_SHAPES=['M12 2 L22 12 L12 22 L2 12Z','M2 2h20v20H2z','M12 2 L22 20 H2Z','M12 22 A10 10 0 1 1 12 2 A10 10 0 1 1 12 22'];
@@ -445,36 +439,25 @@ function renderQ(){
     b.onclick=()=>answer(idx,b,q);
     wrap.appendChild(b);
   });
-  // timer
-  S.tmax = S.mode==='speed'?7:13;
-  S.t=S.tmax; const fill=$('timerFill'); fill.classList.remove('low'); fill.style.width='100%';
-  clearInterval(S.timer);
-  S.timer=setInterval(()=>{
-    S.t-=0.1;
-    const pct=Math.max(0,S.t/S.tmax)*100; fill.style.width=pct+'%';
-    if(pct<25) fill.classList.add('low');
-    if(S.t<=0){ clearInterval(S.timer); if(!S.locked) answer(-1,null,q); }
-  },100);
 }
 
 function answer(idx,btn,q){
-  if(S.locked) return; S.locked=true; clearInterval(S.timer);
+  if(S.locked) return; S.locked=true;
   const correct = idx===q.correct;
   const mult = S.mode==='boss'?2:1;
-  const speedBonus = Math.round((S.t/S.tmax)*400);
   const buttons=[...$('answers').children];
   buttons.forEach((b,i)=>{ if(i===q.correct) b.classList.add('correct'); else if(i===idx) b.classList.add('wrong'); else b.classList.add('faded'); });
   if(correct){
     S.correct++; S.streak++; S.best=Math.max(S.best,S.streak);
     const streakBonus=(S.streak-1)*50;
-    const pts=(600+speedBonus+streakBonus)*mult;
+    const pts=(600+streakBonus)*mult;
     S.score+=pts;
     if(S.mode==='gold') S.gold+=300;
     flash(S.streak>=3?`🔥 ${S.streak} streak!`:'Correct! +'+pts);
   } else {
     S.streak=0;
     if(S.mode==='gold') S.gold=Math.max(0,S.gold-200);
-    flash(idx===-1?'⏱ Time!':'Nope!');
+    flash('Nope!');
   }
   $('qScore').textContent=S.score; $('qGoldN').textContent=S.gold;
   setTimeout(()=>{ S.i++; if(S.i>=S.order.length) finish(); else renderQ(); }, 1100);
@@ -488,7 +471,7 @@ function finish(){
   const acc=Math.round(S.correct/S.order.length*100);
   $('rAcc').textContent=acc+'% accuracy · '+S.correct+'/'+S.order.length;
   $('rCorrect').textContent=S.correct; $('rStreak').textContent=S.best;
-  $('rMode').textContent={classic:'Classic',gold:'Gold Quest',speed:'Speed Run',boss:'Boss Battle'}[S.mode];
+  $('rMode').textContent={classic:'Classic',gold:'Gold Quest',boss:'Boss Battle'}[S.mode];
   $('rCrown').textContent = acc>=80?'👑':acc>=50?'🎉':'💪';
   buildLeaderboard(total);
   show('scResults');
