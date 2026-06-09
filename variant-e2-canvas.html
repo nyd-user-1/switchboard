@@ -21,17 +21,17 @@
     --fg:#eef0f6;
     --fg-dim:#9498a8;
     --fg-faint:#565a6c;
-    --node:#12141d;
-    --node-brd:rgba(255,255,255,.1);
-    --core:#1a1d2a;
-    --accent:#5ce0c0;
-    --accent-2:#8b9bff;
-    --live:#5ce0c0;
+    --node:#13151c;
+    --node-brd:rgba(255,255,255,.08);
+    --core:#181b24;
+    --accent:#7fb8a8;          /* muted teal-sage — desaturated, calm */
+    --accent-2:#8a93b0;        /* muted slate */
+    --live:#7fb8a8;
     --ship:#565a6c;
-    --edge:rgba(140,155,255,.22);
-    --edge-hot:rgba(92,224,192,.7);
-    --line:rgba(255,255,255,.08);
-    --panel:rgba(14,16,24,.92);
+    --edge:rgba(170,180,200,.13);   /* faint hairline, no neon */
+    --edge-hot:rgba(127,184,168,.5);
+    --line:rgba(255,255,255,.07);
+    --panel:rgba(16,18,26,.94);
     --font-display:"Space Grotesk",system-ui,sans-serif;
     --font-body:"Hanken Grotesk",system-ui,sans-serif;
     --font-mono:"Space Mono",ui-monospace,monospace;
@@ -49,14 +49,14 @@
     --fg-faint:#9498a6;
     --node:#ffffff;
     --node-brd:rgba(20,24,40,.12);
-    --core:#13151c;
-    --accent:#11a988;
-    --accent-2:#5566e8;
-    --live:#11a988;
+    --core:#1a1d24;
+    --accent:#3f8c78;          /* muted teal on paper */
+    --accent-2:#6a7290;
+    --live:#3f8c78;
     --ship:#9498a6;
-    --edge:rgba(85,102,232,.25);
-    --edge-hot:rgba(17,169,136,.6);
-    --line:rgba(20,24,40,.1);
+    --edge:rgba(90,98,120,.2);
+    --edge-hot:rgba(63,140,120,.5);
+    --line:rgba(20,24,40,.09);
     --panel:rgba(246,247,250,.95);
   }
   :root{color-scheme:dark} :root[data-theme="light"]{color-scheme:light}
@@ -83,48 +83,86 @@
 
   /* ===== edges (SVG) sit under the nodes ===== */
   .edges{position:absolute;left:-6000px;top:-6000px;width:12000px;height:12000px;overflow:visible;pointer-events:none}
-  .edges path{fill:none;stroke:var(--edge);stroke-width:1.5;transition:stroke .3s,stroke-width .3s}
-  .edges path.hot{stroke:var(--edge-hot);stroke-width:2.5}
+  .edges path{fill:none;stroke:var(--edge);stroke-width:1;transition:stroke .3s,stroke-width .3s,opacity .3s}
+  .edges path.hot{stroke:var(--edge-hot);stroke-width:1.5}
+  .edges path.user{stroke-dasharray:5 5}        /* user-drawn links read dashed */
   .edges .pulse{fill:var(--accent)}
 
-  /* ===== nodes ===== */
-  .node{position:absolute;transform:translate(-50%,-50%);width:236px;
-    background:var(--node);border:1px solid var(--node-brd);border-radius:16px;padding:18px 20px;
+  /* ===== nodes — quiet by default, color only on hover/focus ===== */
+  .node{position:absolute;transform:translate(-50%,-50%);width:224px;
+    background:var(--node);border:1px solid var(--node-brd);border-radius:14px;padding:16px 18px;
     cursor:grab;transition:border-color .25s,box-shadow .3s;will-change:left,top;touch-action:none}
-  .node:hover{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent),0 18px 50px -16px rgba(0,0,0,.6)}
+  .node:hover{border-color:color-mix(in srgb,var(--accent) 60%, transparent);box-shadow:0 16px 44px -18px rgba(0,0,0,.55)}
   .node.dragging{cursor:grabbing;border-color:var(--accent);z-index:10;
-    box-shadow:0 0 0 1px var(--accent),0 28px 70px -14px rgba(0,0,0,.7);transition:box-shadow .2s,border-color .2s}
-  .node.dim{opacity:.4;filter:saturate(.5)}
-  .node .ntop{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
-  .node .nid{font-family:var(--font-mono);font-size:10px;letter-spacing:.1em;color:var(--fg-faint)}
-  .node .st{font-family:var(--font-mono);font-size:9px;letter-spacing:.08em;display:inline-flex;align-items:center;gap:6px;color:var(--ship)}
-  .node .st .d{width:6px;height:6px;border-radius:50%;background:var(--ship)}
-  .node .st.live{color:var(--live)}.node .st.live .d{background:var(--live);box-shadow:0 0 8px var(--live)}
-  .node h3{font-family:var(--font-display);font-weight:600;font-size:20px;letter-spacing:-.01em;margin-bottom:6px}
+    box-shadow:0 24px 60px -16px rgba(0,0,0,.6);transition:box-shadow .2s,border-color .2s}
+  .node.linktarget{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent)}  /* candidate while linking */
+  .node.dim{opacity:.32}
+  .node .ntop{display:flex;justify-content:space-between;align-items:center;margin-bottom:11px}
+  .node .nid{font-family:var(--font-mono);font-size:9.5px;letter-spacing:.1em;color:var(--fg-faint)}
+  .node .st{font-family:var(--font-mono);font-size:8.5px;letter-spacing:.08em;display:inline-flex;align-items:center;gap:6px;color:var(--fg-faint)}
+  .node .st .d{width:5px;height:5px;border-radius:50%;background:var(--ship)}
+  .node .st.live .d{background:var(--accent)}      /* live = a quiet filled dot, no glow */
+  .node h3{font-family:var(--font-display);font-weight:600;font-size:19px;letter-spacing:-.01em;margin-bottom:5px;color:var(--fg)}
   .node h3 .gpt{color:var(--fg-dim);font-weight:400}
-  .node .cat{font-family:var(--font-mono);font-size:10.5px;letter-spacing:.06em;color:var(--fg-faint);text-transform:uppercase}
-  .node .spark{margin-top:12px;height:30px;width:100%;overflow:visible}
-  .node .spark path{fill:none;stroke:var(--accent);stroke-width:1.6;opacity:.65}
+  .node .cat{font-family:var(--font-mono);font-size:10px;letter-spacing:.06em;color:var(--fg-faint);text-transform:uppercase}
+  .node .spark{margin-top:11px;height:26px;width:100%;overflow:visible;opacity:.5;transition:opacity .3s}
+  .node:hover .spark{opacity:.8}
+  .node .spark path{fill:none;stroke:var(--accent);stroke-width:1.4;opacity:.7}
+  /* user-added cards: a thin accent left-marker + a delete affordance */
+  .node.usercard{border-style:solid}
+  .node.usercard .nid{color:var(--accent)}
+  .node .del{position:absolute;top:-9px;right:-9px;width:20px;height:20px;border-radius:50%;background:var(--node);border:1px solid var(--node-brd);
+    color:var(--fg-faint);font-size:12px;line-height:1;display:none;place-items:center;cursor:pointer;z-index:3}
+  .node.usercard:hover .del{display:grid}
+  .node .del:hover{border-color:var(--accent);color:var(--fg)}
+  .node .label{outline:none}
+  .node .label:focus{border-bottom:1px solid var(--accent)}
+  /* the link handle (drag from here to another card) */
+  .node .link-handle{position:absolute;bottom:-9px;right:-9px;width:22px;height:22px;border-radius:50%;
+    background:var(--node);border:1px solid var(--node-brd);color:var(--fg-faint);font-size:11px;line-height:1;
+    display:none;place-items:center;cursor:crosshair;z-index:3;transition:color .2s,border-color .2s}
+  .node:hover .link-handle{display:grid}
+  .node .link-handle:hover{color:var(--accent);border-color:var(--accent)}
+  .linking .node{cursor:crosshair}
 
-  /* the CORE node */
-  .core{position:absolute;transform:translate(-50%,-50%);width:200px;height:200px;border-radius:50%;
-    background:radial-gradient(circle at 50% 40%,var(--core),var(--bg-2));border:1px solid var(--accent);
+  /* ===== how-to card (dismissible, session-remembered) ===== */
+  .howto{position:fixed;left:50%;top:24px;transform:translateX(-50%);z-index:45;width:min(560px,calc(100vw - 40px));
+    background:var(--panel);backdrop-filter:blur(20px);border:1px solid var(--line);border-radius:14px;padding:16px 20px;
+    box-shadow:0 24px 60px -24px rgba(0,0,0,.6);font-size:13px;color:var(--fg-dim);
+    display:flex;align-items:center;gap:18px;animation:dropin .6s cubic-bezier(.16,1,.3,1) both}
+  @keyframes dropin{from{opacity:0;transform:translateX(-50%) translateY(-12px)}to{opacity:1;transform:translateX(-50%)}}
+  .howto.hide{display:none}
+  .howto .htxt{flex:1;line-height:1.6}
+  .howto .htxt b{color:var(--fg);font-weight:600}
+  .howto .htxt kbd{font-family:var(--font-mono);font-size:11px;background:rgba(255,255,255,.06);border:1px solid var(--line);border-radius:4px;padding:1px 6px;color:var(--fg)}
+  :root[data-theme="light"] .howto .htxt kbd{background:rgba(20,24,40,.05)}
+  .howto .hx{flex-shrink:0;width:26px;height:26px;border:1px solid var(--line);border-radius:7px;background:transparent;color:var(--fg-faint);cursor:pointer;font-size:13px;transition:border-color .2s,color .2s}
+  .howto .hx:hover{border-color:var(--accent);color:var(--fg)}
+  @media(max-width:560px){.howto{font-size:12px;padding:14px 16px}}
+
+  /* the CORE node — calm hub: one soft surface, one thin ring, a whisper of glow */
+  .core{position:absolute;transform:translate(-50%,-50%);width:184px;height:184px;border-radius:50%;
+    background:radial-gradient(circle at 50% 42%, color-mix(in srgb,var(--core) 86%, var(--accent) 14%), var(--core) 70%);
+    border:1px solid color-mix(in srgb,var(--accent) 55%, transparent);
     display:grid;place-items:center;text-align:center;cursor:pointer;
-    box-shadow:0 0 0 1px var(--accent),0 0 80px -10px var(--accent),inset 0 0 60px -20px var(--accent)}
-  .core .ring{position:absolute;inset:-14px;border-radius:50%;border:1px solid var(--edge);animation:spin 60s linear infinite}
-  .core .ring.r2{inset:-30px;border-style:dashed;border-color:var(--line);animation-duration:90s;animation-direction:reverse}
+    box-shadow:0 0 50px -26px var(--accent);transition:box-shadow .4s,border-color .3s}
+  .core:hover{box-shadow:0 0 60px -22px var(--accent);border-color:color-mix(in srgb,var(--accent) 80%, transparent)}
+  /* a single, very faint orbit — slow, low-contrast */
+  .core .ring{position:absolute;inset:-22px;border-radius:50%;border:1px solid color-mix(in srgb,var(--accent) 16%, transparent);animation:spin 120s linear infinite}
+  .core .ring.r2{display:none}
   @keyframes spin{to{transform:rotate(360deg)}}
   .core .ci{position:relative;z-index:2}
-  .core .ci .mk{font-family:var(--font-syne);font-weight:800;font-size:24px;letter-spacing:-.02em;color:var(--fg)}
-  .core .ci .sub{font-family:var(--font-mono);font-size:9px;letter-spacing:.18em;color:var(--accent);margin-top:6px;text-transform:uppercase}
-  :root[data-theme="light"] .core .ci .mk{color:#fff}
-  :root[data-theme="light"] .core{color:#fff}
+  .core .ci .mk{font-family:var(--font-syne);font-weight:700;font-size:22px;letter-spacing:-.01em;color:var(--fg)}
+  .core .ci .sub{font-family:var(--font-mono);font-size:8.5px;letter-spacing:.16em;color:var(--fg-faint);margin-top:7px;text-transform:uppercase}
+  :root[data-theme="light"] .core .ci .mk{color:#f4f4f6}
+  :root[data-theme="light"] .core{color:#f4f4f6}
+  :root[data-theme="light"] .core .ci .sub{color:rgba(255,255,255,.5)}
 
   /* ===== fixed UI overlays ===== */
   .hud{position:fixed;z-index:20;pointer-events:none}
   .hud.tl{left:0;top:0;padding:26px 30px}
   .hud.tl .brand{font-family:var(--font-syne);font-weight:800;font-size:22px;letter-spacing:-.01em;pointer-events:auto;display:inline-flex;align-items:center;gap:11px}
-  .hud.tl .brand .dot{width:11px;height:11px;border-radius:50%;background:var(--accent);box-shadow:0 0 14px var(--accent)}
+  .hud.tl .brand .dot{width:9px;height:9px;border-radius:50%;background:var(--accent)}
   .hud.tl .tag{font-family:var(--font-mono);font-size:11px;letter-spacing:.06em;color:var(--fg-dim);margin-top:8px;max-width:30ch}
   .hud.tl .tag b{color:var(--fg)}
 
@@ -132,7 +170,7 @@
   .ctrl{width:40px;height:40px;border:1px solid var(--line);background:var(--panel);backdrop-filter:blur(10px);border-radius:10px;
     display:grid;place-items:center;cursor:pointer;color:var(--fg-dim);transition:border-color .2s,color .2s;font-family:var(--font-mono);font-size:16px}
   .ctrl:hover{border-color:var(--accent);color:var(--fg)}
-  .ctrl.on{border-color:var(--accent);color:var(--accent);box-shadow:0 0 0 1px var(--accent),0 0 18px -4px var(--accent)}
+  .ctrl.on{border-color:var(--accent);color:var(--accent)}
   .ctrl svg{width:16px;height:16px}
   .ctrl .moon{display:none}
   :root[data-theme="light"] .ctrl .sun{display:none}
@@ -143,7 +181,7 @@
   .legend{font-family:var(--font-mono);font-size:11px;color:var(--fg-faint);display:flex;gap:18px;align-items:center;flex-wrap:wrap}
   .legend .it{display:inline-flex;align-items:center;gap:7px}
   .legend .sw{width:9px;height:9px;border-radius:50%}
-  .legend .sw.l{background:var(--live);box-shadow:0 0 8px var(--live)}
+  .legend .sw.l{background:var(--live)}
   .legend .sw.s{background:var(--ship)}
   .legend .sw.e{width:16px;height:2px;border-radius:2px;background:var(--edge)}
   .hud.bl .hint{font-family:var(--font-mono);font-size:10.5px;color:var(--fg-faint);margin-top:10px}
@@ -155,11 +193,11 @@
   .zoom button:hover{background:var(--node);color:var(--fg)}
   .zoom button:first-child{border-bottom:1px solid var(--line)}
   .zoomlvl{font-family:var(--font-mono);font-size:10px;color:var(--fg-faint);text-align:center;padding:5px 0;border-top:1px solid var(--line)}
-  .book{font-family:var(--font-body);font-weight:600;font-size:14px;color:var(--bg);background:var(--accent);
-    padding:13px 22px;border-radius:100px;cursor:pointer;display:inline-flex;align-items:center;gap:9px;
-    box-shadow:0 10px 30px -8px var(--accent);transition:transform .2s,box-shadow .2s}
-  :root[data-theme="light"] .book{color:#fff}
-  .book:hover{transform:translateY(-2px);box-shadow:0 14px 40px -8px var(--accent)}
+  .book{font-family:var(--font-body);font-weight:500;font-size:13.5px;color:var(--fg);background:var(--panel);backdrop-filter:blur(10px);
+    padding:12px 20px;border-radius:100px;cursor:pointer;display:inline-flex;align-items:center;gap:9px;border:1px solid var(--line);
+    transition:transform .2s,border-color .2s,color .2s}
+  .book:hover{transform:translateY(-2px);border-color:var(--accent);color:var(--fg)}
+  .book .ar{color:var(--accent)}
 
   /* ===== detail drawer (slides up when a node is opened) ===== */
   .drawer{position:fixed;left:50%;bottom:24px;transform:translateX(-50%) translateY(140%);z-index:40;width:min(560px,calc(100vw - 40px));
@@ -220,6 +258,14 @@
   </div>
 </div>
 
+<!-- ===== how-to (dismissible, remembered) ===== -->
+<div class="howto" id="howto">
+  <div class="htxt">
+    <b>Make it yours.</b> &nbsp;<kbd>double-click</kbd> empty space to drop a card · hover a card &amp; drag its <kbd>↗</kbd> corner onto another to link them · drag cards to rearrange · <kbd>✕</kbd> deletes your cards. It all saves on this device.
+  </div>
+  <button class="hx" id="howtoX" title="Got it" aria-label="Dismiss">✕</button>
+</div>
+
 <!-- ===== HUD ===== -->
 <div class="hud tl">
   <div class="brand"><span class="dot"></span>NYSGPT</div>
@@ -227,8 +273,10 @@
 </div>
 
 <div class="hud tr">
+  <button class="ctrl" id="addBtn" title="Add a card (or double-click empty space)" aria-label="Add a card">＋</button>
   <button class="ctrl" id="physicsBtn" title="Toggle force layout (physics)" aria-label="Toggle physics">✦</button>
   <button class="ctrl" id="recenter" title="Recenter" aria-label="Recenter the map">⌖</button>
+  <button class="ctrl" id="resetBtn" title="Reset to the default map" aria-label="Reset">⟲</button>
   <button class="ctrl" id="themeToggle" title="Toggle theme" aria-label="Toggle light and dark">
     <svg class="sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>
     <svg class="moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
@@ -241,11 +289,11 @@
     <span class="it"><span class="sw s"></span> shipped</span>
     <span class="it"><span class="sw e"></span> shared architecture</span>
   </div>
-  <div class="hint"><kbd>drag</kbd> empty space to pan · <kbd>drag a card</kbd> to move it · <kbd>scroll</kbd> zoom · <kbd>click</kbd> a card · <kbd>⌖</kbd> recenter</div>
+  <div class="hint"><kbd>dbl-click</kbd> add card · <kbd>↗</kbd> drag to link · <kbd>drag</kbd> move · <kbd>scroll</kbd> zoom · <kbd>✦</kbd> physics · <kbd>⟲</kbd> reset</div>
 </div>
 
 <div class="hud br">
-  <a class="book" id="bookBtn" href="mailto:Brendan@nysgpt.com?subject=Working%20session%20—%20NYSGPT">Book a working session →</a>
+  <a class="book" id="bookBtn" href="mailto:Brendan@nysgpt.com?subject=Working%20session%20—%20NYSGPT">Book a working session <span class="ar">→</span></a>
   <div class="zoom">
     <button id="zin" aria-label="Zoom in">+</button>
     <button id="zout" aria-label="Zoom out">−</button>
@@ -341,13 +389,16 @@ const stage = document.getElementById('stage');
 const edges = document.getElementById('edges');
 const esc = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 
-// gentle curve from core(0,0) to a node's current position — recomputed whenever it moves
+const NS='http://www.w3.org/2000/svg';
+// gentle curve from core(0,0) to a node's current position (the canonical CORE→product edge)
 function edgeD(p){ const mx=p.x*0.5, my=p.y*0.5 - Math.sign(p.y||1)*40; return `M0,0 Q${mx},${my} ${p.x},${p.y}`; }
 function redrawEdge(p){ if(p._edge) p._edge.setAttribute('d',edgeD(p)); }
+// a curve between two arbitrary points (for user-drawn links)
+function linkD(ax,ay,bx,by){ const mx=(ax+bx)/2, my=(ay+by)/2 - Math.min(60,Math.hypot(bx-ax,by-ay)*0.12); return `M${ax},${ay} Q${mx},${my} ${bx},${by}`; }
 
-// build edges core->node (store the element on the product so drag can update it)
+// build the canonical CORE→product edges (store the element on the product so drag can update it)
 PRODUCTS.forEach(p=>{
-  const path=document.createElementNS('http://www.w3.org/2000/svg','path');
+  const path=document.createElementNS(NS,'path');
   path.setAttribute('d',edgeD(p));
   path.dataset.id=p.id;
   edges.appendChild(path);
@@ -367,20 +418,24 @@ core.innerHTML=`<div class="ring"></div><div class="ring r2"></div><div class="c
 core.addEventListener('click',e=>{e.stopPropagation(); focusOn(0,0,1.1); openCore();});
 world.appendChild(core);
 
-// product nodes
-PRODUCTS.forEach((p,i)=>{
+// build a product-node element
+function buildProductNode(p,i){
   const n=document.createElement('div'); n.className='node'; n.style.left=p.x+'px'; n.style.top=p.y+'px'; n.dataset.id=p.id;
   const st=p.status==='live'?'<span class="st live"><span class="d"></span>LIVE</span>':'<span class="st"><span class="d"></span>SHIPPED</span>';
-  n.innerHTML=`<div class="ntop"><span class="nid">U0${i+1}</span>${st}</div>
+  n.innerHTML=`<div class="link-handle" title="Drag to another card to link">↗</div>
+    <div class="ntop"><span class="nid">U0${i+1}</span>${st}</div>
     <h3>${esc(p.name)}<span class="gpt">${esc(p.gpt)}</span></h3>
     <div class="cat">${esc(p.cat)}</div>
     <svg class="spark" viewBox="0 0 196 30" preserveAspectRatio="none"><path d="${sparkPath(i+1)}"/></svg>`;
   n.addEventListener('mouseenter',()=>{ if(!nodeDrag) highlightEdge(p.id,true); });
   n.addEventListener('mouseleave',()=>{ if(!nodeDrag) highlightEdge(p.id,false); });
   makeDraggable(n, p);
+  wireLinkHandle(n, p);
   world.appendChild(n);
   p._el=n;
-});
+}
+// product nodes
+PRODUCTS.forEach((p,i)=>buildProductNode(p,i));
 
 // ===== node dragging (Obsidian-graph style: the node follows the cursor, its edge follows the node) =====
 let nodeDrag=null;   // {p, startX, startY, pointerX, pointerY, moved}
@@ -399,21 +454,157 @@ function makeDraggable(n, p){
     nodeDrag.moved += Math.abs(e.clientX-nodeDrag.pointerX)+Math.abs(e.clientY-nodeDrag.pointerY);
     p.x = nodeDrag.startX + dx; p.y = nodeDrag.startY + dy;
     n.style.left = p.x+'px'; n.style.top = p.y+'px';
-    redrawEdge(p);
+    redrawAll(p);
   });
   function end(e){
     if(!nodeDrag || nodeDrag.p!==p) return;
     n.classList.remove('dragging');
     const wasClick = nodeDrag.moved < 6;       // barely moved → treat as a click/open
+    const dragged = !wasClick;
     nodeDrag = null;
-    if(wasClick){ openNode(p); focusOn(p.x,p.y,1.15); }
-    else { highlightEdge(p.id,false); }
+    if(wasClick){ if(p._user){ p._el.querySelector('.label').focus(); } else { openNode(p); focusOn(p.x,p.y,1.15); } }
+    else { highlightEdge(p.id,false); save(); }
   }
   n.addEventListener('pointerup', end);
   n.addEventListener('pointercancel', end);
 }
 
 function highlightEdge(id,on){ const e=edges.querySelector(`path[data-id="${id}"]`); if(e) e.classList.toggle('hot',on); }
+
+// node lookup by id (products + user cards)
+const ALL = ()=>PRODUCTS.concat(USER.cards);
+function byId(id){ return ALL().find(p=>p.id===id); }
+
+// ========================================================================
+//  USER LAYER — your own cards + links between any two cards. Session-persistent.
+// ========================================================================
+const STORE_KEY='nysgpt-canvas-e2';
+const USER = { cards:[], links:[], moved:{} };   // moved = {id: {x,y}} overrides for ANY card
+let userSeq = 1;
+
+// ---- persistence ----
+let saveT;
+function save(){ clearTimeout(saveT); saveT=setTimeout(()=>{
+  try{
+    const moved={}; ALL().forEach(p=>{ moved[p.id]={x:Math.round(p.x),y:Math.round(p.y)}; });
+    const data={ cards:USER.cards.map(c=>({id:c.id,label:c.label,note:c.note,x:Math.round(c.x),y:Math.round(c.y)})),
+                 links:USER.links, moved, seq:userSeq };
+    localStorage.setItem(STORE_KEY, JSON.stringify(data));
+  }catch(e){}
+},250); }
+function load(){
+  try{ const raw=localStorage.getItem(STORE_KEY); if(!raw) return null; return JSON.parse(raw); }catch(e){ return null; }
+}
+
+// ---- a user card ----
+function buildUserCard(c){
+  const n=document.createElement('div'); n.className='node usercard'; n.style.left=c.x+'px'; n.style.top=c.y+'px'; n.dataset.id=c.id;
+  n.innerHTML=`<div class="del" title="Delete this card">✕</div>
+    <div class="link-handle" title="Drag to another card to link">↗</div>
+    <div class="ntop"><span class="nid">YOURS</span><span class="st"><span class="d"></span>NOTE</span></div>
+    <h3 class="label" contenteditable="true" spellcheck="false">${esc(c.label)}</h3>
+    <div class="cat">double-click text to rename</div>`;
+  c._el=n;
+  const label=n.querySelector('.label');
+  label.addEventListener('input',()=>{ c.label=label.textContent; save(); });
+  label.addEventListener('pointerdown',e=>e.stopPropagation()); // let you click into the text without dragging
+  label.addEventListener('keydown',e=>{ if(e.key==='Enter'){ e.preventDefault(); label.blur(); } });
+  n.querySelector('.del').addEventListener('pointerdown',e=>e.stopPropagation());
+  n.querySelector('.del').addEventListener('click',e=>{ e.stopPropagation(); deleteUserCard(c); });
+  makeDraggable(n, c);
+  wireLinkHandle(n, c);
+  world.appendChild(n);
+}
+function addUserCard(wx, wy, label){
+  const c={ id:'u'+(userSeq++), label:label||'New card', note:'', x:wx, y:wy, vx:0, vy:0, rest:Math.hypot(wx,wy)||300, _user:true };
+  USER.cards.push(c); buildUserCard(c); save();
+  // focus + select its label so you can type immediately
+  setTimeout(()=>{ const l=c._el.querySelector('.label'); l.focus(); document.getSelection().selectAllChildren(l); },30);
+  return c;
+}
+function deleteUserCard(c){
+  USER.links=USER.links.filter(l=>{ if(l.a===c.id||l.b===c.id){ if(l._el) l._el.remove(); return false; } return true; });
+  USER.cards=USER.cards.filter(x=>x!==c);
+  if(c._el) c._el.remove();
+  closeDrawer();
+  save();
+}
+
+// ---- a user link between two card ids ----
+function buildUserLink(l){
+  const path=document.createElementNS(NS,'path'); path.classList.add('user'); path.dataset.link=l.a+'__'+l.b;
+  edges.appendChild(path); l._el=path; redrawLink(l);
+}
+function redrawLink(l){ const a=byId(l.a), b=byId(l.b); if(a&&b&&l._el) l._el.setAttribute('d',linkD(a.x,a.y,b.x,b.y)); }
+function linksOf(id){ return USER.links.filter(l=>l.a===id||l.b===id); }
+function addLink(aId,bId){
+  if(aId===bId) return;
+  if(USER.links.some(l=>(l.a===aId&&l.b===bId)||(l.a===bId&&l.b===aId))) return; // no dupes
+  const l={a:aId,b:bId}; USER.links.push(l); buildUserLink(l); save();
+}
+
+// redraw everything attached to a moved node (its core edge + any user links)
+function redrawAll(p){ redrawEdge(p); linksOf(p.id).forEach(redrawLink); }
+
+// ---- the link gesture: drag from a card's ↗ handle to another card ----
+let linking=null;  // {from, ghost}
+function wireLinkHandle(n, p){
+  const h=n.querySelector('.link-handle'); if(!h) return;
+  h.addEventListener('pointerdown', e=>{
+    e.stopPropagation(); e.preventDefault();
+    const ghost=document.createElementNS(NS,'path'); ghost.classList.add('user'); ghost.style.opacity='.7';
+    edges.appendChild(ghost);
+    linking={ from:p, ghost };
+    document.body.style.cursor='crosshair';
+  });
+}
+stage.addEventListener('pointermove', e=>{
+  if(!linking) return;
+  // world coords of the pointer
+  const wx=(e.clientX-tx)/scale, wy=(e.clientY-ty)/scale;
+  linking.ghost.setAttribute('d', linkD(linking.from.x, linking.from.y, wx, wy));
+  // highlight a hovered candidate card
+  const el=document.elementFromPoint(e.clientX,e.clientY); const card=el&&el.closest('.node');
+  document.querySelectorAll('.node.linktarget').forEach(x=>x.classList.remove('linktarget'));
+  if(card && card.dataset.id!==linking.from.id) card.classList.add('linktarget');
+});
+addEventListener('pointerup', e=>{
+  if(!linking) return;
+  const el=document.elementFromPoint(e.clientX,e.clientY); const card=el&&el.closest('.node');
+  linking.ghost.remove();
+  document.querySelectorAll('.node.linktarget').forEach(x=>x.classList.remove('linktarget'));
+  document.body.style.cursor='';
+  if(card && card.dataset.id && card.dataset.id!==linking.from.id){ addLink(linking.from.id, card.dataset.id); }
+  linking=null;
+});
+
+// ---- add-card gesture: double-click empty space ----
+stage.addEventListener('dblclick', e=>{
+  if(e.target.closest('.node,.core,.hud,.drawer,.pg-panel,.pg-launch')) return;
+  const wx=(e.clientX-tx)/scale, wy=(e.clientY-ty)/scale;
+  addUserCard(wx, wy);
+});
+
+// ---- reset to the default graph ----
+function resetCanvas(){
+  try{ localStorage.removeItem(STORE_KEY); }catch(e){}
+  USER.links.forEach(l=>l._el&&l._el.remove());
+  USER.cards.forEach(c=>c._el&&c._el.remove());
+  USER.links=[]; USER.cards=[]; USER.moved={}; userSeq=1;
+  // restore product positions to their hand-placed defaults
+  PRODUCTS.forEach(p=>{ p.x=p._dx; p.y=p._dy; p._el.style.left=p.x+'px'; p._el.style.top=p.y+'px'; redrawEdge(p); });
+  closeDrawer(); center();
+}
+
+// ---- restore saved state on boot ----
+PRODUCTS.forEach(p=>{ p._dx=p.x; p._dy=p.y; });  // remember defaults for reset
+(function restore(){
+  const data=load(); if(!data) return;
+  if(data.seq) userSeq=data.seq;
+  if(data.moved){ PRODUCTS.forEach(p=>{ const m=data.moved[p.id]; if(m){ p.x=m.x; p.y=m.y; p._el.style.left=p.x+'px'; p._el.style.top=p.y+'px'; redrawEdge(p);} }); }
+  (data.cards||[]).forEach(c=>{ const card={...c, vx:0, vy:0, rest:Math.hypot(c.x,c.y)||300, _user:true}; USER.cards.push(card); buildUserCard(card); });
+  (data.links||[]).forEach(l=>{ USER.links.push(l); buildUserLink(l); });
+})();
 
 // ===== pan / zoom transform =====
 let tx=0, ty=0, scale=1, target={tx:0,ty:0,scale:1};
@@ -430,30 +621,38 @@ PRODUCTS.forEach(p=>{ p.vx=0; p.vy=0; p.rest=Math.hypot(p.x,p.y)||300; });
 function physicsTick(){
   const REP=560000;      // pair repulsion strength
   const SPRING=0.012;    // edge spring toward rest-distance from CORE
+  const LINKK=0.008;     // user-link spring (pulls linked cards together)
+  const LINKLEN=300;     // user-link rest length
   const CENTER=0.0015;   // gentle pull so the cloud doesn't drift away
   const DAMP=0.86;       // velocity damping
   const MAXV=46;         // clamp
-  for(let i=0;i<PRODUCTS.length;i++){
-    const a=PRODUCTS[i];
+  const nodes=ALL();
+  for(let i=0;i<nodes.length;i++){
+    const a=nodes[i];
     if(nodeDrag && nodeDrag.p===a){ a.vx=0; a.vy=0; continue; } // pinned to cursor
+    if(a.vx===undefined){ a.vx=0; a.vy=0; }
     let fx=0, fy=0;
     // node-node repulsion
-    for(let j=0;j<PRODUCTS.length;j++){ if(i===j) continue; const b=PRODUCTS[j];
+    for(let j=0;j<nodes.length;j++){ if(i===j) continue; const b=nodes[j];
       let dx=a.x-b.x, dy=a.y-b.y; let d2=dx*dx+dy*dy; if(d2<1) d2=1; const d=Math.sqrt(d2);
       const f=REP/d2; fx+=(dx/d)*f; fy+=(dy/d)*f; }
-    // also repel from CORE so nodes don't pile on the hub
+    // repel from CORE so nodes don't pile on the hub
     { let dx=a.x, dy=a.y, d2=dx*dx+dy*dy||1, d=Math.sqrt(d2); const f=REP*1.4/d2; fx+=(dx/d)*f; fy+=(dy/d)*f; }
-    // spring along the edge: pull toward rest radius from CORE(0,0)
-    const dist=Math.hypot(a.x,a.y)||1; const diff=dist-a.rest;
-    fx+=-(a.x/dist)*diff*SPRING* dist; fy+=-(a.y/dist)*diff*SPRING* dist;
+    // spring: products pull toward their rest radius from CORE; user cards just float
+    if(!a._user){ const dist=Math.hypot(a.x,a.y)||1; const diff=dist-a.rest;
+      fx+=-(a.x/dist)*diff*SPRING* dist; fy+=-(a.y/dist)*diff*SPRING* dist; }
+    // user-link springs (any card connected to a)
+    linksOf(a.id).forEach(l=>{ const o=byId(l.a===a.id?l.b:l.a); if(!o) return;
+      let dx=o.x-a.x, dy=o.y-a.y, d=Math.hypot(dx,dy)||1; const diff=d-LINKLEN;
+      fx+=(dx/d)*diff*LINKK; fy+=(dy/d)*diff*LINKK; });
     // gentle centering
     fx+=-a.x*CENTER; fy+=-a.y*CENTER;
     a.vx=(a.vx+fx*0.016)*DAMP; a.vy=(a.vy+fy*0.016)*DAMP;
     a.vx=Math.max(-MAXV,Math.min(MAXV,a.vx)); a.vy=Math.max(-MAXV,Math.min(MAXV,a.vy));
   }
   // integrate + paint
-  PRODUCTS.forEach(p=>{ if(nodeDrag && nodeDrag.p===p) return; p.x+=p.vx; p.y+=p.vy;
-    if(p._el){ p._el.style.left=p.x+'px'; p._el.style.top=p.y+'px'; } redrawEdge(p); });
+  nodes.forEach(p=>{ if(nodeDrag && nodeDrag.p===p) return; p.x+=p.vx; p.y+=p.vy;
+    if(p._el){ p._el.style.left=p.x+'px'; p._el.style.top=p.y+'px'; } redrawAll(p); });
 }
 
 // smooth follow + (optional) physics
@@ -466,12 +665,22 @@ function animate(){
 }
 center(); tx=target.tx; ty=target.ty; apply(); animate();
 
-// physics toggle
+// physics toggle (save the settled arrangement when turning off)
 (function(){
   const btn=document.getElementById('physicsBtn');
   btn.addEventListener('click',()=>{ physicsOn=!physicsOn; btn.classList.toggle('on',physicsOn);
-    if(physicsOn){ PRODUCTS.forEach(p=>{ p.vx=(p.x*0)+ (p.id.charCodeAt(0)%7-3); p.vy=(p.id.charCodeAt(1)%7-3); }); } // tiny kick to settle
+    if(physicsOn){ ALL().forEach(p=>{ p.vx=(p.id.charCodeAt(0)%7-3); p.vy=(p.id.charCodeAt(1)%7-3); }); }
+    else save();
   });
+})();
+
+// add-card / reset buttons + how-to dismissal
+document.getElementById('addBtn').onclick=()=>{ const wx=(innerWidth/2-tx)/scale, wy=(innerHeight/2-ty)/scale; addUserCard(wx,wy); };
+document.getElementById('resetBtn').onclick=()=>{ if(confirm('Reset the map to its default layout? This clears your cards and links.')) resetCanvas(); };
+(function(){
+  const ho=document.getElementById('howto');
+  try{ if(localStorage.getItem(STORE_KEY+'-howto')==='hide') ho.classList.add('hide'); }catch(e){}
+  document.getElementById('howtoX').onclick=()=>{ ho.classList.add('hide'); try{localStorage.setItem(STORE_KEY+'-howto','hide');}catch(e){} };
 })();
 
 // drag to pan
