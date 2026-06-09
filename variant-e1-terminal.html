@@ -97,10 +97,9 @@
   :root[data-theme="light"] .icon-btn .moon{display:block}
 
   /* ===== scrollback ===== */
-  .screen{flex:1;overflow-y:auto;padding:24px 26px 8px;scroll-behavior:smooth}
-  .screen::-webkit-scrollbar{width:10px}
-  .screen::-webkit-scrollbar-thumb{background:var(--line);border-radius:10px}
-  .screen::-webkit-scrollbar-track{background:transparent}
+  .screen{flex:1;overflow-y:auto;padding:24px 26px 8px;scroll-behavior:smooth;
+    scrollbar-width:none;-ms-overflow-style:none}
+  .screen::-webkit-scrollbar{width:0;height:0;display:none}
 
   /* a single command block: the echoed command + its output */
   .blk{margin-bottom:18px;animation:appear .2s ease both}
