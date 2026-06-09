@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>NYSGPT — Top 10 (a party game)</title>
-<meta name="description" content="A playable Top-10 party game about NYSGPT — tap the answers you think are on the hidden list. Built on real NYSGPT facts plus a few just-for-fun categories." />
+<title>Bank It — a party game by NYSGPT</title>
+<meta name="description" content="Bank It — a playable party game by NYSGPT. Tap the answers you think are on the hidden list of ten, then bank it before a wrong tap ends the round. Built on real NYSGPT facts plus a few just-for-fun categories." />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Luckiest+Guy&family=Nunito:ital,wght@0,600;0,700;0,800;0,900;1,800&family=Fredoka:wght@500;600;700&display=swap" rel="stylesheet" />
@@ -222,7 +222,7 @@
 <div class="bgfloat" id="bgfloat"></div>
 
 <div class="topbar">
-  <div class="brand"><span class="logo">▲</span>NYSGPT&nbsp;Top&nbsp;10</div>
+  <div class="brand"><span class="logo">▲</span>Bank&nbsp;It</div>
   <div class="topctrl">
     <button class="iconbtn" id="themeToggle" title="Toggle theme" aria-label="Toggle theme">
       <svg class="sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>
@@ -236,7 +236,7 @@
   <!-- ===== START ===== -->
   <section class="screen start on" id="scStart">
     <div class="card">
-      <h1>Name the <span class="ten">Top&nbsp;10</span></h1>
+      <h1>Bank <span class="ten">It</span></h1>
       <div class="sub">Every category hides a list of ten.<br>Tap the answers you think made the cut.</div>
       <div class="rules">
         <div class="rule"><span class="n">1</span><span>Pick a category — see <b>20</b> answers.</span></div>
@@ -461,7 +461,7 @@ function showResults(how){
   $('rHits').textContent=S.score;
   $('rCat').textContent=b.title.length>16?b.title.slice(0,15)+'…':b.title;
   let head, msg, crown, endlabel;
-  if(how==='clear'){ head='Clean sweep!'; crown='🏆'; endlabel='All 10'; msg='You named the whole Top 10 with no misses. Flawless.'; }
+  if(how==='clear'){ head='Clean sweep!'; crown='🏆'; endlabel='All 10'; msg='You found all ten with no misses. Flawless.'; }
   else if(how==='bank'){ head='Banked it!'; crown=S.score>=8?'🤑':S.score>=5?'😎':'👍'; endlabel='Banked'; msg=S.score>=8?'Walked away rich. Smart stop.':S.score>=5?'Solid haul, no risk taken.':'Played it safe — every point counts.'; }
   else { head='Wrong tile!'; crown=S.score>=7?'😅':S.score>=4?'😬':'💥'; endlabel='Busted'; msg=S.score>=7?'So close — one greedy tap ended a great run.':S.score>=4?'The list bit back. Bank it sooner next time.':'Oof, early miss. Pick the sure things first.'; }
   $('rHead').textContent=head; $('rCrown').textContent=crown; $('rMsg').textContent=msg; $('rEnd').textContent=endlabel;
