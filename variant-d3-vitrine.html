@@ -1,0 +1,663 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>NYSGPT — AI for complex, legacy systems</title>
+<meta name="description" content="NYSGPT is an AI-first software company building domain-specific applications for complex, legacy, and regulatory systems. Eight shipped products turning impenetrable data into navigable software." />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=Inter+Tight:wght@300;400;500;600&family=Space+Mono:wght@400;700&family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;1,9..144,300&display=swap" rel="stylesheet" />
+<script>
+  // VITRINE defaults DARK (gallery); go light only when explicitly chosen.
+  (function(){ try{ if(localStorage.getItem('nysgpt-theme-d3')==='light') document.documentElement.setAttribute('data-theme','light'); }catch(e){} })();
+</script>
+<style>
+  :root{
+    /* ---- DARK (default): a near-black gallery, objects in pools of light ---- */
+    --room:#0d0d0f;             /* gallery wall */
+    --room-2:#141416;
+    --plinth:#1a1a1d;           /* the lit object surface */
+    --ink:#f1efea;
+    --ink-dim:#a4a29b;
+    --ink-faint:#646259;
+    --ink-hover:#fff;
+    --spot:rgba(255,253,247,.07);   /* the volumetric spotlight */
+    --spot-hot:rgba(255,253,247,.13);
+    --cast:rgba(0,0,0,.6);          /* long cast shadow color */
+    --line:rgba(255,255,255,.1);
+    --line-soft:rgba(255,255,255,.05);
+    --gild:#c8b890;             /* a near-monochrome warm stone for hairline accents only */
+    --font-display:"Cormorant Garamond",Georgia,serif;
+    --font-body:"Inter Tight",system-ui,sans-serif;
+    --font-mono:"Space Mono",ui-monospace,monospace;
+    --font-serif:"Fraunces",Georgia,serif;
+    --maxw:1180px;
+    /* playground knobs */
+    --radius:1;
+    --wght:0;
+    --density:1;
+    --spotlight:1;             /* spotlight intensity multiplier */
+  }
+
+  /* ---- LIGHT: a daylit gallery, objects cast soft shadow on white walls ---- */
+  :root[data-theme="light"]{
+    --room:#eceae4;
+    --room-2:#f4f2ec;
+    --plinth:#ffffff;
+    --ink:#1a1a17;
+    --ink-dim:#56544c;
+    --ink-faint:#9a988f;
+    --ink-hover:#000;
+    --spot:rgba(255,255,255,.7);
+    --spot-hot:rgba(255,255,255,.95);
+    --cast:rgba(40,38,32,.16);
+    --line:rgba(26,26,23,.12);
+    --line-soft:rgba(26,26,23,.07);
+    --gild:#9a7b3a;
+  }
+  :root{color-scheme:dark} :root[data-theme="light"]{color-scheme:light}
+  html,body{transition:background .5s ease,color .5s ease}
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth;-webkit-text-size-adjust:100%}
+  body{
+    background:var(--room);color:var(--ink);font-family:var(--font-body);
+    font-size:16px;line-height:1.6;-webkit-font-smoothing:antialiased;
+    text-rendering:optimizeLegibility;overflow-x:hidden;font-weight:400;
+  }
+  /* the room's ambient spotlight following nothing — a fixed soft wash from above */
+  body::before{content:"";position:fixed;inset:0;z-index:0;pointer-events:none;
+    background:radial-gradient(120% 70% at 50% -8%,var(--spot),transparent 60%);opacity:var(--spotlight)}
+
+  .wrap{position:relative;z-index:2;max-width:var(--maxw);margin:0 auto;padding:0 32px}
+  a{color:inherit;text-decoration:none}
+  .mono{font-family:var(--font-mono)}
+  .tnum{font-variant-numeric:tabular-nums}
+  .placard{font-family:var(--font-mono);font-size:10.5px;letter-spacing:.22em;text-transform:uppercase;color:var(--ink-faint)}
+  em{font-style:italic}
+
+  /* ===== NAV ===== */
+  header{position:sticky;top:0;z-index:50;background:color-mix(in srgb,var(--room) 78%,transparent);backdrop-filter:blur(14px);border-bottom:1px solid var(--line-soft)}
+  header .wrap{display:flex;align-items:center;justify-content:space-between;height:84px}
+  .brand{display:flex;align-items:baseline;gap:13px;font-family:var(--font-display);font-weight:500;font-size:25px;letter-spacing:.02em}
+  .brand .est{font-family:var(--font-mono);font-size:9.5px;letter-spacing:.2em;color:var(--ink-faint);text-transform:uppercase}
+  nav{display:flex;align-items:center;gap:30px}
+  nav a.lnk{font-family:var(--font-mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-dim);transition:color .3s}
+  nav a.lnk:hover{color:var(--ink)}
+  .pill{font-family:var(--font-body);font-weight:500;font-size:12.5px;letter-spacing:.04em;color:var(--ink);padding:11px 22px;border:1px solid var(--line);border-radius:0;transition:background .3s,color .3s,border-color .3s}
+  .pill:hover{background:var(--ink);color:var(--room);border-color:var(--ink)}
+  .theme-toggle{width:40px;height:40px;border:1px solid var(--line);background:transparent;
+    display:grid;place-items:center;cursor:pointer;color:var(--ink-dim);transition:border-color .3s,color .3s}
+  .theme-toggle:hover{border-color:var(--ink);color:var(--ink)}
+  .theme-toggle svg{width:15px;height:15px;display:block}
+  .theme-toggle .moon{display:none}
+  :root[data-theme="light"] .theme-toggle .sun{display:none}
+  :root[data-theme="light"] .theme-toggle .moon{display:block}
+  @media(max-width:760px){nav a.lnk{display:none}}
+
+  /* ===== HERO — the title wall ===== */
+  .hero{position:relative;padding:calc(120px * var(--density)) 0 calc(96px * var(--density));text-align:center}
+  .hero .room-no{font-family:var(--font-mono);font-size:11px;letter-spacing:.28em;text-transform:uppercase;color:var(--gild);margin-bottom:36px;animation:fade 1.2s ease both}
+  .hero h1{font-family:var(--font-display);font-weight:calc(500 + var(--wght));font-size:clamp(56px,11vw,150px);line-height:.94;letter-spacing:-.01em;max-width:14ch;margin:0 auto;
+    text-shadow:0 30px 60px var(--cast)}
+  .hero h1 .ln{display:block;animation:lift 1.3s cubic-bezier(.16,1,.3,1) both}
+  .hero h1 .l1{animation-delay:.1s}.hero h1 .l2{animation-delay:.24s}
+  .hero h1 em{font-weight:400}
+  @keyframes lift{from{opacity:0;transform:translateY(28px);filter:blur(6px)}to{opacity:1;transform:none;filter:none}}
+  @keyframes fade{from{opacity:0}to{opacity:1}}
+  .hero p.deck{margin:38px auto 0;max-width:56ch;font-size:18px;line-height:1.8;color:var(--ink-dim);animation:fade 1.4s ease .5s both;font-family:var(--font-serif);font-weight:300}
+  .hero p.deck b{color:var(--ink);font-weight:400}
+  .hero .cta{margin-top:46px;display:flex;gap:18px;justify-content:center;flex-wrap:wrap;animation:fade 1.4s ease .66s both}
+  .btn{font-family:var(--font-body);font-weight:500;font-size:14px;letter-spacing:.02em;padding:16px 32px;display:inline-flex;align-items:center;gap:11px;
+    border:1px solid var(--line);cursor:pointer;transition:background .35s,color .35s,border-color .35s,box-shadow .4s;background:transparent;color:var(--ink)}
+  .btn .arr{transition:transform .3s}.btn:hover .arr{transform:translateX(5px)}
+  .btn.primary{background:var(--ink);color:var(--room);border-color:var(--ink);box-shadow:0 18px 40px -16px var(--cast)}
+  .btn.primary:hover{box-shadow:0 26px 56px -16px var(--cast);transform:translateY(-2px)}
+  .btn.ghost:hover{border-color:var(--ink);color:var(--ink-hover)}
+
+  /* ===== WALL TEXT — replaces the stat bar ===== */
+  /* a museum object label / didactic placard */
+  .walltext{max-width:560px;margin:calc(84px * var(--density)) auto 0;border:1px solid var(--line);padding:30px 36px;text-align:left;
+    background:color-mix(in srgb,var(--plinth) 60%,transparent);animation:fade 1.5s ease .8s both;position:relative}
+  .walltext::before{content:"";position:absolute;left:-1px;top:22px;width:3px;height:calc(100% - 44px);background:var(--gild);opacity:.7}
+  .walltext .t{font-family:var(--font-display);font-style:italic;font-size:22px;color:var(--ink);margin-bottom:4px}
+  .walltext .sub{font-family:var(--font-mono);font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-faint);margin-bottom:18px}
+  .walltext .facts{display:flex;gap:30px;flex-wrap:wrap}
+  .walltext .fact{display:flex;flex-direction:column;gap:3px}
+  .walltext .fact .n{font-family:var(--font-display);font-weight:500;font-size:30px;line-height:1;color:var(--ink)}
+  .walltext .fact .l{font-family:var(--font-mono);font-size:9.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-faint)}
+
+  /* ===== THESIS ===== */
+  .thesis{padding:calc(100px * var(--density)) 0;text-align:center}
+  .thesis .inner{max-width:780px;margin:0 auto}
+  .thesis .placard{margin-bottom:28px;color:var(--gild)}
+  .thesis h2{font-family:var(--font-display);font-weight:calc(500 + var(--wght));font-size:clamp(32px,5vw,58px);line-height:1.08;letter-spacing:-.01em}
+  .thesis p{margin:32px auto 0;max-width:62ch;color:var(--ink-dim);font-size:17.5px;line-height:1.85;font-family:var(--font-serif);font-weight:300}
+  .thesis p b{color:var(--ink);font-weight:400}
+
+  /* ===== PRODUCTS — exhibits on plinths, presented one at a time ===== */
+  .work{padding:calc(80px * var(--density)) 0}
+  .work .head{text-align:center;margin-bottom:24px}
+  .work .head .placard{margin-bottom:18px;color:var(--gild)}
+  .work .head h2{font-family:var(--font-display);font-weight:calc(500 + var(--wght));font-size:clamp(36px,5.6vw,68px);letter-spacing:-.01em;line-height:1}
+  .work .head p{margin-top:16px;color:var(--ink-dim);font-size:16px;font-family:var(--font-serif);font-weight:300}
+  /* each exhibit: a wide plinth, the object lit, a long cast shadow under it, alternating sides */
+  .exhibits{margin-top:60px;display:grid;gap:64px}
+  .exhibit{display:grid;grid-template-columns:1fr 1fr;gap:50px;align-items:center}
+  .exhibit:nth-child(even){direction:rtl}
+  .exhibit:nth-child(even) > *{direction:ltr}
+  .exhibit .plinth{position:relative;aspect-ratio:4/3;border-radius:calc(2px * var(--radius));
+    background:radial-gradient(120% 90% at 50% 18%,var(--spot-hot),transparent 62%),var(--plinth);
+    border:1px solid var(--line);display:grid;place-items:center;overflow:hidden;
+    box-shadow:0 40px 60px -30px var(--cast)}
+  /* the object: a big ghosted index numeral, lit from above, casting down */
+  .exhibit .obj{font-family:var(--font-display);font-weight:300;font-size:clamp(90px,16vw,200px);line-height:1;color:var(--ink);
+    text-shadow:0 24px 40px var(--cast);transition:transform .5s cubic-bezier(.16,1,.3,1)}
+  .exhibit .plinth:hover .obj{transform:translateY(-6px) scale(1.03)}
+  .exhibit .plinth .floor{position:absolute;left:50%;bottom:13%;width:46%;height:5%;transform:translateX(-50%);border-radius:50%;
+    background:radial-gradient(ellipse,var(--cast),transparent 70%);filter:blur(4px)}
+  .exhibit .plinth .gildline{position:absolute;left:18px;bottom:18px;font-family:var(--font-mono);font-size:9px;letter-spacing:.2em;text-transform:uppercase;color:var(--gild);opacity:.8}
+  .exhibit .label{}
+  .exhibit .label .cat{font-family:var(--font-mono);font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:var(--ink-faint);margin-bottom:14px;display:flex;gap:12px;align-items:center}
+  .exhibit .label .cat .st{color:var(--gild)}
+  .exhibit .label .cat .st.shipped{color:var(--ink-faint)}
+  .exhibit .label h3{font-family:var(--font-display);font-weight:500;font-size:clamp(30px,3.6vw,44px);letter-spacing:-.01em;line-height:1.02;margin-bottom:14px}
+  .exhibit .label h3 .gpt{color:var(--ink-dim);font-weight:400}
+  .exhibit .label .dsc{color:var(--ink-dim);font-size:15.5px;line-height:1.7;font-family:var(--font-serif);font-weight:300;max-width:46ch}
+  .exhibit .label .meta{margin-top:18px;font-family:var(--font-mono);font-size:11px;letter-spacing:.04em;color:var(--ink-faint);display:flex;gap:10px;flex-wrap:wrap}
+  .exhibit .label .meta .sep{opacity:.5}
+  .exhibit .label .view{margin-top:22px;font-family:var(--font-mono);font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink);display:inline-flex;align-items:center;gap:9px;border-bottom:1px solid var(--gild);padding-bottom:4px;transition:gap .3s}
+  a.exhibit:hover .view{gap:15px}
+  a.exhibit{cursor:pointer}
+  @media(max-width:820px){.exhibit,.exhibit:nth-child(even){grid-template-columns:1fr;direction:ltr;gap:24px}.exhibits{gap:48px}}
+
+  /* ===== METHOD — three gallery rooms ===== */
+  .method{padding:calc(96px * var(--density)) 0}
+  .method .head{text-align:center;margin-bottom:56px}
+  .method .head .placard{margin-bottom:16px;color:var(--gild)}
+  .method .head h2{font-family:var(--font-display);font-weight:calc(500 + var(--wght));font-size:clamp(34px,5vw,58px);letter-spacing:-.01em}
+  .msteps{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--line-soft);border:1px solid var(--line-soft)}
+  .mstep{background:var(--room);padding:44px 36px;transition:background .4s;position:relative}
+  .mstep:hover{background:var(--room-2)}
+  .mstep .num{font-family:var(--font-display);font-weight:300;font-size:64px;line-height:1;color:var(--ink);opacity:.9;margin-bottom:20px;text-shadow:0 16px 30px var(--cast)}
+  .mstep h3{font-family:var(--font-display);font-weight:500;font-size:24px;margin-bottom:12px;letter-spacing:-.01em}
+  .mstep p{color:var(--ink-dim);font-size:14.5px;line-height:1.75;font-family:var(--font-serif);font-weight:300}
+  @media(max-width:820px){.msteps{grid-template-columns:1fr}}
+
+  /* ===== CTA ===== */
+  .cta{padding:calc(96px * var(--density)) 0 calc(110px * var(--density))}
+  .cta .panel{position:relative;border:1px solid var(--line);overflow:hidden;
+    background:radial-gradient(100% 140% at 50% 0%,var(--spot),transparent 60%),var(--room-2);
+    display:grid;grid-template-columns:1fr 1fr}
+  .cta .left{position:relative;padding:58px 52px;border-right:1px solid var(--line)}
+  .cta .left .placard{margin-bottom:22px;color:var(--gild)}
+  .cta .left h2{font-family:var(--font-display);font-weight:500;font-size:clamp(30px,3.8vw,46px);line-height:1.08;letter-spacing:-.01em}
+  .cta .left p{margin-top:22px;color:var(--ink-dim);font-size:16px;line-height:1.8;max-width:40ch;font-family:var(--font-serif);font-weight:300}
+  .cta .direct{margin-top:34px;display:grid;gap:15px}
+  .cta .direct a{display:inline-flex;align-items:center;gap:14px;font-family:var(--font-mono);font-size:12.5px;color:var(--ink);transition:color .3s;width:fit-content}
+  .cta .direct a:hover{color:var(--gild)}
+  .cta .direct .ico{width:38px;height:38px;border:1px solid var(--line);display:grid;place-items:center;color:var(--gild)}
+  form.brief{position:relative;padding:58px 52px;display:grid;gap:18px}
+  form.brief .fld{display:grid;gap:8px}
+  form.brief label{font-family:var(--font-mono);font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-faint)}
+  form.brief input,form.brief textarea,form.brief select{background:transparent;border:1px solid var(--line);border-radius:0;padding:14px 16px;color:var(--ink);font-family:var(--font-body);font-size:14.5px;transition:border-color .3s}
+  form.brief input:focus,form.brief textarea:focus,form.brief select:focus{outline:none;border-color:var(--gild)}
+  form.brief textarea{resize:vertical;min-height:84px}
+  form.brief .row2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  form.brief button{margin-top:6px;width:100%;justify-content:center}
+  form.brief .note{font-family:var(--font-mono);font-size:10px;color:var(--ink-faint);text-align:center}
+  @media(max-width:860px){.cta .panel{grid-template-columns:1fr}.cta .left{border-right:none;border-bottom:1px solid var(--line);padding:42px 30px}form.brief{padding:42px 30px}}
+
+  /* ===== FOOTER ===== */
+  footer{padding:50px 0;border-top:1px solid var(--line-soft)}
+  footer .wrap{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:16px}
+  footer .c{font-family:var(--font-mono);font-size:11px;color:var(--ink-faint);letter-spacing:.04em}
+  footer .c b{color:var(--ink-dim);font-weight:400}
+  footer a:hover{color:var(--gild)}
+
+  /* ===== PLAYGROUND ===== */
+  .pg-launch{position:fixed;right:24px;bottom:24px;z-index:90;width:52px;height:52px;border-radius:50%;
+    background:var(--ink);color:var(--room);cursor:pointer;border:none;display:grid;place-items:center;
+    box-shadow:0 16px 36px -12px var(--cast);transition:transform .3s,box-shadow .3s}
+  .pg-launch:hover{transform:translateY(-3px);box-shadow:0 22px 46px -12px var(--cast)}
+  .pg-launch svg{width:22px;height:22px}
+  .pg-panel{position:fixed;right:24px;bottom:90px;z-index:91;width:322px;
+    background:color-mix(in srgb,var(--room-2) 96%,transparent);backdrop-filter:blur(20px);border:1px solid var(--line);
+    box-shadow:0 30px 70px -20px var(--cast);padding:24px;
+    opacity:0;transform:translateY(12px) scale(.97);pointer-events:none;transform-origin:bottom right;
+    transition:opacity .3s cubic-bezier(.16,1,.3,1),transform .3s cubic-bezier(.16,1,.3,1);max-height:80vh;overflow-y:auto}
+  .pg-panel.open{opacity:1;transform:none;pointer-events:auto}
+  .pg-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px}
+  .pg-title{font-family:var(--font-mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--gild)}
+  .pg-reset{font-family:var(--font-mono);font-size:10px;letter-spacing:.06em;color:var(--ink-dim);background:none;border:none;cursor:pointer;text-transform:uppercase}
+  .pg-reset:hover{color:var(--ink)}
+  .pg-grp{margin-bottom:22px}.pg-grp:last-child{margin-bottom:4px}
+  .pg-grp > label{display:block;font-family:var(--font-mono);font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-dim);margin-bottom:12px}
+  .pg-grp > label .v{color:var(--ink-faint);float:right;text-transform:none;letter-spacing:0}
+  .pg-swatches{display:flex;gap:10px;flex-wrap:wrap}
+  .pg-sw{width:30px;height:30px;border-radius:50%;cursor:pointer;border:1px solid var(--line);transition:transform .15s;position:relative}
+  .pg-sw:hover{transform:scale(1.1)}
+  .pg-sw.on{border-color:var(--ink);box-shadow:0 0 0 2px var(--room),0 0 0 3px var(--ink)}
+  .pg-sw.custom{display:grid;place-items:center;color:var(--ink-faint);overflow:hidden}
+  .pg-sw.custom input{position:absolute;inset:0;opacity:0;cursor:pointer}
+  .pg-fonts{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+  .pg-font{font-family:inherit;font-size:13px;padding:10px 11px;border:1px solid var(--line);background:transparent;color:var(--ink-dim);cursor:pointer;transition:.2s;text-align:left;line-height:1.1}
+  .pg-font:hover{border-color:var(--ink-faint);color:var(--ink)}
+  .pg-font.on{border-color:var(--gild);color:var(--ink)}
+  .pg-font .pf-name{font-size:9px;font-family:var(--font-mono);letter-spacing:.04em;color:var(--ink-faint);display:block;margin-top:3px}
+  input[type=range].pg-range{-webkit-appearance:none;appearance:none;width:100%;height:1px;background:var(--line);outline:none;cursor:pointer}
+  input[type=range].pg-range::-webkit-slider-thumb{-webkit-appearance:none;width:14px;height:14px;border-radius:50%;background:var(--gild);cursor:pointer}
+  input[type=range].pg-range::-moz-range-thumb{width:12px;height:12px;border-radius:50%;background:var(--gild);cursor:pointer;border:none}
+  @media(max-width:560px){.pg-panel{width:calc(100vw - 48px)}}
+
+  .reveal{opacity:0;transform:translateY(28px);transition:opacity .9s cubic-bezier(.16,1,.3,1),transform .9s cubic-bezier(.16,1,.3,1)}
+  .reveal.in{opacity:1;transform:none}
+  @media(prefers-reduced-motion:reduce){*{animation:none !important;transition:none !important}.reveal{opacity:1;transform:none}body::before{opacity:.5}}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap">
+    <a href="#top" class="brand">NYSGPT <span class="est">est. 8 works</span></a>
+    <nav>
+      <a href="#thesis" class="lnk">Thesis</a>
+      <a href="#work" class="lnk">Collection</a>
+      <a href="#how" class="lnk">Method</a>
+      <button class="theme-toggle" id="themeToggle" type="button" aria-label="Toggle light and dark mode" title="Toggle theme">
+        <svg class="sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>
+        <svg class="moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+      </button>
+      <a href="#contact" class="pill">Book a session</a>
+    </nav>
+  </div>
+</header>
+
+<main id="top">
+
+  <!-- HERO -->
+  <section class="hero">
+    <div class="wrap">
+      <div class="room-no">Room I — AI for legacy systems</div>
+      <h1>
+        <span class="ln l1">AI for complex,</span>
+        <span class="ln l2"><em>legacy</em> systems.</span>
+      </h1>
+      <p class="deck">
+        Public doesn't mean usable. The records that run government, energy, and trade are
+        <b>open to everyone and legible to almost no one</b> — so we rebuild them, record by record,
+        into software anyone can use.
+      </p>
+      <div class="cta">
+        <a href="#contact" class="btn primary">Book a working session <span class="arr">→</span></a>
+        <a href="#work" class="btn ghost">Walk the collection <span class="arr">→</span></a>
+      </div>
+
+      <!-- WALL TEXT (replaces the stat bar) -->
+      <div class="walltext">
+        <div class="t">NYSGPT</div>
+        <div class="sub">Long Island, NY · est. 2026 · solo studio</div>
+        <div class="facts">
+          <div class="fact"><span class="n tnum">8</span><span class="l">Works in the collection</span></div>
+          <div class="fact"><span class="n tnum">5</span><span class="l">Currently on view (live)</span></div>
+          <div class="fact"><span class="n tnum">1</span><span class="l">Hand · full-stack</span></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- THESIS -->
+  <section class="thesis" id="thesis">
+    <div class="wrap">
+      <div class="inner reveal">
+        <div class="placard">The thesis</div>
+        <h2>The most consequential systems run on the <em>worst software.</em></h2>
+        <p>
+          Legislative records, customs rulings, energy filings, licensing registries, nuclear references —
+          the data is public, authoritative, and locked behind portals built two decades ago for nobody
+          in particular. <b>NYSGPT closes that gap.</b> We ingest the primary record, ground every answer
+          in a verifiable source, and rebuild the interface from the data up — so the person who actually
+          needs the answer gets one, not a 40-page PDF.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- PRODUCTS / COLLECTION -->
+  <section class="work" id="work">
+    <div class="wrap">
+      <div class="head reveal">
+        <div class="placard">The collection</div>
+        <h2>Eight works. One architecture.</h2>
+        <p>Each ingests a hard public record and rebuilds the interface around it.</p>
+      </div>
+
+      <div class="exhibits">
+        <a class="exhibit reveal" href="https://44b.nysgpt.com" target="_blank" rel="noopener">
+          <div class="plinth"><span class="obj">01</span><span class="floor"></span><span class="gildline">No. 01 · governance</span></div>
+          <div class="label">
+            <div class="cat"><span>AI governance</span><span class="st">● on view</span></div>
+            <h3>44B</h3>
+            <div class="dsc">A public registry, research library, and incident record for AI — and the compliance portal for NY's Article 44-B. "SERFF, for AI."</div>
+            <div class="meta tnum">532 models<span class="sep">·</span>32k papers<span class="sep">·</span>2,561 incidents</div>
+            <span class="view">View the work →</span>
+          </div>
+        </a>
+
+        <a class="exhibit reveal" href="https://tariffs.nysgpt.com" target="_blank" rel="noopener">
+          <div class="plinth"><span class="obj">02</span><span class="floor"></span><span class="gildline">No. 02 · trade</span></div>
+          <div class="label">
+            <div class="cat"><span>Trade &amp; customs</span><span class="st">● on view</span></div>
+            <h3>Tariffs<span class="gpt">GPT</span></h3>
+            <div class="dsc">A self-serve refund engine for importers who paid IEEPA tariffs the Supreme Court invalidated — a real recoverable number before any phone call.</div>
+            <div class="meta tnum">220k+ customs rulings<span class="sep">·</span>live schedule</div>
+            <span class="view">View the work →</span>
+          </div>
+        </a>
+
+        <a class="exhibit reveal" href="https://childcare.nysgpt.com/console" target="_blank" rel="noopener">
+          <div class="plinth"><span class="obj">03</span><span class="floor"></span><span class="gildline">No. 03 · social</span></div>
+          <div class="label">
+            <div class="cat"><span>Social services</span><span class="st">● on view</span></div>
+            <h3>Childcare<span class="gpt">GPT</span></h3>
+            <div class="dsc">NY childcare intelligence — every OCFS facility, county costs, and an AI-assisted subsidy form for the families who need it.</div>
+            <div class="meta tnum">16,800 facilities</div>
+            <span class="view">View the work →</span>
+          </div>
+        </a>
+
+        <a class="exhibit reveal" href="https://solar.nysgpt.com/map/plants-2" target="_blank" rel="noopener">
+          <div class="plinth"><span class="obj">04</span><span class="floor"></span><span class="gildline">No. 04 · energy</span></div>
+          <div class="label">
+            <div class="cat"><span>Energy &amp; grid</span><span class="st">● on view</span></div>
+            <h3>Solar<span class="gpt">GPT</span></h3>
+            <div class="dsc">Clean-energy intelligence for every U.S. county, state, and grid region — generation, emissions, and the grid, rebuilt from EIA data.</div>
+            <div class="meta tnum">EIA data pipelines</div>
+            <span class="view">View the work →</span>
+          </div>
+        </a>
+
+        <div class="exhibit reveal">
+          <div class="plinth"><span class="obj">05</span><span class="floor"></span><span class="gildline">No. 05 · government</span></div>
+          <div class="label">
+            <div class="cat"><span>Government</span><span class="st shipped">○ in the archive</span></div>
+            <h3>Policy<span class="gpt">GPT</span></h3>
+            <div class="dsc">NY legislative &amp; financial intelligence — bills, budgets, lobbying, with an advocacy layer on top of the full record.</div>
+            <div class="meta tnum">Full NYS record</div>
+          </div>
+        </div>
+
+        <div class="exhibit reveal">
+          <div class="plinth"><span class="obj">06</span><span class="floor"></span><span class="gildline">No. 06 · science</span></div>
+          <div class="label">
+            <div class="cat"><span>Scientific reference</span><span class="st shipped">○ in the archive</span></div>
+            <h3>NSR<span class="gpt">gpt</span></h3>
+            <div class="dsc">Semantic search &amp; RAG over the Nuclear Science References database — 88,000 records made navigable.</div>
+            <div class="meta tnum">88,000+ records</div>
+          </div>
+        </div>
+
+        <div class="exhibit reveal">
+          <div class="plinth"><span class="obj">07</span><span class="floor"></span><span class="gildline">No. 07 · insurance</span></div>
+          <div class="label">
+            <div class="cat"><span>Insurance</span><span class="st shipped">○ in the archive</span></div>
+            <h3>Insurance<span class="gpt">GPT</span></h3>
+            <div class="dsc">Auto-insurance quotes grounded in filed carrier data, with Stripe checkout and an agent console.</div>
+            <div class="meta tnum">Grounded rates</div>
+          </div>
+        </div>
+
+        <div class="exhibit reveal">
+          <div class="plinth"><span class="obj">08</span><span class="floor"></span><span class="gildline">No. 08 · sports</span></div>
+          <div class="label">
+            <div class="cat"><span>Public records</span><span class="st shipped">○ in the archive</span></div>
+            <h3>Sports<span class="gpt">GPT</span></h3>
+            <div class="dsc">High-school sports intelligence for Section XI football on Long Island — team and player stats, standings, choropleth maps, and AI-generated game highlights.</div>
+            <div class="meta tnum">Section XI<span class="sep">·</span>AI highlights</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- METHOD -->
+  <section class="method" id="how">
+    <div class="wrap">
+      <div class="head reveal">
+        <div class="placard">How we build</div>
+        <h2>Ingest. Ground. Ship.</h2>
+      </div>
+      <div class="msteps reveal">
+        <div class="mstep">
+          <div class="num">1</div>
+          <h3>Tame the primary record</h3>
+          <p>We crawl, dedupe, and structure the authoritative source — even with no bulk export, no API, or a pagination wall — into clean, queryable Postgres. The hard part nobody else does.</p>
+        </div>
+        <div class="mstep">
+          <div class="num">2</div>
+          <h3>Make the AI accountable</h3>
+          <p>Retrieval over the real corpus, structured output, and a visible chain back to the source. The model reasons over primary data — and every answer can be checked.</p>
+        </div>
+        <div class="mstep">
+          <div class="num">3</div>
+          <h3>Rebuild the interface</h3>
+          <p>Search, structured exploration, maps, and AI on one surface — designed for the human who needs the answer, and pushed to production with real users.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA -->
+  <section class="cta" id="contact">
+    <div class="wrap">
+      <div class="panel reveal">
+        <div class="left">
+          <div class="placard">Let's build</div>
+          <h2>Got a system too complex for ordinary software?</h2>
+          <p>That's exactly what we build for. Book a working session and we'll pressure-test what an AI-first rebuild looks like for your data — or send a short brief and we'll come back with a concrete read.</p>
+          <div class="direct">
+            <a href="mailto:Brendan@nysgpt.com?subject=Working%20session%20—%20NYSGPT"><span class="ico">✉</span> Brendan@nysgpt.com</a>
+            <a href="mailto:Brendan@nysgpt.com?subject=Book%20a%20working%20session"><span class="ico">↗</span> Book a working session</a>
+          </div>
+        </div>
+        <form class="brief" onsubmit="return submitBrief(event)">
+          <div class="fld"><label for="b-name">Your name</label><input id="b-name" name="name" required placeholder="Jane Rivera" /></div>
+          <div class="row2">
+            <div class="fld"><label for="b-email">Email</label><input id="b-email" name="email" type="email" required placeholder="jane@org.gov" /></div>
+            <div class="fld"><label for="b-org">Organization</label><input id="b-org" name="org" placeholder="Agency / company" /></div>
+          </div>
+          <div class="fld"><label for="b-domain">The system / domain</label>
+            <select id="b-domain" name="domain">
+              <option>Government / legislative</option><option>Trade / customs</option><option>Energy / utilities</option>
+              <option>Social services</option><option>Insurance / regulatory</option><option>Scientific / technical reference</option><option>Other legacy system</option>
+            </select>
+          </div>
+          <div class="fld"><label for="b-brief">What's locked up in it?</label><textarea id="b-brief" name="brief" placeholder="The data, who needs it, and why it's hard to use today…"></textarea></div>
+          <button type="submit" class="btn primary">Send the brief <span class="arr">→</span></button>
+          <div class="note">Goes straight to Brendan@nysgpt.com — no funnel, no sales bot.</div>
+        </form>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <div class="c"><b>NYSGPT</b> — AI-first software for legacy systems · Long Island, NY</div>
+    <div class="c"><a href="mailto:Brendan@nysgpt.com">Brendan@nysgpt.com</a> · <a href="https://github.com/nyd-user-1" target="_blank" rel="noopener">GitHub</a></div>
+    <div class="c">© 2026</div>
+  </div>
+</footer>
+
+<!-- ============ PLAYGROUND ============ -->
+<button class="pg-launch" id="pgLaunch" type="button" aria-label="Open the design playground" title="Play with the design">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="13.5" cy="6.5" r="2.5"/><circle cx="6" cy="11" r="2.5"/><circle cx="17.5" cy="13" r="2.5"/><circle cx="9" cy="18" r="2.5"/>
+    <path d="M13.5 9v3M8 12.5l2.5 1M15 15l-3 1.7"/>
+  </svg>
+</button>
+<div class="pg-panel" id="pgPanel" role="dialog" aria-label="Design playground">
+  <div class="pg-head">
+    <span class="pg-title">◈ Design playground</span>
+    <button class="pg-reset" id="pgReset" type="button">Reset</button>
+  </div>
+
+  <div class="pg-grp">
+    <label>Wall tone</label>
+    <div class="pg-swatches" id="pgAccent">
+      <span class="pg-sw on" data-r="#0d0d0f" style="background:#0d0d0f"></span>
+      <span class="pg-sw" data-r="#0f0e10" style="background:#0f0e10"></span>
+      <span class="pg-sw" data-r="#11100d" style="background:#11100d"></span>
+      <span class="pg-sw" data-r="#0c0e10" style="background:#0c0e10"></span>
+      <span class="pg-sw" data-r="#100d0d" style="background:#100d0d"></span>
+      <span class="pg-sw" data-r="#121212" style="background:#121212"></span>
+      <label class="pg-sw custom" title="Custom tone">+<input type="color" id="pgAccentCustom" value="#0d0d0f" /></label>
+    </div>
+  </div>
+
+  <div class="pg-grp">
+    <label>Gild (hairline accent)</label>
+    <div class="pg-swatches" id="pgGild">
+      <span class="pg-sw on" data-g="#c8b890" style="background:#c8b890"></span>
+      <span class="pg-sw" data-g="#b8a878" style="background:#b8a878"></span>
+      <span class="pg-sw" data-g="#a8b0b8" style="background:#a8b0b8"></span>
+      <span class="pg-sw" data-g="#c0a0a0" style="background:#c0a0a0"></span>
+      <span class="pg-sw" data-g="#a0b8a8" style="background:#a0b8a8"></span>
+      <label class="pg-sw custom" title="Custom gild">+<input type="color" id="pgGildCustom" value="#c8b890" /></label>
+    </div>
+  </div>
+
+  <div class="pg-grp">
+    <label>Display font</label>
+    <div class="pg-fonts" id="pgDisplay">
+      <button class="pg-font on" data-f='"Cormorant Garamond", serif' style='font-family:"Cormorant Garamond",serif'>Cormorant<span class="pf-name">garamond</span></button>
+      <button class="pg-font" data-f='"Fraunces", serif' style='font-family:"Fraunces",serif'>Fraunces<span class="pf-name">serif</span></button>
+      <button class="pg-font" data-f='"Inter Tight", sans-serif' style='font-family:"Inter Tight",sans-serif'>Inter Tight<span class="pf-name">sans</span></button>
+      <button class="pg-font" data-f='"Space Mono", monospace' style='font-family:"Space Mono",monospace'>Space Mono<span class="pf-name">mono</span></button>
+    </div>
+  </div>
+
+  <div class="pg-grp">
+    <label>Body font</label>
+    <div class="pg-fonts" id="pgBody">
+      <button class="pg-font on" data-f='"Inter Tight", sans-serif' style='font-family:"Inter Tight",sans-serif'>Inter Tight<span class="pf-name">sans</span></button>
+      <button class="pg-font" data-f='"Fraunces", serif' style='font-family:"Fraunces",serif'>Fraunces<span class="pf-name">serif</span></button>
+      <button class="pg-font" data-f='"Cormorant Garamond", serif' style='font-family:"Cormorant Garamond",serif'>Cormorant<span class="pf-name">garamond</span></button>
+      <button class="pg-font" data-f='"Space Mono", monospace' style='font-family:"Space Mono",monospace'>Space Mono<span class="pf-name">mono</span></button>
+    </div>
+  </div>
+
+  <div class="pg-grp">
+    <label>Spotlight <span class="v" id="pgSpotVal">1.0×</span></label>
+    <input type="range" class="pg-range" id="pgSpot" min="0.2" max="1.8" step="0.05" value="1" />
+  </div>
+
+  <div class="pg-grp">
+    <label>Corner rounding <span class="v" id="pgRadVal">1.0×</span></label>
+    <input type="range" class="pg-range" id="pgRadius" min="0" max="6" step="0.5" value="1" />
+  </div>
+
+  <div class="pg-grp">
+    <label>Heading weight <span class="v" id="pgWghtVal">0</span></label>
+    <input type="range" class="pg-range" id="pgWght" min="-100" max="100" step="10" value="0" />
+  </div>
+
+  <div class="pg-grp">
+    <label>Density <span class="v" id="pgDensVal">1.0×</span></label>
+    <input type="range" class="pg-range" id="pgDensity" min="0.8" max="1.25" step="0.05" value="1" />
+  </div>
+</div>
+
+<script>
+  // ---- theme toggle + persistence (light is the opt-in here) ----
+  (function(){
+    const root=document.documentElement, btn=document.getElementById('themeToggle');
+    btn.addEventListener('click',()=>{
+      const light=root.getAttribute('data-theme')==='light';
+      if(light) root.removeAttribute('data-theme'); else root.setAttribute('data-theme','light');
+      try{localStorage.setItem('nysgpt-theme-d3', light?'dark':'light');}catch(e){}
+    });
+  })();
+
+  // ---- playground (session-only) ----
+  (function(){
+    const root=document.documentElement, rs=root.style;
+    const panel=document.getElementById('pgPanel'), launch=document.getElementById('pgLaunch');
+    launch.addEventListener('click',e=>{e.stopPropagation();panel.classList.toggle('open')});
+    document.addEventListener('click',e=>{ if(!panel.contains(e.target) && e.target!==launch && !launch.contains(e.target)) panel.classList.remove('open'); });
+
+    function setRoom(hex){
+      rs.setProperty('--room',hex);
+      const c=hex.replace('#',''); let r=parseInt(c.substr(0,2),16),g=parseInt(c.substr(2,2),16),b=parseInt(c.substr(4,2),16);
+      const light=root.getAttribute('data-theme')==='light';
+      if(!light){
+        rs.setProperty('--room-2',`rgb(${r+7},${g+7},${b+7})`);
+        rs.setProperty('--plinth',`rgb(${r+13},${g+13},${b+16})`);
+      }
+    }
+    const accWrap=document.getElementById('pgAccent');
+    accWrap.querySelectorAll('.pg-sw[data-r]').forEach(sw=>sw.addEventListener('click',()=>{
+      accWrap.querySelectorAll('.pg-sw').forEach(s=>s.classList.remove('on'));
+      sw.classList.add('on'); setRoom(sw.dataset.r);
+    }));
+    document.getElementById('pgAccentCustom').addEventListener('input',e=>{
+      accWrap.querySelectorAll('.pg-sw').forEach(s=>s.classList.remove('on'));
+      e.target.closest('.pg-sw').classList.add('on'); setRoom(e.target.value);
+    });
+
+    const gildWrap=document.getElementById('pgGild');
+    gildWrap.querySelectorAll('.pg-sw[data-g]').forEach(sw=>sw.addEventListener('click',()=>{
+      gildWrap.querySelectorAll('.pg-sw').forEach(s=>s.classList.remove('on'));
+      sw.classList.add('on'); rs.setProperty('--gild',sw.dataset.g);
+    }));
+    document.getElementById('pgGildCustom').addEventListener('input',e=>{
+      gildWrap.querySelectorAll('.pg-sw').forEach(s=>s.classList.remove('on'));
+      e.target.closest('.pg-sw').classList.add('on'); rs.setProperty('--gild',e.target.value);
+    });
+
+    function fontGroup(id,varName){
+      const wrap=document.getElementById(id);
+      wrap.querySelectorAll('.pg-font').forEach(b=>b.addEventListener('click',()=>{
+        wrap.querySelectorAll('.pg-font').forEach(x=>x.classList.remove('on'));
+        b.classList.add('on'); rs.setProperty(varName,b.dataset.f);
+      }));
+    }
+    fontGroup('pgDisplay','--font-display');
+    fontGroup('pgBody','--font-body');
+
+    function rng(id,valId,varName,fmt){
+      const r=document.getElementById(id),v=document.getElementById(valId);
+      r.addEventListener('input',()=>{rs.setProperty(varName,r.value);v.textContent=fmt(r.value)});
+    }
+    rng('pgSpot','pgSpotVal','--spotlight',x=>parseFloat(x).toFixed(1)+'×');
+    rng('pgRadius','pgRadVal','--radius',x=>parseFloat(x).toFixed(1)+'×');
+    rng('pgWght','pgWghtVal','--wght',x=>(x>0?'+':'')+x);
+    rng('pgDensity','pgDensVal','--density',x=>parseFloat(x).toFixed(2)+'×');
+
+    document.getElementById('pgReset').addEventListener('click',()=>{
+      ['--room','--room-2','--plinth','--gild','--font-display','--font-body','--spotlight','--radius','--wght','--density'].forEach(v=>rs.removeProperty(v));
+      accWrap.querySelectorAll('.pg-sw').forEach((s,i)=>s.classList.toggle('on',i===0));
+      gildWrap.querySelectorAll('.pg-sw').forEach((s,i)=>s.classList.toggle('on',i===0));
+      ['pgDisplay','pgBody'].forEach(id=>document.getElementById(id).querySelectorAll('.pg-font').forEach((b,i)=>b.classList.toggle('on',i===0)));
+      document.getElementById('pgSpot').value=1;document.getElementById('pgSpotVal').textContent='1.0×';
+      document.getElementById('pgRadius').value=1;document.getElementById('pgRadVal').textContent='1.0×';
+      document.getElementById('pgWght').value=0;document.getElementById('pgWghtVal').textContent='0';
+      document.getElementById('pgDensity').value=1;document.getElementById('pgDensVal').textContent='1.0×';
+      document.getElementById('pgAccentCustom').value='#0d0d0f';
+      document.getElementById('pgGildCustom').value='#c8b890';
+    });
+  })();
+
+  // reveal on scroll
+  const io=new IntersectionObserver((es)=>{es.forEach(e=>{if(e.isIntersecting){e.target.classList.add('in');io.unobserve(e.target)}})},{threshold:.1,rootMargin:'0px 0px -6% 0px'});
+  document.querySelectorAll('.reveal').forEach((el,i)=>{el.style.transitionDelay=(i%2*90)+'ms';io.observe(el)});
+
+  function submitBrief(e){
+    e.preventDefault();const f=e.target;
+    const body=encodeURIComponent(`Name: ${f.name.value}\nEmail: ${f.email.value}\nOrg: ${f.org.value}\nDomain: ${f.domain.value}\n\nBrief:\n${f.brief.value}`);
+    window.location.href=`mailto:Brendan@nysgpt.com?subject=${encodeURIComponent('Project brief — '+(f.org.value||f.name.value))}&body=${body}`;
+    return false;
+  }
+</script>
+</body>
+</html>
