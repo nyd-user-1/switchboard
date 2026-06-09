@@ -90,8 +90,10 @@
   /* ===== nodes ===== */
   .node{position:absolute;transform:translate(-50%,-50%);width:236px;
     background:var(--node);border:1px solid var(--node-brd);border-radius:16px;padding:18px 20px;
-    cursor:pointer;transition:border-color .25s,box-shadow .3s,transform .12s;will-change:transform}
+    cursor:grab;transition:border-color .25s,box-shadow .3s;will-change:left,top;touch-action:none}
   .node:hover{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent),0 18px 50px -16px rgba(0,0,0,.6)}
+  .node.dragging{cursor:grabbing;border-color:var(--accent);z-index:10;
+    box-shadow:0 0 0 1px var(--accent),0 28px 70px -14px rgba(0,0,0,.7);transition:box-shadow .2s,border-color .2s}
   .node.dim{opacity:.4;filter:saturate(.5)}
   .node .ntop{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
   .node .nid{font-family:var(--font-mono);font-size:10px;letter-spacing:.1em;color:var(--fg-faint)}
@@ -130,6 +132,7 @@
   .ctrl{width:40px;height:40px;border:1px solid var(--line);background:var(--panel);backdrop-filter:blur(10px);border-radius:10px;
     display:grid;place-items:center;cursor:pointer;color:var(--fg-dim);transition:border-color .2s,color .2s;font-family:var(--font-mono);font-size:16px}
   .ctrl:hover{border-color:var(--accent);color:var(--fg)}
+  .ctrl.on{border-color:var(--accent);color:var(--accent);box-shadow:0 0 0 1px var(--accent),0 0 18px -4px var(--accent)}
   .ctrl svg{width:16px;height:16px}
   .ctrl .moon{display:none}
   :root[data-theme="light"] .ctrl .sun{display:none}
@@ -224,6 +227,7 @@
 </div>
 
 <div class="hud tr">
+  <button class="ctrl" id="physicsBtn" title="Toggle force layout (physics)" aria-label="Toggle physics">✦</button>
   <button class="ctrl" id="recenter" title="Recenter" aria-label="Recenter the map">⌖</button>
   <button class="ctrl" id="themeToggle" title="Toggle theme" aria-label="Toggle light and dark">
     <svg class="sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>
@@ -237,7 +241,7 @@
     <span class="it"><span class="sw s"></span> shipped</span>
     <span class="it"><span class="sw e"></span> shared architecture</span>
   </div>
-  <div class="hint"><kbd>drag</kbd> pan · <kbd>scroll</kbd> zoom · <kbd>click</kbd> a node · <kbd>⌖</kbd> recenter</div>
+  <div class="hint"><kbd>drag</kbd> empty space to pan · <kbd>drag a card</kbd> to move it · <kbd>scroll</kbd> zoom · <kbd>click</kbd> a card · <kbd>⌖</kbd> recenter</div>
 </div>
 
 <div class="hud br">
@@ -337,14 +341,17 @@ const stage = document.getElementById('stage');
 const edges = document.getElementById('edges');
 const esc = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 
-// build edges core->node
+// gentle curve from core(0,0) to a node's current position — recomputed whenever it moves
+function edgeD(p){ const mx=p.x*0.5, my=p.y*0.5 - Math.sign(p.y||1)*40; return `M0,0 Q${mx},${my} ${p.x},${p.y}`; }
+function redrawEdge(p){ if(p._edge) p._edge.setAttribute('d',edgeD(p)); }
+
+// build edges core->node (store the element on the product so drag can update it)
 PRODUCTS.forEach(p=>{
   const path=document.createElementNS('http://www.w3.org/2000/svg','path');
-  // gentle curve from core(0,0) to node
-  const mx=p.x*0.5, my=p.y*0.5 - Math.sign(p.y||1)*40;
-  path.setAttribute('d',`M0,0 Q${mx},${my} ${p.x},${p.y}`);
+  path.setAttribute('d',edgeD(p));
   path.dataset.id=p.id;
   edges.appendChild(path);
+  p._edge=path;
 });
 
 // a tiny sparkline generator per node (deterministic by index)
@@ -368,11 +375,43 @@ PRODUCTS.forEach((p,i)=>{
     <h3>${esc(p.name)}<span class="gpt">${esc(p.gpt)}</span></h3>
     <div class="cat">${esc(p.cat)}</div>
     <svg class="spark" viewBox="0 0 196 30" preserveAspectRatio="none"><path d="${sparkPath(i+1)}"/></svg>`;
-  n.addEventListener('mouseenter',()=>highlightEdge(p.id,true));
-  n.addEventListener('mouseleave',()=>highlightEdge(p.id,false));
-  n.addEventListener('click',e=>{e.stopPropagation(); openNode(p); focusOn(p.x,p.y,1.15);});
+  n.addEventListener('mouseenter',()=>{ if(!nodeDrag) highlightEdge(p.id,true); });
+  n.addEventListener('mouseleave',()=>{ if(!nodeDrag) highlightEdge(p.id,false); });
+  makeDraggable(n, p);
   world.appendChild(n);
+  p._el=n;
 });
+
+// ===== node dragging (Obsidian-graph style: the node follows the cursor, its edge follows the node) =====
+let nodeDrag=null;   // {p, startX, startY, pointerX, pointerY, moved}
+function makeDraggable(n, p){
+  n.addEventListener('pointerdown', e=>{
+    e.stopPropagation();                       // don't let the stage start a pan
+    n.setPointerCapture(e.pointerId);
+    n.classList.add('dragging');
+    highlightEdge(p.id, true);
+    nodeDrag = { p, startX:p.x, startY:p.y, pointerX:e.clientX, pointerY:e.clientY, moved:0 };
+  });
+  n.addEventListener('pointermove', e=>{
+    if(!nodeDrag || nodeDrag.p!==p) return;
+    // screen delta → world delta (divide by the live scale so it tracks 1:1 at any zoom)
+    const dx=(e.clientX-nodeDrag.pointerX)/scale, dy=(e.clientY-nodeDrag.pointerY)/scale;
+    nodeDrag.moved += Math.abs(e.clientX-nodeDrag.pointerX)+Math.abs(e.clientY-nodeDrag.pointerY);
+    p.x = nodeDrag.startX + dx; p.y = nodeDrag.startY + dy;
+    n.style.left = p.x+'px'; n.style.top = p.y+'px';
+    redrawEdge(p);
+  });
+  function end(e){
+    if(!nodeDrag || nodeDrag.p!==p) return;
+    n.classList.remove('dragging');
+    const wasClick = nodeDrag.moved < 6;       // barely moved → treat as a click/open
+    nodeDrag = null;
+    if(wasClick){ openNode(p); focusOn(p.x,p.y,1.15); }
+    else { highlightEdge(p.id,false); }
+  }
+  n.addEventListener('pointerup', end);
+  n.addEventListener('pointercancel', end);
+}
 
 function highlightEdge(id,on){ const e=edges.querySelector(`path[data-id="${id}"]`); if(e) e.classList.toggle('hot',on); }
 
@@ -383,14 +422,57 @@ function center(){ // place world origin at viewport center
   target.tx=innerWidth/2; target.ty=innerHeight/2; }
 function focusOn(wx,wy,s){ target.scale=s; target.tx=innerWidth/2 - wx*s; target.ty=innerHeight/2 - wy*s; }
 
-// smooth follow
+// ===== force-directed layout (Obsidian-style), off by default =====
+let physicsOn=false;
+const reduceMotion=matchMedia('(prefers-reduced-motion:reduce)').matches;
+// init velocities + remember each node's rest radius from CORE (its hand-placed distance)
+PRODUCTS.forEach(p=>{ p.vx=0; p.vy=0; p.rest=Math.hypot(p.x,p.y)||300; });
+function physicsTick(){
+  const REP=560000;      // pair repulsion strength
+  const SPRING=0.012;    // edge spring toward rest-distance from CORE
+  const CENTER=0.0015;   // gentle pull so the cloud doesn't drift away
+  const DAMP=0.86;       // velocity damping
+  const MAXV=46;         // clamp
+  for(let i=0;i<PRODUCTS.length;i++){
+    const a=PRODUCTS[i];
+    if(nodeDrag && nodeDrag.p===a){ a.vx=0; a.vy=0; continue; } // pinned to cursor
+    let fx=0, fy=0;
+    // node-node repulsion
+    for(let j=0;j<PRODUCTS.length;j++){ if(i===j) continue; const b=PRODUCTS[j];
+      let dx=a.x-b.x, dy=a.y-b.y; let d2=dx*dx+dy*dy; if(d2<1) d2=1; const d=Math.sqrt(d2);
+      const f=REP/d2; fx+=(dx/d)*f; fy+=(dy/d)*f; }
+    // also repel from CORE so nodes don't pile on the hub
+    { let dx=a.x, dy=a.y, d2=dx*dx+dy*dy||1, d=Math.sqrt(d2); const f=REP*1.4/d2; fx+=(dx/d)*f; fy+=(dy/d)*f; }
+    // spring along the edge: pull toward rest radius from CORE(0,0)
+    const dist=Math.hypot(a.x,a.y)||1; const diff=dist-a.rest;
+    fx+=-(a.x/dist)*diff*SPRING* dist; fy+=-(a.y/dist)*diff*SPRING* dist;
+    // gentle centering
+    fx+=-a.x*CENTER; fy+=-a.y*CENTER;
+    a.vx=(a.vx+fx*0.016)*DAMP; a.vy=(a.vy+fy*0.016)*DAMP;
+    a.vx=Math.max(-MAXV,Math.min(MAXV,a.vx)); a.vy=Math.max(-MAXV,Math.min(MAXV,a.vy));
+  }
+  // integrate + paint
+  PRODUCTS.forEach(p=>{ if(nodeDrag && nodeDrag.p===p) return; p.x+=p.vx; p.y+=p.vy;
+    if(p._el){ p._el.style.left=p.x+'px'; p._el.style.top=p.y+'px'; } redrawEdge(p); });
+}
+
+// smooth follow + (optional) physics
 let raf;
 function animate(){
+  if(physicsOn && !reduceMotion) physicsTick();
   tx+=(target.tx-tx)*0.16; ty+=(target.ty-ty)*0.16; scale+=(target.scale-scale)*0.16;
   apply();
   raf=requestAnimationFrame(animate);
 }
 center(); tx=target.tx; ty=target.ty; apply(); animate();
+
+// physics toggle
+(function(){
+  const btn=document.getElementById('physicsBtn');
+  btn.addEventListener('click',()=>{ physicsOn=!physicsOn; btn.classList.toggle('on',physicsOn);
+    if(physicsOn){ PRODUCTS.forEach(p=>{ p.vx=(p.x*0)+ (p.id.charCodeAt(0)%7-3); p.vy=(p.id.charCodeAt(1)%7-3); }); } // tiny kick to settle
+  });
+})();
 
 // drag to pan
 let dragging=false, sx=0, sy=0, moved=0;
