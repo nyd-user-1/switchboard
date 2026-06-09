@@ -99,7 +99,7 @@
   .famhead .n{color:var(--faint)}
 
   .row{display:flex;align-items:center;gap:11px;padding:9px 18px;cursor:pointer;position:relative;
-    transition:background .14s}
+    text-decoration:none;color:var(--ink);transition:background .14s}   /* never the browser default link blue / underline */
   /* selection indicator: a crisp ink hairline that animates in, not a colored fill */
   .row::before{content:"";position:absolute;left:0;top:50%;height:0;width:2px;background:var(--ink);
     transform:translateY(-50%);transition:height .2s ease}
@@ -165,17 +165,18 @@
   /* iframe is rendered at a fixed logical size then scaled down to a crisp thumbnail.
      A fixed pixel size + transform:scale keeps the variant's own responsive layout
      pinned to a desktop viewport, so previews read as the real page, not a squished one. */
+  /* pooled preview iframes stack in the same box; only the active one is opaque */
   .framewrap iframe{position:absolute;top:0;left:0;border:0;
-    width:1440px;height:900px;transform-origin:top left;
-    background:#0a0a0a;}
+    width:1440px;height:900px;transform-origin:top left;background:var(--panel);
+    transition:opacity .26s ease, filter .26s ease}
   .screen{display:flex;flex-direction:column}
   .loadbar{position:absolute;top:34px;left:0;right:0;height:2px;background:transparent;z-index:4;overflow:hidden}
   .loadbar i{position:absolute;inset:0;width:35%;background:var(--ink);
     animation:slide 1s ease-in-out infinite;opacity:0;transition:opacity .2s}
   .loadbar.go i{opacity:.9}
   @keyframes slide{0%{transform:translateX(-100%)}100%{transform:translateX(320%)}}
-  .stale{opacity:.32;filter:saturate(.7)}
-  .framewrap iframe{transition:opacity .28s ease, filter .28s ease}
+  /* dim (not hide) the outgoing frame while the next one loads — avoids a flash of empty panel */
+  .framewrap iframe.stale{filter:brightness(.5) saturate(.7)}
 
   /* clickable overlay so the whole preview opens the page */
   .screen .hit{position:absolute;inset:34px 0 0;z-index:4;cursor:pointer}
@@ -193,18 +194,26 @@
   .foot a{color:var(--faint);text-decoration:none}.foot a:hover{color:var(--ink)}
   .foot .pos{font-variant-numeric:tabular-nums;letter-spacing:.04em}
 
-  /* ---------- mobile ---------- */
+  /* ---------- mobile ----------
+     The keyboard+live-preview model is a desktop instrument. On phones we drop the
+     heavy preview pane entirely and make the rail the whole experience: a clean,
+     tappable directory where each row opens its design directly. */
   @media(max-width:840px){
-    body{overflow:auto;font-size:13px}
-    .app{height:auto;min-height:100dvh}
-    .main{grid-template-columns:1fr;}
+    body{overflow:auto;font-size:14px}
+    .app{height:auto;min-height:100dvh;grid-template-rows:auto 1fr auto}
+    .main{grid-template-columns:1fr}
     .kbdhint{display:none}
-    .rail{border-right:none;border-bottom:1px solid var(--line);max-height:none}
-    .list{max-height:none}
-    .stage{position:sticky;top:0;height:62vh;border-bottom:1px solid var(--line)}
-    .meta{padding:18px 18px 12px}.meta .desc{display:none}.meta h1{font-size:26px}
-    .screen{margin:0 16px 18px}
-    /* on mobile the rail comes first and tapping a row opens immediately */
+    .stage{display:none}                 /* no live-preview pane on mobile */
+    .rail{border-right:none}
+    .list{overflow:visible}
+    .search{padding:15px 18px}
+    .row{padding:14px 18px;gap:13px}
+    .row .nm{font-size:17px}
+    .row .sw i{width:11px;height:11px}
+    .row .ar{opacity:1;transform:none;color:var(--faint)}   /* always show the open arrow */
+    .row::before{display:none}
+    .famhead{padding:18px 18px 8px}
+    .foot{flex-direction:column;align-items:flex-start;gap:5px;font-size:10px}
   }
   @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 </style>
@@ -270,9 +279,7 @@
           <div class="live"><span class="pip"></span>live</div>
         </div>
         <div class="loadbar" id="loadbar"><i></i></div>
-        <div class="framewrap" id="frameWrap">
-          <iframe id="preview" title="Live design preview" loading="eager" scrolling="no" tabindex="-1"></iframe>
-        </div>
+        <div class="framewrap" id="frameWrap"><!-- live preview iframes are pooled in by JS --></div>
         <a class="hit" id="hit" href="#"><span class="cue">Click anywhere to open this design →</span></a>
       </div>
     </section>
@@ -344,7 +351,6 @@ FAMILIES.forEach(fam=>{
 });
 
 /* ============ preview + selection ============ */
-const frame   = document.getElementById("preview");
 const frameWrap=document.getElementById("frameWrap");
 const loadbar = document.getElementById("loadbar");
 const openBtn = document.getElementById("openBtn");
@@ -357,26 +363,81 @@ const mDot=document.getElementById("mDot"), mFam=document.getElementById("mFam")
 
 let cur = 0;          // index into `visible`
 let visible = rows.slice();
-let loadToken = 0;
 
 function fmtName(v){
-  // accent the last word of the display name in the big heading
+  // emphasise the last word of the display name (a subtle weight bump, not a color)
   const parts = v.name.split(" ");
   if(parts.length===1) return `<span class="acc">${v.name}</span>`;
   const last = parts.pop();
   return parts.join(" ")+' <span class="acc">'+last+'</span>';
 }
 
-function scaleFrame(){
+/* ---- iframe pool: cache recently-viewed previews so revisits snap in instantly ---- */
+const POOL_MAX = 6;
+const pool = new Map();          // file -> {iframe, loaded}
+let activeFrame = null;
+function scaleOne(ifr){
   const w = frameWrap.clientWidth, h = frameWrap.clientHeight;
-  if(!w||!h) return;
-  // COVER the wrap: take the larger of the two ratios so the scaled 1440×900
-  // frame always fills the panel (top-anchored), never letterboxing.
-  const s = Math.max(w/1440, h/900);
-  frame.style.transform = `scale(${s})`;
+  if(!w||!h||!ifr) return;
+  // COVER the wrap: larger of the two ratios so the 1440×900 frame always fills.
+  ifr.style.transform = `scale(${Math.max(w/1440, h/900)})`;
+}
+function scaleFrame(){ pool.forEach(e=>scaleOne(e.iframe)); }
+function getFrame(v){
+  if(pool.has(v.file)){
+    const e = pool.get(v.file); pool.delete(v.file); pool.set(v.file, e); // bump LRU
+    return e;
+  }
+  const ifr = document.createElement("iframe");
+  ifr.title = "Live design preview"; ifr.setAttribute("scrolling","no"); ifr.tabIndex = -1; ifr.loading="eager";
+  ifr.style.opacity = "0";
+  const e = {iframe:ifr, loaded:false};
+  ifr.addEventListener("load", ()=>{ e.loaded = true; scaleOne(ifr); });
+  frameWrap.appendChild(ifr);
+  pool.set(v.file, e);
+  ifr.src = v.file;
+  // evict oldest beyond the cap (never evict the active one)
+  while(pool.size > POOL_MAX){
+    const oldestKey = pool.keys().next().value;
+    if(pool.get(oldestKey) === activeFrame){ pool.delete(oldestKey); pool.set(oldestKey, activeFrame); continue; }
+    pool.get(oldestKey).iframe.remove(); pool.delete(oldestKey);
+  }
+  return e;
 }
 
-function select(i, {open=false}={}){
+let loadTimer = null, pendingV = null;
+function showPreview(v){
+  if(isMobile) return;          // no live-preview pane on mobile — the rail IS the experience
+  pendingV = v;
+  // debounce the actual mount/swap so fast ↑↓ scrubbing doesn't fetch every intermediate page
+  clearTimeout(loadTimer);
+  loadTimer = setTimeout(()=>mountPreview(pendingV), 130);
+}
+function mountPreview(v){
+  const e = getFrame(v);
+  const ifr = e.iframe;
+  if(e === activeFrame){ return; }
+  const prev = activeFrame; activeFrame = e;
+  if(e.loaded){
+    // cached & ready → snap in, no loadbar flicker
+    loadbar.classList.remove("go");
+    scaleOne(ifr); ifr.style.opacity = "1";
+    if(prev && prev!==e) prev.iframe.style.opacity = "0";
+  } else {
+    // not ready → keep prev visible (stale), show loadbar, fade in on load
+    loadbar.classList.add("go");
+    if(prev) prev.iframe.classList.add("stale");
+    const onReady = ()=>{
+      if(activeFrame!==e) return;            // user moved on
+      loadbar.classList.remove("go");
+      scaleOne(ifr); ifr.style.opacity = "1";
+      if(prev && prev!==e){ prev.iframe.style.opacity = "0"; prev.iframe.classList.remove("stale"); }
+    };
+    if(e.loaded) onReady(); else ifr.addEventListener("load", onReady, {once:true});
+  }
+}
+
+function select(i, {open=false, push=true}={}){
   if(i<0||i>=visible.length) return;
   cur = i;
   const row = visible[cur]; const v = row._v;
@@ -397,19 +458,16 @@ function select(i, {open=false}={}){
   openBtn.href = v.file; hit.href = v.file;
   posIdx.textContent = String(rows.indexOf(row)+1).padStart(2,"0");
 
-  // swap the live preview (skip the heavy iframe work on mobile until tapped)
-  const tok = ++loadToken;
-  frame.classList.add("stale");
-  loadbar.classList.add("go");
-  frame.onload = ()=>{ if(tok===loadToken){ frame.classList.remove("stale"); loadbar.classList.remove("go"); scaleFrame(); } };
-  frame.src = v.file;
+  // remember + deep-link (replaceState so we don't spam history while scrubbing)
+  try{ localStorage.setItem("nysgpt-sw-last", v.id); }catch(e){}
+  if(push){ try{ history.replaceState(null,"","#"+v.id); }catch(e){} }
 
+  showPreview(v);
   if(open) window.location.href = v.file;
 }
 
-/* size the frame responsively */
-function sizeStage(){ scaleFrame(); }
-addEventListener("resize", sizeStage);
+/* size the frames responsively */
+addEventListener("resize", scaleFrame);
 const ro = new ResizeObserver(scaleFrame); ro.observe(frameWrap);
 
 /* row interactions */
@@ -494,8 +552,22 @@ addEventListener("keydown",(e)=>{
   });
 })();
 
-/* ============ boot ============ */
-requestAnimationFrame(()=>{ select(0); scaleFrame(); setTimeout(scaleFrame,60); });
+/* ============ boot: honor #deep-link, then last-viewed, then default ============ */
+function indexOfId(id){ return visible.findIndex(r=>r._v.id===id); }
+function resolveInitial(){
+  const hashId = (location.hash||"").replace(/^#/,"").toUpperCase();
+  if(hashId){ const i=indexOfId(hashId); if(i>=0) return i; }
+  try{ const last=localStorage.getItem("nysgpt-sw-last"); if(last){ const i=indexOfId(last); if(i>=0) return i; } }catch(e){}
+  return 0;
+}
+// react to back/forward / shared-link hash changes (only if it points elsewhere)
+addEventListener("hashchange",()=>{
+  const hashId=(location.hash||"").replace(/^#/,"").toUpperCase();
+  if(!hashId) return;
+  const i=indexOfId(hashId);
+  if(i>=0 && i!==cur) select(i,{push:false});
+});
+requestAnimationFrame(()=>{ select(resolveInitial(),{push:false}); scaleFrame(); setTimeout(scaleFrame,60); });
 </script>
 </body>
 </html>
