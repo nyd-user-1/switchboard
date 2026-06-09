@@ -191,8 +191,8 @@
 
   /* ===== PLAYGROUND ===== */
   .pg-launch{position:fixed;right:22px;bottom:22px;z-index:40;width:50px;height:50px;border-radius:14px;
-    background:var(--panel);color:var(--ink);box-shadow:0 5px 0 var(--shadow);display:grid;place-items:center;top:0;transition:top .08s,box-shadow .08s}
-  .pg-launch:active{top:4px;box-shadow:0 1px 0 var(--shadow)}
+    background:var(--panel);color:var(--ink);box-shadow:0 5px 0 var(--shadow);display:grid;place-items:center;transition:transform .08s,box-shadow .08s}
+  .pg-launch:active{transform:translateY(4px);box-shadow:0 1px 0 var(--shadow)}
   .pg-launch svg{width:23px;height:23px}
   .pg-panel{position:fixed;right:22px;bottom:84px;z-index:41;width:300px;background:var(--panel);border-radius:20px;box-shadow:0 10px 0 var(--shadow);padding:22px;
     opacity:0;transform:translateY(12px) scale(.97);pointer-events:none;transform-origin:bottom right;transition:opacity .24s,transform .24s;max-height:74vh;overflow-y:auto}
