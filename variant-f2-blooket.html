@@ -1,0 +1,539 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>NYSGPT — Quest (a quiz)</title>
+<meta name="description" content="A playable quiz about NYSGPT — an AI-first software company building domain-specific applications for complex, legacy, and regulatory systems. Eight shipped products, as a game." />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Nunito:ital,wght@0,600;0,700;0,800;0,900;1,700&family=Fredoka:wght@500;600;700&display=swap" rel="stylesheet" />
+<script>
+  // light is the default for this candy game UI; dark opts in.
+  (function(){ try{ if(localStorage.getItem('nysgpt-theme-f2')==='dark') document.documentElement.setAttribute('data-theme','dark'); }catch(e){} })();
+</script>
+<style>
+  :root{
+    /* ---- LIGHT (default): candy classroom-game palette ---- */
+    --bg:#3a2db5;              /* the deep violet game backdrop */
+    --bg-2:#2f249a;
+    --panel:#ffffff;
+    --panel-2:#f3f1ff;
+    --ink:#241c54;
+    --ink-dim:#6b66a0;
+    --ink-faint:#a09cc8;
+    --shadow:#1d1568;          /* the chunky drop-shadow under everything */
+    --pink:#ff5d8f;
+    --teal:#22d3c5;
+    --yellow:#ffd23f;
+    --purple:#9b5de5;
+    --green:#5ad469;
+    --blue:#4d9bff;
+    --orange:#ff9f43;
+    --red:#ff5a5a;
+    --correct:#5ad469;
+    --wrong:#ff5a5a;
+    --font-display:"Baloo 2",system-ui,sans-serif;
+    --font-body:"Nunito",system-ui,sans-serif;
+    --font-round:"Fredoka",system-ui,sans-serif;
+    /* playground */
+    --radius:1;                /* chunkiness of corners */
+    --pop:1;                   /* drop-shadow depth */
+  }
+  :root[data-theme="dark"]{
+    --bg:#15122e;
+    --bg-2:#0e0c22;
+    --panel:#221d44;
+    --panel-2:#2a2452;
+    --ink:#f2f0ff;
+    --ink-dim:#b3aee0;
+    --ink-faint:#6f6aa8;
+    --shadow:#08061a;
+  }
+  :root{color-scheme:light} :root[data-theme="dark"]{color-scheme:dark}
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%}
+  body{background:var(--bg);color:var(--ink);font-family:var(--font-body);font-weight:700;
+    -webkit-font-smoothing:antialiased;overflow:hidden;transition:background .4s ease,color .4s ease;
+    background-image:radial-gradient(circle at 20% 20%, rgba(255,255,255,.06), transparent 40%),radial-gradient(circle at 80% 80%, rgba(255,255,255,.05), transparent 45%)}
+  a{color:inherit;text-decoration:none}
+  button{font-family:inherit;cursor:pointer;border:none}
+
+  /* floating background blooks (decorative) */
+  .bgfloat{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden}
+  .bgfloat .b{position:absolute;opacity:.12;animation:bob 6s ease-in-out infinite}
+  @keyframes bob{0%,100%{transform:translateY(0) rotate(-4deg)}50%{transform:translateY(-22px) rotate(4deg)}}
+
+  .stage{position:relative;z-index:2;height:100vh;display:grid;place-items:center;padding:20px;overflow-y:auto}
+
+  /* ===== the chunky button — Blooket's signature ===== */
+  .btn{font-family:var(--font-display);font-weight:800;font-size:19px;color:#fff;background:var(--purple);
+    padding:16px 30px;border-radius:calc(16px * var(--radius));position:relative;top:0;
+    box-shadow:0 calc(6px * var(--pop)) 0 var(--btnsh, #6a3cb0);transition:top .08s,box-shadow .08s,filter .15s;
+    display:inline-flex;align-items:center;gap:10px}
+  .btn:active{top:calc(5px * var(--pop));box-shadow:0 calc(1px * var(--pop)) 0 var(--btnsh,#6a3cb0)}
+  .btn:hover{filter:brightness(1.06)}
+  .btn.teal{background:var(--teal);--btnsh:#14a89c;color:#063b37}
+  .btn.pink{background:var(--pink);--btnsh:#d83b6c}
+  .btn.yellow{background:var(--yellow);--btnsh:#d9a800;color:#5a4500}
+  .btn.green{background:var(--green);--btnsh:#3aa648}
+  .btn.ghost{background:var(--panel);color:var(--ink);--btnsh:rgba(0,0,0,.18)}
+
+  /* ===== card shell ===== */
+  .card{background:var(--panel);border-radius:calc(26px * var(--radius));box-shadow:0 calc(10px * var(--pop)) 0 var(--shadow);
+    padding:38px 40px;width:100%;animation:pop .4s cubic-bezier(.2,1.4,.4,1) both}
+  @keyframes pop{from{opacity:0;transform:scale(.9) translateY(14px)}to{opacity:1;transform:none}}
+  .screen{display:none;width:100%;max-width:560px}
+  .screen.on{display:block}
+  .screen.wide{max-width:920px}
+
+  /* top brand chip */
+  .topbar{position:fixed;top:0;left:0;right:0;z-index:10;display:flex;justify-content:space-between;align-items:center;padding:18px 22px;pointer-events:none}
+  .brand{font-family:var(--font-display);font-weight:800;font-size:22px;color:#fff;display:flex;align-items:center;gap:10px;pointer-events:auto;
+    text-shadow:0 2px 0 var(--shadow)}
+  .brand .logo{width:34px;height:34px;border-radius:10px;background:var(--yellow);display:grid;place-items:center;box-shadow:0 3px 0 #d9a800;color:#5a4500;font-size:18px}
+  .topctrl{display:flex;gap:10px;pointer-events:auto}
+  .iconbtn{width:42px;height:42px;border-radius:12px;background:var(--panel);box-shadow:0 4px 0 var(--shadow);display:grid;place-items:center;color:var(--ink);transition:top .08s,box-shadow .08s;position:relative;top:0}
+  .iconbtn:active{top:3px;box-shadow:0 1px 0 var(--shadow)}
+  .iconbtn svg{width:18px;height:18px}.iconbtn .moon{display:none}
+  :root[data-theme="dark"] .iconbtn .sun{display:none}:root[data-theme="dark"] .iconbtn .moon{display:block}
+
+  /* ===== JOIN screen ===== */
+  .join h1{font-family:var(--font-display);font-weight:800;font-size:34px;color:var(--ink);text-align:center;line-height:1.05;margin-bottom:6px}
+  .join .sub{text-align:center;color:var(--ink-dim);font-size:15px;margin-bottom:26px;font-weight:700}
+  .codebox{display:flex;gap:10px;justify-content:center;margin-bottom:22px}
+  .codebox .digit{width:54px;height:64px;border-radius:14px;background:var(--panel-2);box-shadow:inset 0 -4px 0 rgba(0,0,0,.06);
+    display:grid;place-items:center;font-family:var(--font-display);font-weight:800;font-size:30px;color:var(--ink)}
+  .field{margin-bottom:18px}
+  .field label{display:block;font-size:13px;color:var(--ink-dim);margin-bottom:8px;font-weight:800;text-transform:uppercase;letter-spacing:.04em}
+  .field input{width:100%;font-family:var(--font-display);font-weight:700;font-size:20px;color:var(--ink);background:var(--panel-2);
+    border:none;border-radius:14px;padding:15px 18px;box-shadow:inset 0 -4px 0 rgba(0,0,0,.06);outline:none}
+  .field input:focus{box-shadow:inset 0 -4px 0 var(--teal)}
+  .join .go{width:100%;justify-content:center;font-size:21px}
+  .mascot-pick{display:flex;gap:12px;justify-content:center;margin:6px 0 22px;flex-wrap:wrap}
+  .mascot-opt{width:58px;height:58px;border-radius:16px;background:var(--panel-2);display:grid;place-items:center;cursor:pointer;
+    box-shadow:0 4px 0 rgba(0,0,0,.08);transition:transform .12s,box-shadow .12s;position:relative;top:0}
+  .mascot-opt:hover{transform:translateY(-3px)}
+  .mascot-opt.sel{box-shadow:0 0 0 3px var(--teal),0 4px 0 rgba(0,0,0,.08)}
+  .mascot-opt svg{width:42px;height:42px}
+
+  /* ===== MODE SELECT ===== */
+  .modes h2{font-family:var(--font-display);font-weight:800;font-size:28px;text-align:center;margin-bottom:4px}
+  .modes .sub{text-align:center;color:var(--ink-dim);font-weight:700;margin-bottom:24px}
+  .modegrid{display:grid;grid-template-columns:repeat(2,1fr);gap:16px}
+  .mode{border-radius:20px;padding:22px;color:#fff;text-align:left;position:relative;overflow:hidden;top:0;
+    box-shadow:0 6px 0 var(--msh);transition:top .1s,box-shadow .1s;min-height:130px;display:flex;flex-direction:column;justify-content:flex-end}
+  .mode:hover{top:-3px;box-shadow:0 9px 0 var(--msh)}
+  .mode:active{top:3px;box-shadow:0 1px 0 var(--msh)}
+  .mode .emoji{position:absolute;top:14px;right:16px;font-size:38px;filter:drop-shadow(0 3px 0 rgba(0,0,0,.15))}
+  .mode .mname{font-family:var(--font-display);font-weight:800;font-size:22px}
+  .mode .mdesc{font-size:13px;opacity:.92;font-weight:700;margin-top:3px}
+  .mode.classic{background:var(--blue);--msh:#2d6fd6}
+  .mode.gold{background:var(--yellow);--msh:#d9a800;color:#5a4500}
+  .mode.speed{background:var(--pink);--msh:#d83b6c}
+  .mode.boss{background:var(--purple);--msh:#6a3cb0}
+  @media(max-width:560px){.modegrid{grid-template-columns:1fr}}
+
+  /* ===== QUIZ ===== */
+  .quiz{max-width:920px}
+  .qhead{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;color:#fff;font-family:var(--font-display);font-weight:800}
+  .qhead .pill{background:rgba(255,255,255,.18);padding:8px 16px;border-radius:100px;font-size:15px;display:flex;align-items:center;gap:8px;backdrop-filter:blur(6px)}
+  .qhead .pill .mini{width:22px;height:22px}
+  .timer{height:14px;background:rgba(255,255,255,.18);border-radius:100px;overflow:hidden;margin-bottom:18px;box-shadow:inset 0 -2px 0 rgba(0,0,0,.1)}
+  .timer .fill{height:100%;background:var(--teal);border-radius:100px;width:100%;transition:width .12s linear}
+  .timer .fill.low{background:var(--red)}
+  .qcard{background:var(--panel);border-radius:24px;box-shadow:0 10px 0 var(--shadow);padding:30px 34px;text-align:center;margin-bottom:18px}
+  .qcard .qcat{font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:var(--ink-faint);margin-bottom:10px}
+  .qcard .qtext{font-family:var(--font-display);font-weight:800;font-size:clamp(20px,3.2vw,30px);color:var(--ink);line-height:1.2}
+  .answers{display:grid;grid-template-columns:repeat(2,1fr);gap:14px}
+  .ans{border-radius:18px;padding:22px 20px;color:#fff;font-family:var(--font-display);font-weight:800;font-size:18px;text-align:center;position:relative;top:0;
+    box-shadow:0 6px 0 var(--ash);transition:top .08s,box-shadow .08s,filter .12s,opacity .2s;display:flex;align-items:center;justify-content:center;gap:10px;min-height:78px}
+  .ans:hover{filter:brightness(1.06)}.ans:active{top:4px;box-shadow:0 2px 0 var(--ash)}
+  .ans .shape{width:22px;height:22px;flex-shrink:0}
+  .ans.a0{background:var(--red);--ash:#d83b3b}
+  .ans.a1{background:var(--blue);--ash:#2d6fd6}
+  .ans.a2{background:var(--yellow);--ash:#d9a800;color:#5a4500}
+  .ans.a3{background:var(--green);--ash:#3aa648}
+  .ans.correct{background:var(--correct)!important;--ash:#3aa648!important;animation:rightpulse .4s}
+  .ans.wrong{background:var(--wrong)!important;--ash:#d83b3b!important;opacity:.7}
+  .ans.faded{opacity:.35}
+  @keyframes rightpulse{0%,100%{transform:scale(1)}40%{transform:scale(1.06)}}
+  @media(max-width:560px){.answers{grid-template-columns:1fr}}
+
+  /* feedback flash */
+  .flash{position:fixed;inset:0;z-index:30;pointer-events:none;display:grid;place-items:center;opacity:0}
+  .flash.show{animation:flashin .9s ease}
+  @keyframes flashin{0%{opacity:0;transform:scale(.6)}20%{opacity:1;transform:scale(1)}80%{opacity:1}100%{opacity:0;transform:scale(1.1)}}
+  .flash .msg{font-family:var(--font-display);font-weight:800;font-size:clamp(40px,9vw,90px);color:#fff;text-shadow:0 5px 0 rgba(0,0,0,.25)}
+
+  /* ===== RESULTS ===== */
+  .results{text-align:center;max-width:560px}
+  .results .crown{font-size:64px;margin-bottom:6px}
+  .results h2{font-family:var(--font-display);font-weight:800;font-size:32px;margin-bottom:4px}
+  .results .name{color:var(--purple)}
+  .results .score{font-family:var(--font-display);font-weight:800;font-size:64px;color:var(--ink);line-height:1;margin:10px 0}
+  .results .accuracy{color:var(--ink-dim);font-weight:800;margin-bottom:22px}
+  .results .statrow{display:flex;justify-content:center;gap:14px;margin-bottom:24px;flex-wrap:wrap}
+  .results .stat{background:var(--panel-2);border-radius:16px;padding:14px 20px;min-width:96px}
+  .results .stat .n{font-family:var(--font-display);font-weight:800;font-size:24px;color:var(--ink)}
+  .results .stat .l{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:var(--ink-faint);margin-top:2px}
+  .results .actions{display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
+  .results .realnote{margin-top:24px;padding-top:20px;border-top:2px dashed var(--panel-2);color:var(--ink-dim);font-size:14px;font-weight:700;line-height:1.6}
+  .results .realnote a{color:var(--purple);text-decoration:underline;text-underline-offset:3px}
+
+  /* the leaderboard mini-list on results */
+  .lb{margin-top:6px;text-align:left}
+  .lb .row{display:flex;align-items:center;gap:12px;padding:9px 12px;border-radius:12px;margin-bottom:6px;background:var(--panel-2)}
+  .lb .row.you{box-shadow:0 0 0 2px var(--teal)}
+  .lb .row .rk{font-family:var(--font-display);font-weight:800;color:var(--ink-faint);width:24px}
+  .lb .row .who{flex:1;font-weight:800;color:var(--ink);display:flex;align-items:center;gap:9px}
+  .lb .row .who svg{width:26px;height:26px}
+  .lb .row .pts{font-family:var(--font-display);font-weight:800;color:var(--purple)}
+
+  /* ===== PLAYGROUND ===== */
+  .pg-launch{position:fixed;right:22px;bottom:22px;z-index:40;width:50px;height:50px;border-radius:14px;
+    background:var(--panel);color:var(--ink);box-shadow:0 5px 0 var(--shadow);display:grid;place-items:center;top:0;position:fixed;transition:top .08s,box-shadow .08s}
+  .pg-launch:active{top:4px;box-shadow:0 1px 0 var(--shadow)}
+  .pg-launch svg{width:23px;height:23px}
+  .pg-panel{position:fixed;right:22px;bottom:84px;z-index:41;width:300px;background:var(--panel);border-radius:20px;box-shadow:0 10px 0 var(--shadow);padding:22px;
+    opacity:0;transform:translateY(12px) scale(.97);pointer-events:none;transform-origin:bottom right;transition:opacity .24s,transform .24s;max-height:74vh;overflow-y:auto}
+  .pg-panel.open{opacity:1;transform:none;pointer-events:auto}
+  .pg-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px}
+  .pg-title{font-family:var(--font-display);font-size:15px;font-weight:800;color:var(--ink)}
+  .pg-reset{font-size:11px;font-weight:800;color:var(--ink-dim);background:none;text-transform:uppercase}
+  .pg-reset:hover{color:var(--ink)}
+  .pg-grp{margin-bottom:18px}.pg-grp:last-child{margin-bottom:2px}
+  .pg-grp>label{display:block;font-size:11px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;color:var(--ink-dim);margin-bottom:10px}
+  .pg-grp>label .v{float:right;color:var(--ink-faint)}
+  .pg-sw{display:flex;gap:9px;flex-wrap:wrap}
+  .pg-sw i{width:30px;height:30px;border-radius:9px;cursor:pointer;border:3px solid transparent;display:block}
+  .pg-sw i.on{border-color:var(--ink)}
+  .pg-fonts{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  .pg-font{font-size:14px;padding:10px;border-radius:11px;background:var(--panel-2);color:var(--ink-dim);font-weight:800;text-align:left}
+  .pg-font.on{color:var(--ink);box-shadow:inset 0 0 0 2px var(--teal)}
+  input[type=range].pg-range{-webkit-appearance:none;appearance:none;width:100%;height:8px;border-radius:8px;background:var(--panel-2);outline:none}
+  input[type=range].pg-range::-webkit-slider-thumb{-webkit-appearance:none;width:20px;height:20px;border-radius:50%;background:var(--purple);cursor:pointer;box-shadow:0 2px 0 #6a3cb0}
+  input[type=range].pg-range::-moz-range-thumb{width:18px;height:18px;border-radius:50%;background:var(--purple);cursor:pointer;border:none}
+  @media(max-width:560px){.pg-panel{width:calc(100vw - 44px)}.card{padding:28px 24px}}
+  @media(prefers-reduced-motion:reduce){*{animation-duration:.01ms !important}}
+</style>
+</head>
+<body>
+
+<div class="bgfloat" id="bgfloat"></div>
+
+<div class="topbar">
+  <div class="brand"><span class="logo">▲</span>NYSGPT&nbsp;Quest</div>
+  <div class="topctrl">
+    <button class="iconbtn" id="themeToggle" title="Toggle theme" aria-label="Toggle theme">
+      <svg class="sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>
+      <svg class="moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+    </button>
+  </div>
+</div>
+
+<div class="stage">
+
+  <!-- ===== JOIN ===== -->
+  <section class="screen join on" id="scJoin">
+    <div class="card">
+      <h1>Enter the game</h1>
+      <div class="sub">8 products · 1 founder · how much do you know?</div>
+      <div class="codebox" aria-hidden="true">
+        <span class="digit">N</span><span class="digit">Y</span><span class="digit">S</span><span class="digit">G</span><span class="digit">P</span><span class="digit">T</span>
+      </div>
+      <div class="field">
+        <label for="pname">Pick a nickname</label>
+        <input id="pname" maxlength="14" placeholder="e.g. DataWrangler" autocomplete="off" />
+      </div>
+      <div class="field" style="margin-bottom:8px"><label>Choose your blook</label></div>
+      <div class="mascot-pick" id="mascotPick"></div>
+      <button class="btn go" id="joinGo">Let's go! <span>→</span></button>
+    </div>
+  </section>
+
+  <!-- ===== MODE SELECT ===== -->
+  <section class="screen modes" id="scModes">
+    <div class="card">
+      <h2>Pick a mode</h2>
+      <div class="sub">same questions, different way to win</div>
+      <div class="modegrid">
+        <button class="mode classic" data-mode="classic"><span class="emoji">🎯</span><div class="mname">Classic</div><div class="mdesc">Answer fast, build a streak. Pure points.</div></button>
+        <button class="mode gold" data-mode="gold"><span class="emoji">🪙</span><div class="mname">Gold Quest</div><div class="mdesc">Right answers mine gold. Don't lose it all.</div></button>
+        <button class="mode speed" data-mode="speed"><span class="emoji">⚡</span><div class="mname">Speed Run</div><div class="mdesc">Half the clock. Double the pressure.</div></button>
+        <button class="mode boss" data-mode="boss"><span class="emoji">👑</span><div class="mname">Boss Battle</div><div class="mdesc">Every question counts double. No mercy.</div></button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== QUIZ ===== -->
+  <section class="screen quiz" id="scQuiz">
+    <div class="qhead">
+      <span class="pill"><span class="mini" id="qMascot"></span><span id="qName">You</span></span>
+      <span class="pill" id="qProgress">1 / 8</span>
+      <span class="pill">⭐ <span id="qScore">0</span><span id="qGold" style="display:none">&nbsp;· 🪙 <span id="qGoldN">0</span></span></span>
+    </div>
+    <div class="timer"><div class="fill" id="timerFill"></div></div>
+    <div class="qcard">
+      <div class="qcat" id="qCat">NYSGPT</div>
+      <div class="qtext" id="qText">Loading…</div>
+    </div>
+    <div class="answers" id="answers"></div>
+  </section>
+
+  <!-- ===== RESULTS ===== -->
+  <section class="screen results" id="scResults">
+    <div class="card">
+      <div class="crown" id="rCrown">🎉</div>
+      <h2><span class="name" id="rName">You</span> finished!</h2>
+      <div class="score" id="rScore">0</div>
+      <div class="accuracy" id="rAcc">0% accuracy</div>
+      <div class="statrow">
+        <div class="stat"><div class="n" id="rCorrect">0</div><div class="l">correct</div></div>
+        <div class="stat"><div class="n" id="rStreak">0</div><div class="l">best streak</div></div>
+        <div class="stat"><div class="n" id="rMode">Classic</div><div class="l">mode</div></div>
+      </div>
+      <div class="lb" id="lb"></div>
+      <div class="actions" style="margin-top:20px">
+        <button class="btn teal" id="rAgain">Play again</button>
+        <button class="btn ghost" id="rModes">Change mode</button>
+      </div>
+      <div class="realnote">
+        Psst — these are <b>real</b> NYSGPT products. Eight of them, all live or shipped.<br>
+        <a href="https://nysgpt-landing.vercel.app/index.html">See the real thing</a> · <a href="mailto:Brendan@nysgpt.com?subject=Working%20session%20—%20NYSGPT">Book a working session</a>
+      </div>
+    </div>
+  </section>
+
+</div>
+
+<!-- feedback flash -->
+<div class="flash" id="flash"><div class="msg" id="flashMsg"></div></div>
+
+<!-- ===== PLAYGROUND ===== -->
+<button class="pg-launch" id="pgLaunch" type="button" aria-label="Open the design playground" title="Play with the design">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="13.5" cy="6.5" r="2.5"/><circle cx="6" cy="11" r="2.5"/><circle cx="17.5" cy="13" r="2.5"/><circle cx="9" cy="18" r="2.5"/><path d="M13.5 9v3M8 12.5l2.5 1M15 15l-3 1.7"/>
+  </svg>
+</button>
+<div class="pg-panel" id="pgPanel" role="dialog" aria-label="Design playground">
+  <div class="pg-head"><span class="pg-title">🎨 Playground</span><button class="pg-reset" id="pgReset">Reset</button></div>
+  <div class="pg-grp">
+    <label>Game color</label>
+    <div class="pg-sw" id="pgBg">
+      <i class="on" data-bg="#3a2db5" style="background:#3a2db5"></i>
+      <i data-bg="#0f9b8e" style="background:#0f9b8e"></i>
+      <i data-bg="#d83b6c" style="background:#d83b6c"></i>
+      <i data-bg="#2d6fd6" style="background:#2d6fd6"></i>
+      <i data-bg="#e0850e" style="background:#e0850e"></i>
+      <i data-bg="#3aa648" style="background:#3aa648"></i>
+    </div>
+  </div>
+  <div class="pg-grp">
+    <label>Font</label>
+    <div class="pg-fonts" id="pgFont">
+      <button class="pg-font on" data-f='"Baloo 2", sans-serif' style='font-family:"Baloo 2"'>Baloo</button>
+      <button class="pg-font" data-f='"Fredoka", sans-serif' style='font-family:"Fredoka"'>Fredoka</button>
+      <button class="pg-font" data-f='"Nunito", sans-serif' style='font-family:"Nunito"'>Nunito</button>
+      <button class="pg-font" data-f='system-ui, sans-serif' style='font-family:system-ui'>System</button>
+    </div>
+  </div>
+  <div class="pg-grp"><label>Chunkiness <span class="v" id="radVal">1.0×</span></label><input type="range" class="pg-range" id="radR" min="0.4" max="1.8" step="0.1" value="1" /></div>
+  <div class="pg-grp"><label>Depth <span class="v" id="popVal">1.0×</span></label><input type="range" class="pg-range" id="popR" min="0.3" max="2" step="0.1" value="1" /></div>
+</div>
+
+<script>
+//// ===== mascots (our own friendly blooks, inline SVG) =====
+const MASCOTS = {
+  fox:  c=>`<svg viewBox="0 0 48 48"><rect x="6" y="14" width="36" height="30" rx="13" fill="${c}"/><path d="M8 16 L4 6 L18 13Z" fill="${c}"/><path d="M40 16 L44 6 L30 13Z" fill="${c}"/><circle cx="18" cy="28" r="3" fill="#241c54"/><circle cx="30" cy="28" r="3" fill="#241c54"/><ellipse cx="24" cy="36" rx="4" ry="3" fill="#fff"/><circle cx="24" cy="34" r="2" fill="#241c54"/></svg>`,
+  robot:c=>`<svg viewBox="0 0 48 48"><rect x="9" y="12" width="30" height="28" rx="10" fill="${c}"/><rect x="22" y="4" width="4" height="8" rx="2" fill="${c}"/><circle cx="24" cy="4" r="3" fill="${c}"/><rect x="15" y="22" width="7" height="8" rx="3.5" fill="#fff"/><rect x="26" y="22" width="7" height="8" rx="3.5" fill="#fff"/><circle cx="18.5" cy="26" r="2.5" fill="#241c54"/><circle cx="29.5" cy="26" r="2.5" fill="#241c54"/></svg>`,
+  ghost:c=>`<svg viewBox="0 0 48 48"><path d="M10 24a14 14 0 0 1 28 0v18l-5-4-5 4-4-4-4 4-5-4Z" fill="${c}"/><circle cx="19" cy="24" r="3" fill="#241c54"/><circle cx="29" cy="24" r="3" fill="#241c54"/></svg>`,
+  cat:  c=>`<svg viewBox="0 0 48 48"><path d="M10 14 L8 4 L20 12Z" fill="${c}"/><path d="M38 14 L40 4 L28 12Z" fill="${c}"/><rect x="8" y="12" width="32" height="30" rx="14" fill="${c}"/><circle cx="18" cy="26" r="3" fill="#241c54"/><circle cx="30" cy="26" r="3" fill="#241c54"/><path d="M22 33 q2 2 4 0" stroke="#241c54" stroke-width="2" fill="none" stroke-linecap="round"/></svg>`,
+  bird: c=>`<svg viewBox="0 0 48 48"><ellipse cx="24" cy="26" rx="16" ry="17" fill="${c}"/><circle cx="19" cy="22" r="3" fill="#241c54"/><circle cx="29" cy="22" r="3" fill="#241c54"/><path d="M24 28 l6 4 l-6 3 l-6 -3Z" fill="#ffd23f"/><path d="M8 30 q-6 2 -2 8" stroke="${c}" stroke-width="4" fill="none" stroke-linecap="round"/></svg>`,
+  blob: c=>`<svg viewBox="0 0 48 48"><path d="M24 6c10 0 16 8 16 18 0 12-7 18-16 18S8 36 8 24C8 14 14 6 24 6Z" fill="${c}"/><circle cx="18" cy="24" r="3.5" fill="#fff"/><circle cx="30" cy="24" r="3.5" fill="#fff"/><circle cx="18.5" cy="25" r="1.8" fill="#241c54"/><circle cx="30.5" cy="25" r="1.8" fill="#241c54"/><path d="M20 33 q4 4 8 0" stroke="#241c54" stroke-width="2.4" fill="none" stroke-linecap="round"/></svg>`,
+};
+const MCOLORS=['#ff5d8f','#22d3c5','#ffd23f','#9b5de5','#5ad469','#4d9bff'];
+const MKEYS=Object.keys(MASCOTS);
+let chosen={key:'blob',color:'#22d3c5'};
+
+//// ===== the quiz bank (real NYSGPT facts) =====
+const QUESTIONS = [
+  { cat:'Trade & customs', q:'Which product is a self-serve refund engine for importers who paid IEEPA tariffs?',
+    a:['TariffsGPT','SolarGPT','44B','NSRgpt'], correct:0 },
+  { cat:'Social services', q:'ChildcareGPT covers every OCFS facility in NY. How many is that?',
+    a:['1,680','16,800','168,000','800'], correct:1 },
+  { cat:'AI governance', q:'44B is best described as a "SERFF, for ___."',
+    a:['solar','sports','AI','tariffs'], correct:2 },
+  { cat:'The thesis', q:'Fill in the blank: "Public doesn\'t mean ___."',
+    a:['free','usable','legal','online'], correct:1 },
+  { cat:'Energy & grid', q:'SolarGPT pulls clean-energy data for every U.S. county from which source?',
+    a:['NASA','EIA','the EPA','OpenAI'], correct:1 },
+  { cat:'Scientific reference', q:'NSRgpt runs semantic search & RAG over which database?',
+    a:['Nuclear Science References','NASA Ames','PubMed','arXiv'], correct:0 },
+  { cat:'Architecture', q:'Every NYSGPT product runs on one architecture. What is it?',
+    a:['Crawl · Cache · Cash','Ingest · Ground · Ship','Map · Reduce · Serve','Plan · Build · Sell'], correct:1 },
+  { cat:'Sports', q:'SportsGPT covers high-school football for which Long Island league?',
+    a:['Section XI','the NFL','Big Ten','Serie A'], correct:0 },
+  { cat:'Insurance', q:'InsuranceGPT grounds its auto-insurance quotes in what?',
+    a:['vibes','filed carrier data','TV ads','random numbers'], correct:1 },
+  { cat:'The portfolio', q:'How many products has NYSGPT shipped?',
+    a:['3','5','8','40'], correct:2 },
+  { cat:'The team', q:'How many people build all of NYSGPT?',
+    a:['1 (full-stack)','a 50-person team','a big agency','nobody, it\'s AI'], correct:0 },
+  { cat:'Government', q:'PolicyGPT tracks bills, budgets, and lobbying for which state\'s record?',
+    a:['California','Texas','New York','Florida'], correct:2 },
+];
+
+//// ===== state =====
+const S = { mode:'classic', i:0, order:[], score:0, gold:0, correct:0, streak:0, best:0, timer:null, t:0, tmax:0, locked:false };
+const $ = id=>document.getElementById(id);
+function show(id){ document.querySelectorAll('.screen').forEach(s=>s.classList.remove('on')); $(id).classList.add('on'); }
+const ANS_SHAPES=['M12 2 L22 12 L12 22 L2 12Z','M2 2h20v20H2z','M12 2 L22 20 H2Z','M12 22 A10 10 0 1 1 12 2 A10 10 0 1 1 12 22'];
+
+//// ===== build join screen mascots =====
+(function(){
+  const wrap=$('mascotPick');
+  MKEYS.forEach((k,i)=>{
+    const col=MCOLORS[i%MCOLORS.length];
+    const d=document.createElement('div'); d.className='mascot-opt'+(i===5?' sel':''); d.dataset.k=k; d.dataset.c=col;
+    d.innerHTML=MASCOTS[k](col);
+    d.onclick=()=>{ wrap.querySelectorAll('.mascot-opt').forEach(x=>x.classList.remove('sel')); d.classList.add('sel'); chosen={key:k,color:col}; };
+    wrap.appendChild(d);
+  });
+  chosen={key:MKEYS[5],color:MCOLORS[5]};
+})();
+
+// floating bg blooks
+(function(){
+  const wrap=$('bgfloat');
+  const spots=[[8,18],[82,14],[14,72],[88,68],[46,86],[70,40]];
+  spots.forEach((s,i)=>{ const d=document.createElement('div'); d.className='b';
+    d.style.left=s[0]+'%'; d.style.top=s[1]+'%'; d.style.width='70px'; d.style.animationDelay=(i*0.7)+'s';
+    d.innerHTML=MASCOTS[MKEYS[i%MKEYS.length]](MCOLORS[i%MCOLORS.length]); wrap.appendChild(d); });
+})();
+
+//// ===== flow =====
+$('joinGo').onclick=()=>{
+  const nm=$('pname').value.trim()||'Player';
+  S.name=nm.slice(0,14);
+  $('qName').textContent=S.name; $('rName').textContent=S.name;
+  $('qMascot').innerHTML=MASCOTS[chosen.key](chosen.color);
+  show('scModes');
+};
+document.querySelectorAll('.mode').forEach(m=>m.onclick=()=>{ S.mode=m.dataset.mode; startGame(); });
+
+function startGame(){
+  S.i=0; S.score=0; S.gold= S.mode==='gold'?500:0; S.correct=0; S.streak=0; S.best=0; S.locked=false;
+  S.order=[...Array(QUESTIONS.length).keys()];
+  // shuffle (deterministic-ish via simple Fisher-Yates with index seed)
+  for(let k=S.order.length-1;k>0;k--){ const j=(k*7+3)%(k+1); [S.order[k],S.order[j]]=[S.order[j],S.order[k]]; }
+  S.order=S.order.slice(0,8);
+  $('qGold').style.display = S.mode==='gold'?'inline':'none';
+  show('scQuiz'); renderQ();
+}
+
+function renderQ(){
+  S.locked=false;
+  const q=QUESTIONS[S.order[S.i]];
+  $('qProgress').textContent=`${S.i+1} / ${S.order.length}`;
+  $('qScore').textContent=S.score; $('qGoldN').textContent=S.gold;
+  $('qCat').textContent=q.cat; $('qText').textContent=q.q;
+  const wrap=$('answers'); wrap.innerHTML='';
+  q.a.forEach((txt,idx)=>{
+    const b=document.createElement('button'); b.className='ans a'+idx;
+    b.innerHTML=`<svg class="shape" viewBox="0 0 24 24" fill="rgba(255,255,255,.85)"><path d="${ANS_SHAPES[idx]}"/></svg> ${txt}`;
+    b.onclick=()=>answer(idx,b,q);
+    wrap.appendChild(b);
+  });
+  // timer
+  S.tmax = S.mode==='speed'?7:13;
+  S.t=S.tmax; const fill=$('timerFill'); fill.classList.remove('low'); fill.style.width='100%';
+  clearInterval(S.timer);
+  S.timer=setInterval(()=>{
+    S.t-=0.1;
+    const pct=Math.max(0,S.t/S.tmax)*100; fill.style.width=pct+'%';
+    if(pct<25) fill.classList.add('low');
+    if(S.t<=0){ clearInterval(S.timer); if(!S.locked) answer(-1,null,q); }
+  },100);
+}
+
+function answer(idx,btn,q){
+  if(S.locked) return; S.locked=true; clearInterval(S.timer);
+  const correct = idx===q.correct;
+  const mult = S.mode==='boss'?2:1;
+  const speedBonus = Math.round((S.t/S.tmax)*400);
+  const buttons=[...$('answers').children];
+  buttons.forEach((b,i)=>{ if(i===q.correct) b.classList.add('correct'); else if(i===idx) b.classList.add('wrong'); else b.classList.add('faded'); });
+  if(correct){
+    S.correct++; S.streak++; S.best=Math.max(S.best,S.streak);
+    const streakBonus=(S.streak-1)*50;
+    const pts=(600+speedBonus+streakBonus)*mult;
+    S.score+=pts;
+    if(S.mode==='gold') S.gold+=300;
+    flash(S.streak>=3?`🔥 ${S.streak} streak!`:'Correct! +'+pts);
+  } else {
+    S.streak=0;
+    if(S.mode==='gold') S.gold=Math.max(0,S.gold-200);
+    flash(idx===-1?'⏱ Time!':'Nope!');
+  }
+  $('qScore').textContent=S.score; $('qGoldN').textContent=S.gold;
+  setTimeout(()=>{ S.i++; if(S.i>=S.order.length) finish(); else renderQ(); }, 1100);
+}
+
+function flash(msg){ const f=$('flash'); $('flashMsg').textContent=msg; f.classList.remove('show'); void f.offsetWidth; f.classList.add('show'); }
+
+function finish(){
+  const total = S.mode==='gold'?S.gold:S.score;
+  $('rScore').textContent = (S.mode==='gold'?'🪙 ':'')+total.toLocaleString();
+  const acc=Math.round(S.correct/S.order.length*100);
+  $('rAcc').textContent=acc+'% accuracy · '+S.correct+'/'+S.order.length;
+  $('rCorrect').textContent=S.correct; $('rStreak').textContent=S.best;
+  $('rMode').textContent={classic:'Classic',gold:'Gold Quest',speed:'Speed Run',boss:'Boss Battle'}[S.mode];
+  $('rCrown').textContent = acc>=80?'👑':acc>=50?'🎉':'💪';
+  buildLeaderboard(total);
+  show('scResults');
+}
+
+// a playful fake leaderboard with you slotted in by score
+function buildLeaderboard(you){
+  const bots=[['Brendan','robot','#9b5de5'],['QueryBee','bird','#ffd23f'],['NullPointer','ghost','#22d3c5'],['DataFox','fox','#ff9f43'],['RAGcat','cat','#4d9bff']];
+  const rows=bots.map((b,i)=>({name:b[0],key:b[1],color:b[2],pts:Math.round(you*(0.5+ (i*0.18)) + (i*137)%400)}));
+  rows.push({name:S.name,key:chosen.key,color:chosen.color,pts:you,you:true});
+  rows.sort((a,b)=>b.pts-a.pts);
+  const lb=$('lb'); lb.innerHTML='<div style="font-weight:800;color:var(--ink-faint);font-size:12px;text-transform:uppercase;letter-spacing:.06em;margin:8px 0 8px">Leaderboard</div>'+
+    rows.slice(0,6).map((r,i)=>`<div class="row ${r.you?'you':''}"><span class="rk">${i+1}</span><span class="who">${MASCOTS[r.key](r.color)} ${r.name}</span><span class="pts">${r.pts.toLocaleString()}</span></div>`).join('');
+}
+
+$('rAgain').onclick=startGame;
+$('rModes').onclick=()=>show('scModes');
+
+// enter key on nickname
+$('pname').addEventListener('keydown',e=>{ if(e.key==='Enter') $('joinGo').click(); });
+
+//// ===== theme + playground =====
+(function(){
+  const root=document.documentElement, btn=$('themeToggle');
+  btn.onclick=()=>{ const dark=root.getAttribute('data-theme')==='dark';
+    if(dark) root.removeAttribute('data-theme'); else root.setAttribute('data-theme','dark');
+    try{localStorage.setItem('nysgpt-theme-f2', dark?'light':'dark');}catch(e){} };
+})();
+(function(){
+  const root=document.documentElement, rs=root.style;
+  const panel=$('pgPanel'), launch=$('pgLaunch');
+  launch.onclick=e=>{e.stopPropagation();panel.classList.toggle('open')};
+  document.addEventListener('click',e=>{ if(!panel.contains(e.target)&&e.target!==launch&&!launch.contains(e.target)) panel.classList.remove('open'); });
+  function darken(hex,f){ const c=hex.replace('#',''); let r=parseInt(c.substr(0,2),16),g=parseInt(c.substr(2,2),16),b=parseInt(c.substr(4,2),16); return `rgb(${Math.round(r*f)},${Math.round(g*f)},${Math.round(b*f)})`; }
+  const bgWrap=$('pgBg');
+  bgWrap.querySelectorAll('i').forEach(i=>i.onclick=()=>{ bgWrap.querySelectorAll('i').forEach(x=>x.classList.remove('on')); i.classList.add('on');
+    rs.setProperty('--bg',i.dataset.bg); rs.setProperty('--bg-2',darken(i.dataset.bg,.8)); rs.setProperty('--shadow',darken(i.dataset.bg,.55)); });
+  const fWrap=$('pgFont');
+  fWrap.querySelectorAll('.pg-font').forEach(b=>b.onclick=()=>{ fWrap.querySelectorAll('.pg-font').forEach(x=>x.classList.remove('on')); b.classList.add('on'); rs.setProperty('--font-display',b.dataset.f); });
+  $('radR').oninput=e=>{ rs.setProperty('--radius',e.target.value); $('radVal').textContent=(+e.target.value).toFixed(1)+'×'; };
+  $('popR').oninput=e=>{ rs.setProperty('--pop',e.target.value); $('popVal').textContent=(+e.target.value).toFixed(1)+'×'; };
+  $('pgReset').onclick=()=>{ ['--bg','--bg-2','--shadow','--font-display','--radius','--pop'].forEach(v=>rs.removeProperty(v));
+    bgWrap.querySelectorAll('i').forEach((x,i)=>x.classList.toggle('on',i===0)); fWrap.querySelectorAll('.pg-font').forEach((x,i)=>x.classList.toggle('on',i===0));
+    $('radR').value=1;$('radVal').textContent='1.0×'; $('popR').value=1;$('popVal').textContent='1.0×'; };
+})();
+</script>
+</body>
+</html>
