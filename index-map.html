@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>NYSGPT — gallery map</title>
+<meta name="description" content="A spatial map of the NYSGPT landing-page design gallery — 22 explorations clustered into 6 families, navigated by pan and zoom." />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..600;1,9..144,400&family=Spline+Sans+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+<script>
+  (function(){ try{ if(localStorage.getItem('nysgpt-theme-map')==='light') document.documentElement.setAttribute('data-theme','light'); }catch(e){} })();
+</script>
+<style>
+  :root{
+    --bg:#080a10; --bg-2:#0b0e16; --ink:#e8ecf5; --dim:#8a90a4; --faint:#4f5468;
+    --line:#1c2030; --line-soft:#141826; --core:#aeb8ff;
+    --hud:rgba(11,14,22,.74); --hud-line:#23283c;
+    --star:rgba(255,255,255,.5);
+    --mono:"Spline Sans Mono",ui-monospace,monospace; --serif:"Fraunces",Georgia,serif;
+  }
+  :root[data-theme="light"]{
+    --bg:#eef0f6; --bg-2:#e6e9f2; --ink:#161a26; --dim:#565d72; --faint:#9aa0b4;
+    --line:#cfd4e2; --line-soft:#dde1ec; --core:#4b56c8;
+    --hud:rgba(238,240,246,.82); --hud-line:#cfd4e2;
+    --star:rgba(40,46,70,.32);
+  }
+  :root{color-scheme:dark} :root[data-theme="light"]{color-scheme:light}
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%;overflow:hidden}
+  body{background:var(--bg);color:var(--ink);font-family:var(--mono);font-size:13px;
+    -webkit-font-smoothing:antialiased;touch-action:none;
+    transition:background .4s ease,color .4s ease}
+
+  /* atmospheric backdrop: a faint star-field + vignette */
+  .sky{position:fixed;inset:0;z-index:0;pointer-events:none;
+    background:
+      radial-gradient(1200px 800px at 50% 42%, color-mix(in srgb,var(--core) 7%, transparent), transparent 70%),
+      radial-gradient(circle at 18% 22%, var(--star) 0 1px, transparent 1.4px) 0 0/170px 150px,
+      radial-gradient(circle at 70% 60%, var(--star) 0 1px, transparent 1.4px) 0 0/220px 240px,
+      radial-gradient(circle at 40% 80%, var(--star) 0 1px, transparent 1.2px) 0 0/300px 280px;
+    opacity:.6}
+  .sky::after{content:"";position:absolute;inset:0;box-shadow:inset 0 0 240px rgba(0,0,0,.55)}
+  :root[data-theme="light"] .sky::after{box-shadow:inset 0 0 220px rgba(70,80,120,.14)}
+
+  /* the viewport you drag in */
+  .viewport{position:fixed;inset:0;z-index:1;cursor:grab;overflow:hidden}
+  .viewport.drag{cursor:grabbing}
+  .world{position:absolute;top:0;left:0;transform-origin:0 0;will-change:transform}
+  .world svg.edges{position:absolute;top:0;left:0;overflow:visible;pointer-events:none}
+
+  .node{position:absolute;transform:translate(-50%,-50%);text-align:center;cursor:pointer;
+    transition:filter .25s}
+  .node .dot{width:var(--r,16px);height:var(--r,16px);border-radius:50%;margin:0 auto;
+    background:var(--c);box-shadow:0 0 0 1px rgba(255,255,255,.12) inset, 0 0 18px -2px var(--c);
+    transition:transform .22s, box-shadow .22s}
+  .node .lab{margin-top:9px;font-family:var(--serif);font-size:15px;font-weight:430;letter-spacing:-.01em;
+    color:var(--ink);white-space:nowrap;transition:color .2s}
+  .node .id{font-family:var(--mono);font-size:9.5px;letter-spacing:.1em;color:var(--faint);margin-top:1px}
+  .node:hover .dot{transform:scale(1.35);box-shadow:0 0 0 1px rgba(255,255,255,.2) inset, 0 0 30px 2px var(--c)}
+  .node:hover .lab{color:var(--c)}
+  .node.dim{filter:grayscale(.7) opacity(.32)}
+  .node.active .dot{transform:scale(1.5);box-shadow:0 0 0 2px var(--c) inset, 0 0 40px 4px var(--c)}
+  .node.active .lab{color:var(--c)}
+
+  /* family hub */
+  .hub{position:absolute;transform:translate(-50%,-50%);text-align:center;pointer-events:none}
+  .hub .ring{width:var(--ring,180px);height:var(--ring,180px);border-radius:50%;
+    border:1px dashed color-mix(in srgb,var(--c) 38%, transparent);margin:0 auto;
+    box-shadow:0 0 60px -20px var(--c) inset}
+  .hub .htag{position:absolute;top:-14px;left:50%;transform:translateX(-50%);
+    font-size:10px;letter-spacing:.22em;text-transform:uppercase;color:color-mix(in srgb,var(--c) 80%, var(--dim));
+    background:var(--bg);padding:0 9px;white-space:nowrap}
+  .hub .hnote{position:absolute;bottom:-13px;left:50%;transform:translateX(-50%);
+    font-size:9.5px;color:var(--faint);white-space:nowrap;letter-spacing:.04em}
+
+  /* center core */
+  .core{position:absolute;transform:translate(-50%,-50%);text-align:center;pointer-events:none}
+  .core .orb{width:84px;height:84px;border-radius:50%;margin:0 auto;
+    background:radial-gradient(circle at 38% 32%, color-mix(in srgb,var(--core) 92%,#fff), var(--core) 55%, color-mix(in srgb,var(--core) 30%, #06070d));
+    box-shadow:0 0 90px -8px var(--core), 0 0 0 1px rgba(255,255,255,.2) inset;
+    animation:pulse 5s ease-in-out infinite}
+  @keyframes pulse{0%,100%{box-shadow:0 0 80px -10px var(--core),0 0 0 1px rgba(255,255,255,.2) inset}
+    50%{box-shadow:0 0 120px 0px var(--core),0 0 0 1px rgba(255,255,255,.3) inset}}
+  .core .cn{font-family:var(--serif);font-size:19px;letter-spacing:.04em;margin-top:13px}
+  .core .cn b{font-style:italic;color:var(--core)}
+  .core .cs{font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--faint);margin-top:4px}
+
+  /* ---------- HUD overlays ---------- */
+  .hud{position:fixed;z-index:10;font-family:var(--mono)}
+  .hud.tl{top:18px;left:20px;display:flex;align-items:center;gap:11px}
+  .brand{display:flex;align-items:center;gap:11px}
+  .brand .mk{width:27px;height:27px;border:1.5px solid var(--ink);border-radius:5px;display:grid;place-items:center;
+    font-family:var(--serif);font-weight:600;font-size:13px}
+  .brand .bn{font-size:13px;letter-spacing:.22em}.brand .bn b{color:var(--core);font-weight:600}
+  .tl .div{width:1px;height:18px;background:var(--hud-line)}
+  .tl .mode{font-size:10.5px;letter-spacing:.18em;text-transform:uppercase;color:var(--faint)}
+
+  .hud.tr{top:18px;right:20px;display:flex;gap:9px;transition:right .42s cubic-bezier(.4,0,.1,1)}
+  /* slide the top-right controls clear of the detail panel when it's open */
+  body.panel-open .hud.tr{right:400px}
+  @media(max-width:760px){ body.panel-open .hud.tr{right:20px;opacity:0;pointer-events:none} }
+  .iconbtn{width:31px;height:31px;border:1px solid var(--hud-line);border-radius:7px;background:var(--hud);backdrop-filter:blur(8px);
+    display:grid;place-items:center;cursor:pointer;color:var(--dim);transition:border-color .2s,color .2s}
+  .iconbtn:hover{border-color:var(--core);color:var(--ink)}
+  .iconbtn svg{width:14px;height:14px}.iconbtn .moon{display:none}
+  :root[data-theme="light"] .iconbtn .sun{display:none}
+  :root[data-theme="light"] .iconbtn .moon{display:block}
+
+  .hud.bl{bottom:18px;left:20px;max-width:330px}
+  .legend{background:var(--hud);backdrop-filter:blur(10px);border:1px solid var(--hud-line);border-radius:11px;padding:13px 15px}
+  .legend .lt{font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--faint);margin-bottom:10px}
+  .legend .fam{display:flex;align-items:center;gap:9px;padding:3px 0;cursor:pointer;border-radius:5px;transition:color .15s}
+  .legend .fam:hover{color:var(--core)}
+  .legend .fam i{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+  .legend .fam .fn{flex:1;font-size:12px}
+  .legend .fam .fc{font-size:10px;color:var(--faint)}
+
+  .hud.br{bottom:18px;right:20px;display:flex;flex-direction:column;align-items:flex-end;gap:9px}
+  .hint{font-size:10.5px;color:var(--faint);letter-spacing:.03em;text-align:right;line-height:1.7}
+  .hint b{color:var(--dim);font-weight:500}
+  .zoomgrp{display:flex;gap:7px}
+  .zbtn{width:31px;height:31px;border:1px solid var(--hud-line);border-radius:7px;background:var(--hud);backdrop-filter:blur(8px);
+    color:var(--dim);font-size:15px;cursor:pointer;display:grid;place-items:center;transition:.2s}
+  .zbtn:hover{border-color:var(--core);color:var(--ink)}
+
+  /* ---------- detail card ---------- */
+  .detail{position:fixed;z-index:12;top:0;right:0;height:100%;width:380px;max-width:88vw;
+    background:var(--bg-2);border-left:1px solid var(--hud-line);
+    transform:translateX(100%);transition:transform .42s cubic-bezier(.4,0,.1,1);
+    display:flex;flex-direction:column;box-shadow:-30px 0 80px -40px rgba(0,0,0,.8)}
+  .detail.open{transform:none}
+  .detail .dhead{padding:24px 26px 18px;border-bottom:1px solid var(--line)}
+  .detail .dcrumb{font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--faint);
+    display:flex;align-items:center;gap:9px;margin-bottom:13px}
+  .detail .dcrumb i{width:9px;height:9px;border-radius:50%;background:var(--dc)}
+  .detail h2{font-family:var(--serif);font-weight:350;font-size:36px;line-height:1;letter-spacing:-.02em}
+  .detail h2 .acc{color:var(--dc);font-style:italic}
+  .detail .dsw{display:flex;gap:7px;margin-top:18px}
+  .detail .dsw i{width:34px;height:34px;border-radius:6px;box-shadow:0 1px 6px rgba(0,0,0,.45),0 0 0 1px rgba(255,255,255,.08) inset}
+  .detail .dbody{padding:22px 26px;flex:1;overflow-y:auto}
+  .detail .dbody p{font-size:13.5px;line-height:1.7;color:var(--dim)}
+  .detail .dmeta{margin-top:22px;border-top:1px solid var(--line-soft);padding-top:16px;font-size:11.5px;color:var(--faint);
+    display:flex;flex-direction:column;gap:7px}
+  .detail .dmeta b{color:var(--dim);font-weight:500}
+  .detail .dmeta span{color:var(--dim)}
+  .detail .dfoot{padding:20px 26px;border-top:1px solid var(--line);display:flex;gap:10px}
+  .openbtn{flex:1;display:inline-flex;align-items:center;justify-content:center;gap:9px;padding:13px;border-radius:9px;
+    background:var(--dc);color:#0a0a0a;font-family:var(--mono);font-weight:600;font-size:13px;letter-spacing:.03em;
+    text-decoration:none;transition:transform .16s,filter .16s}
+  .openbtn:hover{transform:translateY(-2px);filter:brightness(1.08)}
+  .closebtn{width:46px;border:1px solid var(--hud-line);border-radius:9px;background:transparent;color:var(--dim);
+    font-size:17px;cursor:pointer;transition:.2s}.closebtn:hover{border-color:var(--core);color:var(--ink)}
+
+  /* offset the intro BELOW the core orb so the two don't collide */
+  .intro{position:fixed;z-index:11;top:64%;left:50%;transform:translate(-50%,-50%);text-align:center;
+    pointer-events:none;transition:opacity .6s;max-width:520px;padding:0 20px}
+  .intro h1{font-family:var(--serif);font-weight:330;font-size:clamp(26px,4vw,40px);line-height:1.08;letter-spacing:-.02em}
+  .intro h1 em{font-style:italic;color:var(--core)}
+  .intro p{margin-top:14px;font-size:12.5px;color:var(--dim);letter-spacing:.02em}
+  .intro.hide{opacity:0}
+
+  @media(max-width:760px){
+    .hud.bl{display:none} .intro h1{font-size:24px}
+    .detail{width:100%}
+  }
+  @media(prefers-reduced-motion:reduce){.core .orb{animation:none}*{transition-duration:.01ms!important}}
+</style>
+</head>
+<body>
+  <div class="sky"></div>
+
+  <div class="viewport" id="viewport">
+    <div class="world" id="world">
+      <svg class="edges" id="edges"></svg>
+      <!-- nodes/hubs/core injected by JS -->
+    </div>
+  </div>
+
+  <!-- HUD -->
+  <div class="hud tl">
+    <div class="brand"><span class="mk">N</span><span class="bn">NYS<b>GPT</b></span></div>
+    <span class="div"></span>
+    <span class="mode">Gallery Map</span>
+  </div>
+  <div class="hud tr">
+    <button class="iconbtn" id="recenter" type="button" title="Recenter" aria-label="Recenter">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg>
+    </button>
+    <button class="iconbtn" id="themeToggle" type="button" title="Toggle theme" aria-label="Toggle theme">
+      <svg class="sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>
+      <svg class="moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+    </button>
+  </div>
+
+  <div class="hud bl">
+    <div class="legend" id="legend"><div class="lt">22 designs · 6 families</div></div>
+  </div>
+
+  <div class="hud br">
+    <div class="hint"><b>drag</b> to pan · <b>scroll</b> to zoom · <b>click</b> a node<br>a family in the legend flies you there</div>
+    <div class="zoomgrp">
+      <button class="zbtn" id="zout" title="Zoom out">−</button>
+      <button class="zbtn" id="zin" title="Zoom in">+</button>
+    </div>
+  </div>
+
+  <!-- detail -->
+  <aside class="detail" id="detail" aria-hidden="true">
+    <div class="dhead">
+      <div class="dcrumb"><i id="dDot"></i><span id="dFam"></span><span>·</span><span id="dId"></span></div>
+      <h2 id="dName"></h2>
+      <div class="dsw" id="dSw"></div>
+    </div>
+    <div class="dbody">
+      <p id="dDesc"></p>
+      <div class="dmeta">
+        <div><b>family</b> &nbsp; <span id="dFam2"></span></div>
+        <div><b>file</b> &nbsp; <span id="dFile"></span></div>
+        <div><b>signature</b> &nbsp; <span id="dSig"></span></div>
+      </div>
+    </div>
+    <div class="dfoot">
+      <a class="openbtn" id="dOpen" href="#">Open full page →</a>
+      <button class="closebtn" id="dClose" aria-label="Close">×</button>
+    </div>
+  </aside>
+
+  <div class="intro" id="intro">
+    <h1>The gallery as a <em>constellation</em>.</h1>
+    <p>Six families orbiting one architecture · drag to roam, click a star to inspect it</p>
+  </div>
+
+<script>
+/* ============ data ============ */
+const FAMILIES = [
+  {key:"A",label:"Editorial",note:"serif · hairline rules",c:"#ff5a1f",sig:"hairline rules + serif/mono"},
+  {key:"B",label:"Luminous",note:"glow · motion",c:"#5ce0c0",sig:"light as material"},
+  {key:"C",label:"Blueprint",note:"technical drafting",c:"#46c8ff",sig:"cyanotype / schematic"},
+  {key:"D",label:"Monochrome",note:"shadow is the ink",c:"#c8b890",sig:"depth via shadow only"},
+  {key:"E",label:"Interactive",note:"operated, not scrolled",c:"#6e8bff",sig:"a thing you operate"},
+  {key:"F",label:"Playful",note:"actually playable",c:"#ff7a3c",sig:"game-UI cosplay"},
+];
+const V = [
+  {fam:"A",id:"A01",name:"Broadsheet",file:"variant-a.html",sw:["#0a0c0f","#ece7dd","#ff5a1f"],d:"Editorial engineering terminal — serif + mono, hairline rules, the portfolio as a precise data ledger. Restrained, authoritative."},
+  {fam:"A",id:"A02",name:"Column",file:"variant-a1-column.html",sw:["#0b0b0c","#ece6da","#e8472a"],d:"The portfolio as a newspaper front page — nameplate, a multi-column flowed lede with a drop-cap, products as a ruled register. Night edition + newsprint."},
+  {fam:"A",id:"A03",name:"Dispatch",file:"variant-a2-dispatch.html",sw:["#0c0d0a","#e8e6db","#f0a623"],d:"A newsroom wire terminal — a live typed bulletin, a scrolling amber ticker, products filed as an AP-style wire feed that prints in. Charcoal + telex paper."},
+  {fam:"A",id:"A04",name:"Folio",file:"variant-a3-folio.html",sw:["#0c0a0b","#efe9e0","#b23a48"],d:"A luxe print-magazine spread — an oversized cover headline, an asymmetric editorial grid, pull-quotes and page-folios, products as a contents spread. Claret + cream."},
+  {fam:"B",id:"B05",name:"Aurora",file:"variant-b.html",sw:["#06070d","#8b7bff","#46e3d0"],d:"Luminous & atmospheric — drifting gradient-mesh, glowing accent, lifting cards. Frontier-lab energy, motion-forward."},
+  {fam:"B",id:"B06",name:"Signal",file:"variant-b1-signal.html",sw:["#04080a","#7bd0ff","#46e3c0"],d:"A live phosphor oscilloscope — a real canvas scope sweeps the hero, the 8 products read out as channels with their own traces. Scanlines, graticule, CRT glow."},
+  {fam:"B",id:"B07",name:"Prism",file:"variant-b2-prism.html",sw:["#05060a","#a06bff","#3fd8e8"],d:"White light through black glass — a live canvas prism disperses a beam into a moving spectrum, the headline splits into RGB channels, products lay across the band."},
+  {fam:"B",id:"B08",name:"Halo",file:"variant-b3-halo.html",sw:["#0a0a0c","#e8c98a","#b8862e"],d:"One soft lamp in a dark room — a single volumetric spotlight that breathes, near-monochrome, generous quiet. The pragmatic one."},
+  {fam:"B",id:"B09",name:"Eclipse",file:"variant-b4-eclipse.html",sw:["#040409","#c9a4ff","#7af0d6"],d:"The page hidden in the dark — your cursor is the only light. Move it and the corona reveals the layout; products bloom awake as the torch sweeps over them. The bold one."},
+  {fam:"C",id:"C10",name:"Circuit",file:"variant-c2-schematic.html",sw:["#071318","#46c8ff","#28e0b0"],d:"The portfolio as a live wiring schematic — a CORE bus routing to 8 product nodes, animated signal pulses, hover-to-trace. The most ambitious."},
+  {fam:"C",id:"C11",name:"Datasheet",file:"variant-c1-spec.html",sw:["#10130f","#d8451f","#e8a838"],d:"Pure electronics datasheet — absolute-max ratings, an electrical-characteristics table of the 8 products, revision history. Mono, amber."},
+  {fam:"C",id:"C12",name:"Plate",file:"variant-c3-plate.html",sw:["#f4f2ea","#1c5fa8","#c0381a"],d:"Exploded assembly drawing on white drafting paper — item balloons, leader lines, a parts list. The compositional, light-default one."},
+  {fam:"C",id:"C13",name:"Blueprint",file:"variant-c.html",sw:["#0a1a2f","#ff5a3c","#4cc3ff"],d:"The original all-in-one Blueprint: the portfolio drawn three ways down one page (spec sheet · schematic · exploded plate). A showcase."},
+  {fam:"D",id:"D14",name:"Paper",file:"variant-d1-paper.html",sw:["#e9e9ec","#b8bac0","#1a1b1f"],d:"Soft neumorphic — one off-white surface where objects exist only through shadow: extruded buttons, debossed plates, pressed inputs, an embossed colophon-seal. The gentle one."},
+  {fam:"D",id:"D15",name:"Slab",file:"variant-d2-slab.html",sw:["#ffffff","#000000","#5a5a5a"],d:"Hard brutalist — pure white, pure black, one harsh noon drop-shadow on everything. Oversized slab type; products overlap and z-stack; the proof a giant ghost numeral. The bold one."},
+  {fam:"D",id:"D16",name:"Vitrine",file:"variant-d3-vitrine.html",sw:["#0d0d0f","#c8b890","#f1efea"],d:"Gallery / museum — content in pools of spotlight against a near-black wall, long cast-shadows. Products presented one at a time as exhibits on plinths; proof as wall-text. The expressive one."},
+  {fam:"E",id:"E17",name:"Terminal",file:"variant-e1-terminal.html",sw:["#08090c","#5cc8ff","#4fd6a8"],d:"A working command-line REPL — the products are a corpus you query. ls products, open 44b, query \"tariff refund\", whoami, book session. The page demonstrates the product instead of describing it."},
+  {fam:"E",id:"E18",name:"Canvas",file:"variant-e2-canvas.html",sw:["#0a0b10","#8b9bff","#5ce0c0"],d:"An infinite pan/zoom map — no scroll. The eight products are nodes orbiting a glowing CORE hub, wired by shared-architecture edges. Click a node and the camera flies to it."},
+  {fam:"E",id:"E19",name:"Launcher",file:"variant-e3-launcher.html",sw:["#0b0b0e","#54d6a8","#6e8bff"],d:"The whole page is a ⌘K command-palette. Fuzzy-search the eight products and the actions with live highlighting, arrow-key navigation, and inline drill-down pages — no marketing sections at all."},
+  {fam:"F",id:"F20",name:"Discover",file:"variant-f1-roblox.html",sw:["#191b1f","#3b9dff","#00b06f"],d:"The game-launcher home recreated: the eight products as browsable experiences — gradient tiles, player counts, big Play buttons. Hit play and drop into Data-Block Run, a real click-to-collect toy."},
+  {fam:"F",id:"F21",name:"Quest",file:"variant-f2-blooket.html",sw:["#3a2db5","#22d3c5","#ff5d8f"],d:"A real, playable quiz in the classroom-game UI — candy palette, chunky buttons, our own mascots. Pick a nickname & a blook, choose a mode (incl. Hacker), answer 8 questions on real NYSGPT facts."},
+  {fam:"F",id:"F22",name:"Bank It",file:"variant-f3-outburst.html",sw:["#ff7a3c","#1fc7b6","#ffd23f"],d:"A real, playable party game in the Outburst-Jr. mold — a sunny game-show board. Pick a category, see 20 answers, tap the ten you think made the hidden list. Push-your-luck: bank it & stop while you're ahead."},
+];
+
+/* ============ layout the world ============ */
+const WORLD = 4200;           // logical world size
+const CX = WORLD/2, CY = WORLD/2;
+const world = document.getElementById("world");
+const edges = document.getElementById("edges");
+world.style.width = WORLD+"px"; world.style.height = WORLD+"px";
+edges.setAttribute("width", WORLD); edges.setAttribute("height", WORLD);
+edges.setAttribute("viewBox", `0 0 ${WORLD} ${WORLD}`);
+
+const famAngle = {};           // key -> {x,y}
+const nodePos = {};            // id -> {x,y}
+const FAM_R = 1180;            // distance of family hubs from core
+
+// place 6 family hubs evenly around the core
+FAMILIES.forEach((fam,i)=>{
+  const a = (-90 + i*60) * Math.PI/180;   // start at top, clockwise
+  const fx = CX + Math.cos(a)*FAM_R;
+  const fy = CY + Math.sin(a)*FAM_R;
+  famAngle[fam.key] = {x:fx,y:fy,a};
+
+  // hub ring sized to members
+  const members = V.filter(v=>v.fam===fam.key);
+  const ringR = 120 + members.length*26;
+
+  const hub = document.createElement("div");
+  hub.className="hub"; hub.style.left=fx+"px"; hub.style.top=fy+"px";
+  hub.style.setProperty("--c", fam.c); hub.style.setProperty("--ring", (ringR*2)+"px");
+  hub.innerHTML = `<div class="ring"></div><div class="htag">${fam.key} · ${fam.label}</div><div class="hnote">${fam.note}</div>`;
+  world.appendChild(hub);
+
+  // edge core -> hub
+  edges.appendChild(line(CX,CY,fx,fy, "core"));
+
+  // arrange members around the hub center, fanning outward from the core direction
+  members.forEach((v,j)=>{
+    const spread = members.length>1 ? 1.5 : 0;           // radians of fan
+    const base = a;                                       // point away from core
+    const t = members.length>1 ? (j/(members.length-1)-0.5)*spread : 0;
+    const na = base + t;
+    const nr = ringR*0.74;
+    const nx = fx + Math.cos(na)*nr;
+    const ny = fy + Math.sin(na)*nr;
+    nodePos[v.id]={x:nx,y:ny};
+
+    edges.appendChild(line(fx,fy,nx,ny,"node",fam.c));
+
+    const el=document.createElement("div");
+    el.className="node"; el.style.left=nx+"px"; el.style.top=ny+"px";
+    el.style.setProperty("--c", v.sw[2]); el.dataset.id=v.id;
+    el.innerHTML=`<div class="dot"></div><div class="lab">${v.name}</div><div class="id">${v.id}</div>`;
+    el._v=v;
+    world.appendChild(el);
+  });
+});
+
+// core
+const core=document.createElement("div");
+core.className="core"; core.style.left=CX+"px"; core.style.top=CY+"px";
+core.innerHTML=`<div class="orb"></div><div class="cn">NYSGPT <b>core</b></div><div class="cs">ingest · ground · ship</div>`;
+world.appendChild(core);
+
+function line(x1,y1,x2,y2,kind,c){
+  const ns="http://www.w3.org/2000/svg";
+  const l=document.createElementNS(ns,"line");
+  l.setAttribute("x1",x1);l.setAttribute("y1",y1);l.setAttribute("x2",x2);l.setAttribute("y2",y2);
+  if(kind==="core"){ l.setAttribute("stroke","var(--line)"); l.setAttribute("stroke-width","1.4"); l.setAttribute("stroke-dasharray","2 7"); }
+  else { l.setAttribute("stroke", c); l.setAttribute("stroke-width","1"); l.setAttribute("stroke-opacity",".22"); }
+  return l;
+}
+
+/* ============ camera (pan/zoom) ============ */
+const vp=document.getElementById("viewport");
+let scale=0.5, tx=0, ty=0;            // current
+let aScale=0.5, aTx=0, aTy=0;         // animated targets
+const MIN=0.22, MAX=1.6;
+
+function clampTargets(){ aScale=Math.max(MIN,Math.min(MAX,aScale)); }
+function apply(){ world.style.transform=`translate(${tx}px,${ty}px) scale(${scale})`; }
+
+// center the core in the viewport at a given scale
+function centerOn(wx,wy,s){
+  aScale = Math.max(MIN,Math.min(MAX,s));
+  aTx = innerWidth/2 - wx*aScale;
+  aTy = innerHeight/2 - wy*aScale;
+}
+centerOn(CX,CY,0.5); tx=aTx;ty=aTy;scale=aScale; apply();
+
+let raf=null;
+function animate(){
+  scale += (aScale-scale)*0.16;
+  tx += (aTx-tx)*0.16; ty += (aTy-ty)*0.16;
+  apply();
+  if(Math.abs(aScale-scale)>0.0006 || Math.abs(aTx-tx)>0.4 || Math.abs(aTy-ty)>0.4){ raf=requestAnimationFrame(animate); }
+  else { scale=aScale;tx=aTx;ty=aTy;apply();raf=null; }
+}
+function kick(){ if(!raf) raf=requestAnimationFrame(animate); }
+
+/* drag */
+let dragging=false, moved=false, sx=0,sy=0, stx=0,sty=0;
+vp.addEventListener("pointerdown",(e)=>{
+  dragging=true;moved=false;sx=e.clientX;sy=e.clientY;
+  // snap targets to current so drag is direct
+  aTx=tx;aTy=ty;aScale=scale;
+  stx=tx;sty=ty; vp.classList.add("drag"); vp.setPointerCapture(e.pointerId);
+});
+vp.addEventListener("pointermove",(e)=>{
+  if(!dragging)return;
+  const dx=e.clientX-sx, dy=e.clientY-sy;
+  if(Math.abs(dx)+Math.abs(dy)>4) moved=true;
+  tx=stx+dx; ty=sty+dy; aTx=tx;aTy=ty; apply();
+});
+vp.addEventListener("pointerup",(e)=>{ dragging=false; vp.classList.remove("drag"); vp.releasePointerCapture?.(e.pointerId); });
+vp.addEventListener("pointercancel",()=>{ dragging=false; vp.classList.remove("drag"); });
+
+/* wheel zoom toward cursor */
+vp.addEventListener("wheel",(e)=>{
+  e.preventDefault();
+  const factor = Math.exp(-e.deltaY*0.0014);
+  const ns = Math.max(MIN,Math.min(MAX, scale*factor));
+  // keep the world point under the cursor fixed
+  const wx = (e.clientX - tx)/scale, wy=(e.clientY - ty)/scale;
+  scale = ns;
+  tx = e.clientX - wx*scale; ty = e.clientY - wy*scale;
+  aScale=scale;aTx=tx;aTy=ty; apply();
+  hideIntro();
+},{passive:false});
+
+/* zoom buttons */
+document.getElementById("zin").onclick=()=>{ centerOn((innerWidth/2-tx)/scale,(innerHeight/2-ty)/scale, scale*1.3); kick(); };
+document.getElementById("zout").onclick=()=>{ centerOn((innerWidth/2-tx)/scale,(innerHeight/2-ty)/scale, scale/1.3); kick(); };
+document.getElementById("recenter").onclick=()=>{ closeDetail(); centerOn(CX,CY,0.5); kick(); };
+
+/* ============ node interaction ============ */
+const nodes=[...document.querySelectorAll(".node")];
+nodes.forEach(n=>{
+  n.addEventListener("click",(e)=>{ if(moved)return; e.stopPropagation(); openNode(n._v); });
+  n.addEventListener("dblclick",()=>{ window.location.href=n._v.file; });
+});
+vp.addEventListener("click",()=>{ if(!moved) closeDetail(); });
+
+function openNode(v){
+  hideIntro();
+  // fly to it
+  const p=nodePos[v.id];
+  // bias the camera left so the node sits clear of the right-side detail panel
+  const panelW = innerWidth<=760?0:380;
+  aScale=Math.max(MIN,Math.min(MAX,0.95));
+  aTx=(innerWidth-panelW)/2 - p.x*aScale;
+  aTy=innerHeight/2 - p.y*aScale;
+  kick();
+
+  nodes.forEach(n=>{ n.classList.toggle("active", n._v.id===v.id); n.classList.toggle("dim", n._v.id!==v.id); });
+
+  const fam=FAMILIES.find(f=>f.key===v.fam);
+  const dc=v.sw[2];
+  document.documentElement.style.setProperty("--dc",dc);
+  document.getElementById("dDot").style.background=dc;
+  document.getElementById("dFam").textContent=fam.label+" family";
+  document.getElementById("dId").textContent=v.id;
+  const parts=v.name.split(" ");const last=parts.pop();
+  document.getElementById("dName").innerHTML=(parts.length?parts.join(" ")+" ":"")+`<span class="acc">${last}</span>`;
+  document.getElementById("dSw").innerHTML=v.sw.map(c=>`<i style="background:${c}"></i>`).join("");
+  document.getElementById("dDesc").textContent=v.d;
+  document.getElementById("dFam2").textContent=`${fam.label} — ${fam.note}`;
+  document.getElementById("dFile").textContent="/"+v.file;
+  document.getElementById("dSig").textContent=fam.sig;
+  const open=document.getElementById("dOpen"); open.href=v.file;
+  const d=document.getElementById("detail"); d.classList.add("open"); d.setAttribute("aria-hidden","false");
+  document.body.classList.add("panel-open");
+}
+function closeDetail(){
+  const d=document.getElementById("detail"); d.classList.remove("open"); d.setAttribute("aria-hidden","true");
+  document.body.classList.remove("panel-open");
+  nodes.forEach(n=>n.classList.remove("active","dim"));
+}
+document.getElementById("dClose").onclick=(e)=>{ e.stopPropagation(); closeDetail(); };
+
+/* ============ legend → fly to family ============ */
+const legend=document.getElementById("legend");
+FAMILIES.forEach(fam=>{
+  const n=V.filter(v=>v.fam===fam.key).length;
+  const row=document.createElement("div");
+  row.className="fam";
+  row.innerHTML=`<i style="background:${fam.c}"></i><span class="fn">${fam.label}</span><span class="fc">${n}</span>`;
+  row.onclick=()=>{ closeDetail(); const p=famAngle[fam.key]; centerOn(p.x,p.y,0.62); kick(); hideIntro(); };
+  legend.appendChild(row);
+});
+
+/* ============ misc ============ */
+let introHidden=false;
+function hideIntro(){ if(introHidden)return; introHidden=true; document.getElementById("intro").classList.add("hide"); }
+addEventListener("keydown",(e)=>{ if(e.key==="Escape") closeDetail(); });
+
+(function(){
+  const root=document.documentElement, btn=document.getElementById("themeToggle");
+  btn.addEventListener("click",()=>{
+    const light=root.getAttribute("data-theme")==="light";
+    if(light) root.removeAttribute("data-theme"); else root.setAttribute("data-theme","light");
+    try{localStorage.setItem("nysgpt-theme-map", light?"dark":"light");}catch(e){}
+  });
+})();
+
+addEventListener("resize",()=>{ aTx=tx;aTy=ty; });
+</script>
+</body>
+</html>
