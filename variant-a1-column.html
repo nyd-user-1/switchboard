@@ -153,7 +153,7 @@
   @media(max-width:720px){.ribbon .wrap{grid-template-columns:repeat(2,1fr)}.ribbon .cell{padding:30px 22px}.ribbon .cell:nth-child(odd){padding-left:0}.ribbon .cell:nth-child(even){border-right:none;padding-right:0}}
 
   /* ===================== THESIS (the editorial / op-ed) ===================== */
-  .thesis{padding:calc(108px * var(--density)) 0;border-bottom:1px solid var(--rule)}
+  .thesis{padding:calc(108px * var(--density)) 0}
   .thesis .hd{display:flex;align-items:baseline;gap:16px;margin-bottom:52px}
   .thesis .hd .k{font-family:var(--font-mono);font-size:10.5px;letter-spacing:.2em;text-transform:uppercase;color:var(--accent)}
   .thesis .hd .r{height:1px;background:var(--rule);flex:1}
@@ -172,7 +172,7 @@
   @media(max-width:860px){.thesis .grid{grid-template-columns:1fr;gap:32px}}
 
   /* ===================== THE REGISTER (products as a front-page index) ===================== */
-  .register{padding:calc(108px * var(--density)) 0 calc(116px * var(--density));border-bottom:1px solid var(--rule)}
+  .register{padding:calc(108px * var(--density)) 0 calc(116px * var(--density))}
   .register .hd{display:flex;justify-content:space-between;align-items:flex-end;gap:24px;flex-wrap:wrap;margin-bottom:12px}
   .register .hd h2{font-family:var(--font-display);font-weight:calc(360 + var(--wght));font-size:clamp(28px,4.4vw,52px);letter-spacing:-.022em;line-height:.98}
   .register .hd h2 em{font-style:italic;color:var(--accent)}
@@ -206,7 +206,7 @@
   }
 
   /* ===================== DOMAINS (dateline chips) ===================== */
-  .domains{padding:80px 0;border-bottom:1px solid var(--rule)}
+  .domains{padding:80px 0}
   .domains .k{font-family:var(--font-mono);font-size:10.5px;letter-spacing:.18em;text-transform:uppercase;color:var(--paper-faint);margin-bottom:30px}
   .domains .chips{display:flex;flex-wrap:wrap;gap:12px}
   .domains .chip{font-family:var(--font-mono);font-size:12px;color:var(--paper-dim);border:1px solid var(--rule);border-radius:calc(2px*var(--radius));padding:10px 16px;transition:.2s}
@@ -214,13 +214,13 @@
   .domains .chip b{color:var(--accent);font-weight:500}
 
   /* ===================== METHOD ===================== */
-  .method{padding:calc(108px * var(--density)) 0;border-bottom:1px solid var(--rule)}
+  .method{padding:calc(108px * var(--density)) 0}
   .method .hd{display:flex;align-items:baseline;gap:16px;margin-bottom:52px}
   .method .hd h2{font-family:var(--font-display);font-weight:calc(360 + var(--wght));font-size:clamp(26px,3.6vw,40px);letter-spacing:-.02em;line-height:1}
   .method .hd .r{height:1px;background:var(--rule);flex:1}
   .method .hd .k{font-family:var(--font-mono);font-size:10.5px;letter-spacing:.06em;color:var(--paper-faint)}
   .method .cols{display:grid;grid-template-columns:repeat(3,1fr);gap:0;border-top:1px solid var(--rule)}
-  .method .c{padding:44px 40px 44px 0;border-right:1px solid var(--rule-soft);border-bottom:1px solid var(--rule-soft)}
+  .method .c{padding:44px 40px;border-right:1px solid var(--rule-soft);border-bottom:1px solid var(--rule-soft)}
   .method .c:last-child{border-right:none}
   .method .c .ic{font-family:var(--font-mono);font-size:10.5px;color:var(--accent);letter-spacing:.12em;margin-bottom:18px}
   .method .c h3{font-family:var(--font-display);font-weight:440;font-size:20px;letter-spacing:-.01em;margin-bottom:12px}
@@ -229,7 +229,7 @@
 
   /* ===================== CTA ===================== */
   .cta{padding:calc(116px * var(--density)) 0}
-  .cta .panel{border:1px solid var(--rule);border-top:3px double var(--rule);border-radius:calc(3px*var(--radius));overflow:hidden;display:grid;grid-template-columns:1.05fr .95fr;background:linear-gradient(160deg,var(--tint),transparent 55%),var(--ink-2)}
+  .cta .panel{border:1px solid var(--rule);border-top:1px solid var(--rule);border-radius:calc(3px*var(--radius));overflow:hidden;display:grid;grid-template-columns:1.05fr .95fr;background:linear-gradient(160deg,var(--tint),transparent 55%),var(--ink-2)}
   .cta .left{padding:60px 54px;border-right:1px solid var(--rule)}
   .cta .left .k{font-family:var(--font-mono);font-size:10.5px;letter-spacing:.2em;text-transform:uppercase;color:var(--accent);margin-bottom:18px}
   .cta .left h2{font-family:var(--font-display);font-weight:360;font-size:clamp(28px,3.4vw,42px);line-height:1.06;letter-spacing:-.02em}
@@ -251,7 +251,7 @@
   @media(max-width:860px){.cta .panel{grid-template-columns:1fr}.cta .left{border-right:none;border-bottom:1px solid var(--rule);padding:36px 28px}form.brief{padding:36px 28px}}
 
   /* ===================== FOOTER (the colophon) ===================== */
-  footer{border-top:3px double var(--rule);padding:32px 0}
+  footer{border-top:2px solid var(--rule);padding:32px 0}
   footer .wrap{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:16px}
   footer .c{font-family:var(--font-mono);font-size:11px;letter-spacing:.04em;color:var(--paper-faint)}
   footer .c b{color:var(--paper-dim);font-weight:500}
@@ -296,8 +296,8 @@
   <div class="wrap">
     <div class="util">
       <div class="l">
-        <span>Vol. I · No. 008</span>
-        <span class="hideS">Long Island, N.Y.</span>
+        <span>NYSgpt Foundry</span>
+        <span class="hideS"></span>
       </div>
       <div class="r">
         <a href="#register" class="hideS">Products</a>
@@ -354,13 +354,10 @@
   <!-- ===================== THESIS ===================== -->
   <section class="thesis" id="thesis">
     <div class="wrap">
-      <div class="hd"><span class="k">Editorial</span><span class="r"></span></div>
+      <div class="hd"><span class="k"></span><span class="r"></span></div>
       <div class="grid">
         <div>
-          <h2>The hardest data in the world is <em>public</em> — and almost unusable.</h2>
-          <div class="pulled reveal">
-            <div class="pq">"We don't bolt a chatbot onto a problem. We rebuild the interface from the record up."</div>
-          </div>
+          <h2>We don't bolt a chatbot onto a problem. We build from the record up.</h2>
           <div class="principles reveal">
             <div class="p"><span class="num">01</span><span class="t"><b>Grounded, not generated.</b> Every claim traces to a primary source. Fluency without traceability is a liability.</span></div>
             <div class="p"><span class="num">02</span><span class="t"><b>The data is the product.</b> We rebuild the interface from the record up — search, structure, and AI as one surface.</span></div>
@@ -381,7 +378,6 @@
     <div class="wrap">
       <div class="hd">
         <h2><em>Register</em></h2>
-        <p>EIGHT DOMAIN-SPECIFIC AI PRODUCTS · ONE ARCHITECTURE · BUILT &amp; SHIPPED BY NYSGPT</p>
       </div>
       <div class="reg-head">
         <div>№</div><div>Product</div><div>What it does</div><div>At scale</div><div class="r">Status</div>
@@ -449,7 +445,7 @@
   <!-- ===================== DOMAINS ===================== -->
   <section class="domains">
     <div class="wrap">
-      <div class="k">Datelines — domains we've already gone deep on</div>
+      <div class="k">Domains we've already gone deep on</div>
       <div class="chips">
         <span class="chip"><b>Government</b> &amp; legislative</span>
         <span class="chip"><b>Trade</b> &amp; customs law</span>
@@ -466,7 +462,7 @@
   <!-- ===================== METHOD ===================== -->
   <section class="method" id="how">
     <div class="wrap">
-      <div class="hd"><h2>How we build</h2><span class="r"></span><span class="k">Ingest · Ground · Ship</span></div>
+      <div class="hd"><h2>How we build</h2><span class="r"></span><span class="k"></span></div>
       <div class="cols">
         <div class="c reveal">
           <div class="ic">01 — INGEST</div>
@@ -523,7 +519,7 @@
 
 <footer>
   <div class="wrap">
-    <div class="c"><b>NYSGPT Register</b> — AI-first software for legacy systems · Long Island, NY</div>
+    <div class="c"><b>NYSGPT</b> — AI-first software for legacy systems</div>
     <div class="c"><a href="mailto:Brendan@nysgpt.com">Brendan@nysgpt.com</a> · <a href="https://github.com/nyd-user-1" target="_blank" rel="noopener">GitHub</a></div>
     <div class="c">© 2026 · Built by hand · No. 008</div>
   </div>
