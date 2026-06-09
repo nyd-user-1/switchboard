@@ -96,6 +96,15 @@
   .tl .div{width:1px;height:18px;background:var(--hud-line)}
   .tl .mode{font-size:10.5px;letter-spacing:.18em;text-transform:uppercase;color:var(--faint)}
 
+  /* ---------- view switcher (shared across all four chooser views; HUD-styled here) ---------- */
+  .views{display:inline-flex;align-items:center;gap:2px;border:1px solid var(--hud-line);border-radius:8px;
+    padding:3px;background:var(--hud);backdrop-filter:blur(8px)}
+  .views a{font-size:11px;letter-spacing:.04em;color:var(--dim);text-decoration:none;padding:5px 10px;border-radius:5px;
+    transition:background .16s,color .16s;white-space:nowrap}
+  .views a:hover{color:var(--ink);background:var(--line-soft)}
+  .views a.on{background:var(--core);color:#0a0a0a;font-weight:600;cursor:default}
+  @media(max-width:760px){ .tl .mode,.tl .div{display:none} .views a{padding:5px 8px} }
+
   .hud.tr{top:18px;right:20px;display:flex;gap:9px;transition:right .42s cubic-bezier(.4,0,.1,1)}
   /* slide the top-right controls clear of the detail panel when it's open */
   body.panel-open .hud.tr{right:400px}
@@ -181,7 +190,12 @@
   <div class="hud tl">
     <div class="brand"><span class="mk">N</span><span class="bn">NYS<b>GPT</b></span></div>
     <span class="div"></span>
-    <span class="mode">Gallery Map</span>
+    <nav class="views" aria-label="Gallery views">
+      <a href="index.html">Switchboard</a>
+      <a class="on" href="index-map.html" aria-current="page">Map</a>
+      <a href="index-wall.html">Wall</a>
+      <a href="index-grid.html">Grid</a>
+    </nav>
   </div>
   <div class="hud tr">
     <button class="iconbtn" id="recenter" type="button" title="Recenter" aria-label="Recenter">

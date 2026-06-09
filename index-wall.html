@@ -42,6 +42,16 @@
   .brand .div{width:1px;height:18px;background:var(--line);margin:0 5px}
   .brand .mode{font-size:10.5px;letter-spacing:.18em;text-transform:uppercase;color:var(--faint)}
   header .right{display:flex;align-items:center;gap:10px}
+
+  /* ---------- view switcher (shared across all four chooser views) ---------- */
+  .views{display:inline-flex;align-items:center;gap:2px;border:1px solid var(--line);border-radius:8px;
+    padding:3px;background:var(--bg)}
+  .views a{font-size:11px;letter-spacing:.04em;color:var(--dim);text-decoration:none;padding:5px 10px;border-radius:5px;
+    transition:background .16s,color .16s;white-space:nowrap}
+  .views a:hover{color:var(--ink);background:var(--line-soft)}
+  .views a.on{background:var(--accent);color:#0a0a0a;font-weight:600;cursor:default}
+  @media(max-width:680px){ .brand .mode,.brand .div{display:none} .views a{padding:5px 8px} }
+
   .iconbtn{width:31px;height:31px;border:1px solid var(--line);border-radius:7px;background:transparent;
     display:grid;place-items:center;cursor:pointer;color:var(--dim);transition:border-color .2s,color .2s}
   .iconbtn:hover{border-color:var(--accent);color:var(--ink)}
@@ -139,6 +149,12 @@
         <span class="div"></span><span class="mode">Proof Sheet</span>
       </div>
       <div class="right">
+        <nav class="views" aria-label="Gallery views">
+          <a href="index.html">Switchboard</a>
+          <a href="index-map.html">Map</a>
+          <a class="on" href="index-wall.html" aria-current="page">Wall</a>
+          <a href="index-grid.html">Grid</a>
+        </nav>
         <button class="iconbtn" id="themeToggle" type="button" title="Toggle theme" aria-label="Toggle theme">
           <svg class="sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>
           <svg class="moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>

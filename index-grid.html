@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>NYSGPT — design gallery</title>
+<meta name="description" content="A gallery of landing-page design explorations for NYSGPT, an AI-first software company building for complex, legacy systems." />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..600;1,9..144,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<script>
+  // dark is the gallery default; go light only when explicitly chosen.
+  (function(){ try{ if(localStorage.getItem('nysgpt-theme-idx')==='light') document.documentElement.setAttribute('data-theme','light'); }catch(e){} })();
+</script>
+<style>
+  :root{
+    --bg:#0a0b0f; --bg-2:#111319; --ink:#ece9e2; --dim:#8e8b81; --faint:#56544c;
+    --line:#22242b; --line-soft:#191b21; --accent:#ff5a1f;
+    --grid-line:rgba(255,255,255,.012); --grid-op:.5;
+    --mono:"JetBrains Mono",ui-monospace,monospace; --serif:"Fraunces",Georgia,serif;
+  }
+  :root[data-theme="light"]{
+    --bg:#f4f2ea; --bg-2:#fbfaf4; --ink:#1a1813; --dim:#5c5749; --faint:#9a9484;
+    --line:#ddd6c7; --line-soft:#e8e2d4; --accent:#d8420a;
+    --grid-line:rgba(0,0,0,.022); --grid-op:.6;
+  }
+  :root{color-scheme:dark} :root[data-theme="light"]{color-scheme:light}
+  html,body{transition:background .4s ease,color .4s ease}
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth}
+  body{background:var(--bg);color:var(--ink);font-family:var(--mono);font-size:14px;line-height:1.5;
+    -webkit-font-smoothing:antialiased;overflow-x:hidden;min-height:100vh}
+  body::before{content:"";position:fixed;inset:0;z-index:0;pointer-events:none;opacity:var(--grid-op);
+    background-image:repeating-linear-gradient(90deg,var(--grid-line) 0 1px,transparent 1px 90px)}
+  .wrap{position:relative;z-index:1;max-width:1080px;margin:0 auto;padding:0 28px}
+
+  header{border-bottom:1px solid var(--line);padding:22px 0}
+  header .wrap{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px}
+  .brand{display:flex;align-items:center;gap:11px}
+  .brand .mk{width:28px;height:28px;border:1.5px solid var(--ink);border-radius:5px;display:grid;place-items:center;font-family:var(--serif);font-weight:600;font-size:13px}
+  .brand .bn{font-size:13px;letter-spacing:.2em}.brand .bn b{color:var(--accent);font-weight:500}
+  header .right{display:flex;align-items:center;gap:16px}
+  header .tagline{font-size:11px;color:var(--faint);letter-spacing:.06em}
+
+  /* ---------- view switcher (shared across all four chooser views) ---------- */
+  .views{display:inline-flex;align-items:center;gap:2px;border:1px solid var(--line);border-radius:8px;
+    padding:3px;background:var(--bg)}
+  .views a{font-size:11px;letter-spacing:.04em;color:var(--dim);text-decoration:none;padding:5px 10px;border-radius:5px;
+    transition:background .16s,color .16s;white-space:nowrap}
+  .views a:hover{color:var(--ink);background:var(--line-soft)}
+  .views a.on{background:var(--accent);color:#0a0a0a;font-weight:600;cursor:default}
+  @media(max-width:680px){ header .tagline{display:none} .views a{padding:5px 8px} }
+  .theme-toggle{width:32px;height:32px;border:1px solid var(--line);border-radius:6px;background:transparent;
+    display:grid;place-items:center;cursor:pointer;color:var(--dim);transition:border-color .2s,color .2s;flex-shrink:0}
+  .theme-toggle:hover{border-color:var(--accent);color:var(--ink)}
+  .theme-toggle svg{width:14px;height:14px}.theme-toggle .moon{display:none}
+  :root[data-theme="light"] .theme-toggle .sun{display:none}
+  :root[data-theme="light"] .theme-toggle .moon{display:block}
+
+  .hero{padding:64px 0 40px;border-bottom:1px solid var(--line)}
+  .hero .kick{font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:var(--faint);display:inline-flex;align-items:center;gap:10px;margin-bottom:22px}
+  .hero .kick::before{content:"";width:22px;height:1px;background:var(--accent)}
+  .hero h1{font-family:var(--serif);font-weight:330;font-size:clamp(32px,5.4vw,58px);line-height:1.02;letter-spacing:-.02em;max-width:18ch}
+  .hero h1 em{font-style:italic;color:var(--accent)}
+  .hero p{margin-top:22px;max-width:62ch;font-size:14.5px;line-height:1.7;color:var(--dim)}
+  .hero p b{color:var(--ink);font-weight:500}
+
+  .gallery{padding:48px 0 70px}
+  .gh{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:26px;flex-wrap:wrap;gap:10px}
+  .gh .t{font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--faint)}
+  .grid{display:grid;grid-template-columns:repeat(2,1fr);gap:16px}
+  .card{position:relative;border:1px solid var(--line);background:var(--bg-2);padding:24px;text-decoration:none;color:inherit;
+    overflow:hidden;transition:border-color .25s,transform .25s;display:flex;flex-direction:column;min-height:184px}
+  .card::before{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--ca,var(--accent));transform:scaleY(0);transform-origin:top;transition:transform .3s}
+  .card:hover{transform:translateY(-3px)}
+  .card:hover::before{transform:scaleY(1)}
+  .card:hover{border-color:var(--ca,var(--accent))}
+  .card .top{display:flex;justify-content:space-between;align-items:center;margin-bottom:auto}
+  .card .id{font-size:11px;color:var(--faint);letter-spacing:.1em}
+  .card .swatch{display:flex;gap:5px}
+  .card .swatch i{width:13px;height:13px;border-radius:3px;display:block}
+  .card h2{font-family:var(--serif);font-weight:430;font-size:25px;letter-spacing:-.01em;margin:16px 0 7px}
+  .card h2 .ca{color:var(--ca,var(--accent))}
+  .card .d{font-size:12px;color:var(--dim);line-height:1.5}
+  .card .d code{font-family:var(--mono);font-size:.92em;color:var(--ca,var(--accent));background:var(--line-soft);padding:1px 4px;border-radius:3px}
+  .card .go{margin-top:14px;font-size:11px;letter-spacing:.08em;color:var(--ca,var(--accent));display:inline-flex;align-items:center;gap:7px}
+  .card .go .ar{transition:transform .25s}.card:hover .go .ar{transform:translateX(4px)}
+  .card.span2{grid-column:span 2}
+  @media(max-width:680px){.grid{grid-template-columns:1fr}.card.span2{grid-column:span 1}}
+
+  .subhead{grid-column:1/-1;display:flex;align-items:center;gap:14px;margin:14px 0 2px;font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--faint)}
+  .subhead::after{content:"";flex:1;height:1px;background:var(--line)}
+
+  footer{border-top:1px solid var(--line);padding:26px 0}
+  footer .wrap{display:flex;justify-content:space-between;flex-wrap:wrap;gap:10px;font-size:11px;color:var(--faint);letter-spacing:.05em}
+  footer b{color:var(--dim);font-weight:500}footer a:hover{color:var(--accent)}
+</style>
+</head>
+<body>
+  <header>
+    <div class="wrap">
+      <div class="brand"><span class="mk">N</span><span class="bn">NYS<b>GPT</b></span></div>
+      <div class="right">
+        <span class="tagline">GRID VIEW · LANDING-PAGE EXPLORATIONS</span>
+        <nav class="views" aria-label="Gallery views">
+          <a href="index.html">Switchboard</a>
+          <a href="index-map.html">Map</a>
+          <a href="index-wall.html">Wall</a>
+          <a class="on" href="index-grid.html" aria-current="page">Grid</a>
+        </nav>
+        <button class="theme-toggle" id="themeToggle" type="button" aria-label="Toggle light and dark mode" title="Toggle theme">
+          <svg class="sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>
+          <svg class="moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <section class="hero">
+    <div class="wrap">
+      <div class="kick">One company · many faces</div>
+      <h1>Landing pages for an <em>AI-first</em> software company.</h1>
+      <p>NYSGPT builds domain-specific AI applications for complex, legacy, and regulatory systems — eight shipped products. <b>This is a working gallery of design directions for its landing page</b>, each a complete page with light/dark and a live design playground. Pick one to open it full-screen.</p>
+    </div>
+  </section>
+
+  <section class="gallery">
+    <div class="wrap">
+      <div class="gh"><span class="t">▸ Directions</span><span class="t">22 explorations · 6 families</span></div>
+      <div class="grid">
+
+        <div class="subhead">A · Editorial family — serif + hairline rules / newsprint · 4</div>
+
+        <a class="card" href="variant-a.html" style="--ca:#ff5a1f">
+          <div class="top"><span class="id">A · 01</span><span class="swatch"><i style="background:#0a0c0f"></i><i style="background:#ece7dd"></i><i style="background:#ff5a1f"></i></span></div>
+          <h2><span class="ca">Broadsheet</span></h2>
+          <div class="d">Editorial engineering terminal — serif + mono, hairline rules, the portfolio as a precise data ledger. Restrained, authoritative.</div>
+          <span class="go">Open <span class="ar">→</span></span>
+        </a>
+
+        <a class="card" href="variant-a1-column.html" style="--ca:#e8472a">
+          <div class="top"><span class="id">A1 · 02</span><span class="swatch"><i style="background:#0b0b0c"></i><i style="background:#ece6da"></i><i style="background:#e8472a"></i></span></div>
+          <h2><span class="ca">Column</span></h2>
+          <div class="d">The portfolio as a newspaper front page — nameplate, a multi-column flowed lede with a drop-cap, the products as a ruled register. Night edition + newsprint.</div>
+          <span class="go">Open <span class="ar">→</span></span>
+        </a>
+
+        <a class="card" href="variant-a2-dispatch.html" style="--ca:#f0a623">
+          <div class="top"><span class="id">A2 · 03</span><span class="swatch"><i style="background:#0c0d0a"></i><i style="background:#e8e6db"></i><i style="background:#f0a623"></i></span></div>
+          <h2><span class="ca">Dispatch</span></h2>
+          <div class="d">A newsroom wire terminal — a live typed bulletin, a scrolling amber ticker, the products filed as an AP-style wire feed that prints in. Charcoal + telex paper.</div>
+          <span class="go">Open <span class="ar">→</span></span>
+        </a>
+
+        <a class="card" href="variant-a3-folio.html" style="--ca:#b23a48">
+          <div class="top"><span class="id">A3 · 04</span><span class="swatch"><i style="background:#0c0a0b"></i><i style="background:#efe9e0"></i><i style="background:#b23a48"></i></span></div>
+          <h2><span class="ca">Folio</span></h2>
+          <div class="d">A luxe print-magazine spread — an oversized cover headline, an asymmetric editorial grid, pull-quotes and page-folios, the products as a contents spread. Claret on cover stock + cream.</div>
+          <span class="go">Open <span class="ar">→</span></span>
+        </a>
+
+        <div class="subhead">B · Luminous family — glow + motion / atmosphere · 5</div>
+
+        <a class="card" href="variant-b.html" style="--ca:#46e3d0">
+          <div class="top"><span class="id">B · 05</span><span class="swatch"><i style="background:#06070d"></i><i style="background:#8b7bff"></i><i style="background:#46e3d0"></i></span></div>
+          <h2><span class="ca">Aurora</span></h2>
+          <div class="d">Luminous &amp; atmospheric — drifting gradient-mesh, glowing accent, lifting cards. Frontier-lab energy, motion-forward.</div>
+          <span class="go">Open <span class="ar">→</span></span>
+        </a>
+
+        <a class="card" href="variant-b1-signal.html" style="--ca:#46e3c0">
+          <div class="top"><span class="id">B1 · 06</span><span class="swatch"><i style="background:#04080a"></i><i style="background:#7bd0ff"></i><i style="background:#46e3c0"></i></span></div>
+          <h2><span class="ca">Signal</span></h2>
+          <div class="d">A live phosphor oscilloscope — a real canvas scope sweeps the hero, the 8 products read out as channels with their own traces. Scanlines, graticule, CRT glow. Lab bench in light.</div>
+          <span class="go">Open <span class="ar">→</span></span>
+        </a>
+
+        <a class="card" href="variant-b2-prism.html" style="--ca:#3fd8e8">
+          <div class="top"><span class="id">B2 · 07</span><span class="swatch"><i style="background:#05060a"></i><i style="background:#a06bff"></i><i style="background:#3fd8e8"></i></span></div>
+          <h2><span class="ca">Prism</span></h2>
+          <div class="d">White light through black glass — a live canvas prism disperses a beam into a moving spectrum, the headline splits into RGB channels, the 8 products lay out across the dispersed band, each its own wavelength.</div>
+          <span class="go">Open <span class="ar">→</span></span>
+        </a>
+
+        <a class="card" href="variant-b3-halo.html" style="--ca:#e8c98a">
+          <div class="top"><span class="id">B3 · 08</span><span class="swatch"><i style="background:#0a0a0c"></i><i style="background:#e8c98a"></i><i style="background:#b8862e"></i></span></div>
+          <h2><span class="ca">Halo</span></h2>
+          <div class="d">One soft lamp in a dark room — a single volumetric spotlight that breathes, near-monochrome, generous quiet. Fraunces serif, the products as a calm restrained ledger. The pragmatic one.</div>
+          <span class="go">Open <span class="ar">→</span></span>
+        </a>
+
+        <a class="card span2" href="variant-b4-eclipse.html" style="--ca:#7af0d6">
+          <div class="top"><span class="id">B4 · 09</span><span class="swatch"><i style="background:#040409"></i><i style="background:#c9a4ff"></i><i style="background:#7af0d6"></i></span></div>
+          <h2><span class="ca">Eclipse</span></h2>
+          <div class="d">The page hidden in the dark — your cursor is the only light. Move it and the corona reveals the layout; the products bloom awake as the torch sweeps over them. Inverts to a pool of clarity cutting through glare in light mode. The bold one.</div>
+          <span class="go">Open <span class="ar">→</span></span>
+        </a>
+
+        <div class="subhead">C · Blueprint family — technical drafting / cyanotype · 4</div>
+
+        <a class="card" href="variant-c2-schematic.html" style="--ca:#28e0b0">
+          <div class="top"><span class="id">C2 · 10</span><span class="swatch"><i style="background:#071318"></i><i style="background:#46c8ff"></i><i style="background:#28e0b0"></i></span></div>
+          <h2><span class="ca">Circuit</span></h2>
+          <div class="d">The portfolio as a live wiring schematic — a CORE bus routing to 8 product nodes, animated signal pulses, hover-to-trace. The most ambitious.</div>
+          <span class="go">Open <span class="ar">→</span></span>
+        </a>
+
+        <a class="card" href="variant-c1-spec.html" style="--ca:#e8a838">
+          <div class="top"><span class="id">C1 · 11</span><span class="swatch"><i style="background:#10130f"></i><i style="background:#d8451f"></i><i style="background:#e8a838"></i></span></div>
+          <h2><span class="ca">Datasheet</span></h2>
+          <div class="d">Pure electronics datasheet — absolute-max ratings, an electrical-characteristics table of the 8 products, revision history. Mono, amber.</div>
+          <span class="go">Open <span class="ar">→</span></span>
+        </a>
+
+        <a class="card" href="variant-c3-plate.html" style="--ca:#c0381a">
+          <div class="top"><span class="id">C3 · 12</span><span class="swatch"><i style="background:#f4f2ea"></i><i style="background:#1c5fa8"></i><i style="background:#c0381a"></i></span></div>
+          <h2><span class="ca">Plate</span></h2>
+          <div class="d">Exploded assembly drawing on white drafting paper — item balloons, leader lines, a parts list. The compositional, light-default one.</div>
+          <span class="go">Open <span class="ar">→</span></span>
+        </a>
+
+        <a class="card" href="variant-c.html" style="--ca:#4cc3ff">
+          <div class="top"><span class="id">C0 · 13</span><span class="swatch"><i style="background:#0a1a2f"></i><i style="background:#ff5a3c"></i><i style="background:#4cc3ff"></i></span></div>
+          <h2><span class="ca">Blueprint — combined</span></h2>
+          <div class="d">The original all-in-one Blueprint: the portfolio drawn three ways down one page (spec sheet · schematic · exploded plate). A showcase.</div>
+          <span class="go">Open <span class="ar">→</span></span>
+        </a>
+
+        <div class="subhead">D · Monochrome family — white / black / gray · shadow is the only ink · 3</div>
+
+        <a class="card" href="variant-d1-paper.html" style="--ca:#8a8c92">
+          <div class="top"><span class="id">D1 · 14</span><span class="swatch"><i style="background:#e9e9ec"></i><i style="background:#b8bac0"></i><i style="background:#1a1b1f"></i></span></div>
+          <h2><span class="ca">Paper</span></h2>
+          <div class="d">Soft neumorphic — one off-white surface where objects exist only through shadow: extruded buttons, debossed product plates, pressed-in inputs. The stat bar becomes an embossed colophon-seal. Calm, tactile. The gentle one.</div>
+          <span class="go">Open <span class="ar">→</span></span>
+        </a>
+
+        <a class="card" href="variant-d2-slab.html" style="--ca:#111111">
+          <div class="top"><span class="id">D2 · 15</span><span class="swatch"><i style="background:#ffffff"></i><i style="background:#000000"></i><i style="background:#000000"></i></span></div>
+          <h2><span class="ca">Slab</span></h2>
+          <div class="d">Hard brutalist — pure white, pure black, one harsh noon drop-shadow on everything. Oversized slab type; products as black/white blocks that overlap and stack; the proof a giant ghost numeral behind the content. The bold one.</div>
+          <span class="go">Open <span class="ar">→</span></span>
+        </a>
+
+        <a class="card span2" href="variant-d3-vitrine.html" style="--ca:#c8b890">
+          <div class="top"><span class="id">D3 · 16</span><span class="swatch"><i style="background:#0d0d0f"></i><i style="background:#c8b890"></i><i style="background:#f1efea"></i></span></div>
+          <h2><span class="ca">Vitrine</span></h2>
+          <div class="d">Gallery / museum — content in pools of spotlight against a near-black wall, long soft cast-shadows. Products presented one at a time as exhibits on plinths (spatial, not a grid); the proof as didactic wall-text. A whisper of warm stone for hairlines only. Curatorial, dramatic. The expressive one.</div>
+          <span class="go">Open <span class="ar">→</span></span>
+        </a>
+
+        <div class="subhead">E · Interactive family — not a page you scroll · a thing you operate · 3</div>
+
+        <a class="card" href="variant-e1-terminal.html" style="--ca:#4fd6a8">
+          <div class="top"><span class="id">E1 · 17</span><span class="swatch"><i style="background:#08090c"></i><i style="background:#5cc8ff"></i><i style="background:#4fd6a8"></i></span></div>
+          <h2><span class="ca">Terminal</span></h2>
+          <div class="d">A working command-line REPL — the products are a corpus you query. <code>ls products</code>, <code>open 44b</code>, <code>query "tariff refund"</code>, <code>whoami</code>, <code>book session</code>. Copy is streamed command output; keyboard-driven with clickable chips, history, autocomplete. The page demonstrates the product instead of describing it.</div>
+          <span class="go">Run it <span class="ar">→</span></span>
+        </a>
+
+        <a class="card" href="variant-e2-canvas.html" style="--ca:#5ce0c0">
+          <div class="top"><span class="id">E2 · 18</span><span class="swatch"><i style="background:#0a0b10"></i><i style="background:#8b9bff"></i><i style="background:#5ce0c0"></i></span></div>
+          <h2><span class="ca">Canvas</span></h2>
+          <div class="d">An infinite pan/zoom map — no scroll. The eight products are nodes orbiting a glowing CORE hub, wired by shared-architecture edges. Drag to explore, scroll to zoom, click a node and the camera flies to it as a detail drawer slides up. The portfolio as a system diagram you navigate.</div>
+          <span class="go">Explore <span class="ar">→</span></span>
+        </a>
+
+        <a class="card span2" href="variant-e3-launcher.html" style="--ca:#6e8bff">
+          <div class="top"><span class="id">E3 · 19</span><span class="swatch"><i style="background:#0b0b0e"></i><i style="background:#54d6a8"></i><i style="background:#6e8bff"></i></span></div>
+          <h2><span class="ca">Launcher</span></h2>
+          <div class="d">The whole page is a ⌘K command-palette. Fuzzy-search the eight products and the actions (book, brief, method, whoami) with live result-highlighting, arrow-key navigation, and inline drill-down pages — no marketing sections at all. The most app-like of the set: a launcher you operate, not a page you read.</div>
+          <span class="go">Open <span class="ar">→</span></span>
+        </a>
+
+        <div class="subhead">F · Playful family — game-UI cosplay · actually playable · 3</div>
+
+        <a class="card" href="variant-f1-roblox.html" style="--ca:#00b06f">
+          <div class="top"><span class="id">F1 · 20</span><span class="swatch"><i style="background:#191b1f"></i><i style="background:#3b9dff"></i><i style="background:#00b06f"></i></span></div>
+          <h2><span class="ca">Discover</span></h2>
+          <div class="d">The game-launcher (Roblox) home, recreated: the eight products as browsable <b>experiences</b> — gradient tiles, player counts, thumbs-up %, big green Play buttons, a coin chip + left nav rail. Hit play and drop into <b>Data-Block Run</b>, a real click-to-collect toy: ingest the falling data-blocks, build a combo, beat the clock, earn coins. Our own assets, no marks.</div>
+          <span class="go">Play it <span class="ar">→</span></span>
+        </a>
+
+        <a class="card" href="variant-f2-blooket.html" style="--ca:#9b5de5">
+          <div class="top"><span class="id">F2 · 21</span><span class="swatch"><i style="background:#3a2db5"></i><i style="background:#22d3c5"></i><i style="background:#ff5d8f"></i></span></div>
+          <h2><span class="ca">Quest</span></h2>
+          <div class="d">A <b>real, playable quiz</b> in the classroom-game (Blooket) UI — candy palette, chunky drop-shadow buttons, our own friendly "blook" mascots. Pick a nickname &amp; a blook, choose a mode (Classic · Gold Quest · Boss Battle · <b>Hacker</b> — one wrong answer and you get hacked), then answer 8 questions drawn from real NYSGPT facts, with streaks, a score, and a leaderboard.</div>
+          <span class="go">Play it <span class="ar">→</span></span>
+        </a>
+
+        <a class="card" href="variant-f3-outburst.html" style="--ca:#ff7a3c">
+          <div class="top"><span class="id">F3 · 22</span><span class="swatch"><i style="background:#ff7a3c"></i><i style="background:#1fc7b6"></i><i style="background:#ffd23f"></i></span></div>
+          <h2><span class="ca">Bank It</span></h2>
+          <div class="d">A <b>real, playable party game</b> in the <b>Outburst-Jr.</b> mold — a sunny game-show board (Luckiest Guy display, confetti, chunky tiles). Pick a category, see <b>20</b> answers, and tap the ten you think made the hidden list. Push-your-luck: <b>+1 per hit, one wrong tap ends the round</b>, so <i>bank it &amp; stop</i> while you're ahead. Four boards — the first is all real NYSGPT (products &amp; capabilities), then Vending Machine Food · Kool-Aid Flavors · Christmas Things.</div>
+          <span class="go">Play it <span class="ar">→</span></span>
+        </a>
+
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    <div class="wrap">
+      <div><b>NYSGPT</b> — AI-first software for legacy systems · Long Island, NY</div>
+      <div><a href="mailto:Brendan@nysgpt.com">Brendan@nysgpt.com</a></div>
+    </div>
+  </footer>
+
+  <script>
+    (function(){
+      const root=document.documentElement, btn=document.getElementById('themeToggle');
+      btn.addEventListener('click',()=>{
+        const light=root.getAttribute('data-theme')==='light';
+        if(light) root.removeAttribute('data-theme'); else root.setAttribute('data-theme','light');
+        try{localStorage.setItem('nysgpt-theme-idx', light?'dark':'light');}catch(e){}
+      });
+    })();
+  </script>
+</body>
+</html>
