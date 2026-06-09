@@ -6,15 +6,18 @@ Each page is a complete, self-contained landing page (no build step — plain HT
 
 ## The directions
 
-| File | Name | Direction |
+| File | Name | Family · Direction |
 |------|------|-----------|
-| `index.html` | **Gallery** | The index — links to every design below |
-| `variant-a.html` | **Broadsheet** | Editorial engineering terminal — serif + mono, hairline rules, portfolio as a data ledger |
-| `variant-b.html` | **Aurora** | Luminous & atmospheric — drifting gradient-mesh, glowing accent, lifting cards |
-| `variant-c2-schematic.html` | **Circuit** | Live wiring schematic — CORE bus → 8 product nodes, animated signal pulses, hover-to-trace |
-| `variant-c1-spec.html` | **Datasheet** | Electronics datasheet — abs-max ratings, electrical-characteristics table, revision history |
-| `variant-c3-plate.html` | **Plate** | Exploded assembly drawing on white drafting paper — item balloons, leader lines, parts list |
-| `variant-c.html` | **Blueprint (combined)** | The original all-in-one Blueprint — portfolio drawn three ways down one page |
+| `index.html` | **Gallery** | The index — links to every design below, grouped by family |
+| `variant-a.html` | **Broadsheet** | Editorial · engineering terminal — serif + mono, hairline rules, portfolio as a data ledger |
+| `variant-a1-column.html` | **Column** | Editorial · newspaper front page — nameplate, a multi-column drop-cap lede, products as a ruled register. Night edition + newsprint |
+| `variant-a2-dispatch.html` | **Dispatch** | Editorial · newsroom wire terminal — a live typed bulletin, a scrolling ticker, products as an AP-style wire feed that prints in |
+| `variant-a3-folio.html` | **Folio** | Editorial · luxe magazine spread — an oversized cover headline, an asymmetric grid with page-folios, products as a contents spread |
+| `variant-b.html` | **Aurora** | Luminous · atmospheric — drifting gradient-mesh, glowing accent, lifting cards |
+| `variant-c2-schematic.html` | **Circuit** | Blueprint · live wiring schematic — CORE bus → 8 product nodes, animated signal pulses, hover-to-trace |
+| `variant-c1-spec.html` | **Datasheet** | Blueprint · electronics datasheet — abs-max ratings, electrical-characteristics table, revision history |
+| `variant-c3-plate.html` | **Plate** | Blueprint · exploded assembly drawing on white drafting paper — item balloons, leader lines, parts list |
+| `variant-c.html` | **Blueprint (combined)** | Blueprint · the original all-in-one — portfolio drawn three ways down one page |
 
 ## The product portfolio (what these pages link out to)
 

@@ -1,0 +1,631 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>NYSGPT Register — AI for complex, legacy systems</title>
+<meta name="description" content="NYSGPT is an AI-first software company building domain-specific applications for complex, legacy, and regulatory systems. Eight shipped products turning impenetrable data into navigable software." />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..900;1,9..144,300..700&family=Spline+Sans+Mono:wght@400;500;600&family=Newsreader:ital,opsz,wght@0,6..72,300..600;1,6..72,300..500&family=Playfair+Display:ital,wght@0,400..800;1,400..600&family=Instrument+Serif:ital@0;1&family=Space+Grotesk:wght@400;500;600;700&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&family=Familjen+Grotesk:wght@400;500;600&display=swap" rel="stylesheet" />
+<script>
+  // Editorial family default = DARK (night edition). Light = newsprint. Per-page key.
+  (function(){ try{ if(localStorage.getItem('nysgpt-theme-a1')==='light') document.documentElement.setAttribute('data-theme','light'); }catch(e){} })();
+</script>
+<style>
+  :root{
+    /* ===== DARK (default): the night edition — ink-black press ===== */
+    --ink:#0b0b0c;            /* press black */
+    --ink-2:#121214;          /* raised */
+    --paper:#ece6da;          /* warm newsprint white (text) */
+    --paper-dim:#a09a8d;
+    --paper-faint:#6a655b;
+    --rule:#2a2823;           /* hairline */
+    --rule-soft:#1c1b17;
+    --rule-hair:#222019;
+    --accent:#e8472a;         /* press-red, the spot color */
+    --accent-ink:#0b0b0c;
+    --accent-2:#2f6df0;
+    --good:#46b178;
+    --mast-bg:rgba(11,11,12,.82);
+    --grain-op:.05;
+    --tint:rgba(232,71,42,.05);
+    --hover:rgba(232,71,42,.06);
+    --font-display:"Fraunces", Georgia, serif;
+    --font-read:"Newsreader", Georgia, serif;      /* body reading text */
+    --font-mono:"Spline Sans Mono", ui-monospace, monospace;
+    --maxw:1240px;
+    /* playground knobs */
+    --radius:1;
+    --wght:0;
+    --density:1;
+  }
+  /* ===== LIGHT: the morning edition — true newsprint ===== */
+  :root[data-theme="light"]{
+    --ink:#e9e4d6;            /* aged newsprint */
+    --ink-2:#f3efe4;
+    --paper:#181410;          /* ink */
+    --paper-dim:#544e44;
+    --paper-faint:#8a8175;
+    --rule:#cabfa9;
+    --rule-soft:#dcd3bf;
+    --rule-hair:#d2c8b3;
+    --accent:#c5371c;         /* deeper press-red on paper */
+    --accent-ink:#fdf6ee;
+    --accent-2:#1f54d8;
+    --good:#1f9457;
+    --mast-bg:rgba(233,228,214,.84);
+    --grain-op:.04;
+    --tint:rgba(197,55,28,.06);
+    --hover:rgba(197,55,28,.05);
+  }
+  :root{color-scheme:dark} :root[data-theme="light"]{color-scheme:light}
+  html,body{transition:background .4s ease,color .4s ease}
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth;-webkit-text-size-adjust:100%}
+  body{
+    background:var(--ink);color:var(--paper);
+    font-family:var(--font-read);font-size:16px;line-height:1.58;
+    -webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility;overflow-x:hidden;
+  }
+  /* newsprint grain */
+  body::after{
+    content:"";position:fixed;inset:0;z-index:0;pointer-events:none;opacity:var(--grain-op);
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+  .wrap{position:relative;z-index:1;max-width:var(--maxw);margin:0 auto;padding:0 26px}
+  a{color:inherit;text-decoration:none}
+  .mono{font-family:var(--font-mono)}
+  .tnum{font-variant-numeric:tabular-nums}
+  .sc{font-variant:small-caps;letter-spacing:.04em}
+
+  /* shared editorial label */
+  .klabel{font-family:var(--font-mono);font-size:10.5px;letter-spacing:.2em;text-transform:uppercase;color:var(--paper-faint)}
+
+  /* ===================== MASTHEAD (one quiet utility line) ===================== */
+  header.mast{position:sticky;top:0;z-index:50;background:var(--mast-bg);backdrop-filter:blur(12px) saturate(140%);border-bottom:1px solid var(--rule)}
+  .mast .util{display:flex;align-items:center;justify-content:space-between;height:60px}
+  .mast .util .l,.mast .util .r{display:flex;align-items:center;gap:26px;font-family:var(--font-mono);font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--paper-faint)}
+  .mast .util a{transition:color .2s}.mast .util a:hover{color:var(--accent)}
+  .mast .util .r a:not(.tt){display:inline-block}
+  @media(max-width:720px){.mast .util .l span.hideS,.mast .util .r a.hideS{display:none}}
+  .theme-toggle{width:32px;height:32px;border:1px solid var(--rule);border-radius:calc(6px*var(--radius));background:transparent;display:grid;place-items:center;cursor:pointer;color:var(--paper-dim);transition:border-color .2s,color .2s;flex-shrink:0}
+  .theme-toggle:hover{border-color:var(--accent);color:var(--paper)}
+  .theme-toggle svg{width:14px;height:14px;display:block}
+  .theme-toggle .moon{display:none}
+  :root[data-theme="light"] .theme-toggle .sun{display:none}
+  :root[data-theme="light"] .theme-toggle .moon{display:block}
+
+  /* ===================== FRONT PAGE / HERO — the headline IS the masthead ===================== */
+  .front{padding:calc(120px * var(--density)) 0 calc(86px * var(--density));border-bottom:1px solid var(--rule)}
+
+  .front h1{
+    font-family:var(--font-display);font-weight:calc(360 + var(--wght));
+    font-size:clamp(46px,9vw,128px);line-height:1.04;letter-spacing:-.03em;text-align:center;
+    max-width:15ch;margin:0 auto;
+  }
+  .front h1 em{font-style:italic;color:var(--accent);font-weight:380}
+  /* overflow-clip masks the rise animation; pad bottom so descenders (y, g) never clip,
+     then pull the next line back up with negative margin to keep the lines visually tight */
+  .front h1 .ln{display:block;overflow:hidden;padding-bottom:.14em;margin-bottom:-.14em}
+  .front h1 .ln>span{display:block;transform:translateY(104%);animation:rise .9s cubic-bezier(.16,1,.3,1) forwards}
+  .front h1 .ln:nth-child(2)>span{animation-delay:.08s}
+  .front h1 .ln:nth-child(3)>span{animation-delay:.16s}
+  @keyframes rise{to{transform:translateY(0)}}
+  .front .subhead{margin:56px auto 0;max-width:54ch;text-align:center;font-family:var(--font-display);font-style:italic;font-weight:340;font-size:clamp(19px,2.4vw,25px);line-height:1.42;color:var(--paper-dim);opacity:0;animation:fade .8s ease .5s forwards}
+  @keyframes fade{to{opacity:1}}
+
+  .front .byline{margin:40px auto 0;display:flex;gap:18px;align-items:center;justify-content:center;flex-wrap:wrap;font-family:var(--font-mono);font-size:11px;letter-spacing:.08em;color:var(--paper-faint);opacity:0;animation:fade .8s ease .62s forwards}
+  .front .byline .dot{width:3px;height:3px;border-radius:50%;background:var(--paper-faint)}
+
+  /* the columned lede — the signature move */
+  .lede{margin-top:64px;padding-top:48px;border-top:1px solid var(--rule);column-count:3;column-gap:48px;column-rule:1px solid var(--rule-soft);opacity:0;animation:fade .9s ease .72s forwards}
+  .lede>p{margin:0 0 18px;font-size:15px;line-height:1.7;color:var(--paper);text-align:justify;hyphens:auto;-webkit-hyphens:auto}
+  .lede>p b{font-weight:600}
+  .lede .dropcap::first-letter{
+    font-family:var(--font-display);font-weight:520;float:left;font-size:3.55em;line-height:.74;
+    padding:6px 10px 0 0;color:var(--accent);
+  }
+  .lede .runin{font-family:var(--font-display);font-weight:600;font-style:normal;color:var(--paper)}
+  @media(max-width:900px){.lede{column-count:2}}
+  @media(max-width:600px){.lede{column-count:1;column-rule:none}}
+
+  .front .cta-row{margin-top:56px;display:flex;gap:16px;flex-wrap:wrap;justify-content:center}
+
+  /* shared CTA pair (component: cta-pair / editorial-ink variant) */
+  .btn{font-family:var(--font-mono);font-size:13px;letter-spacing:.03em;padding:13px 22px;border-radius:calc(4px*var(--radius));display:inline-flex;align-items:center;gap:9px;transition:transform .2s,background .2s,border-color .2s,color .2s;cursor:pointer;border:1px solid transparent}
+  .btn .arr{transition:transform .25s}.btn:hover .arr{transform:translateX(4px)}
+  .btn-primary{background:var(--accent);color:var(--accent-ink);font-weight:600}
+  .btn-primary:hover{filter:brightness(1.08);transform:translateY(-2px)}
+  .btn-ghost{border-color:var(--rule);color:var(--paper)}
+  .btn-ghost:hover{border-color:var(--accent);background:var(--tint)}
+
+  /* ===================== STAT RIBBON (component: proof-bar / ruled variant) ===================== */
+  .ribbon{border-bottom:1px solid var(--rule)}
+  .ribbon .wrap{display:grid;grid-template-columns:repeat(4,1fr)}
+  .ribbon .cell{padding:48px 34px 46px;border-right:1px solid var(--rule-soft)}
+  .ribbon .cell:first-child{padding-left:0}
+  .ribbon .cell:last-child{border-right:none;padding-right:0}
+  .ribbon .n{font-family:var(--font-display);font-size:clamp(34px,4vw,46px);font-weight:380;letter-spacing:-.02em;line-height:1}
+  .ribbon .n .u{font-size:.5em;color:var(--accent)}
+  .ribbon .l{font-family:var(--font-mono);font-size:10px;letter-spacing:.15em;text-transform:uppercase;color:var(--paper-faint);margin-top:11px}
+  .ribbon .l b{color:var(--paper-dim);font-weight:500}
+  @media(max-width:720px){.ribbon .wrap{grid-template-columns:repeat(2,1fr)}.ribbon .cell{padding:30px 22px}.ribbon .cell:nth-child(odd){padding-left:0}.ribbon .cell:nth-child(even){border-right:none;padding-right:0}}
+
+  /* ===================== THESIS (the editorial / op-ed) ===================== */
+  .thesis{padding:calc(108px * var(--density)) 0;border-bottom:1px solid var(--rule)}
+  .thesis .hd{display:flex;align-items:baseline;gap:16px;margin-bottom:52px}
+  .thesis .hd .k{font-family:var(--font-mono);font-size:10.5px;letter-spacing:.2em;text-transform:uppercase;color:var(--accent)}
+  .thesis .hd .r{height:1px;background:var(--rule);flex:1}
+  .thesis .grid{display:grid;grid-template-columns:1.15fr .85fr;gap:72px;align-items:start}
+  .thesis h2{font-family:var(--font-display);font-weight:calc(360 + var(--wght));font-size:clamp(26px,3.6vw,42px);line-height:1.08;letter-spacing:-.02em}
+  .thesis h2 em{font-style:italic;color:var(--accent)}
+  .thesis .body{color:var(--paper-dim);font-size:16px;line-height:1.72;display:grid;gap:20px}
+  .thesis .body b{color:var(--paper);font-weight:600}
+  .thesis .pulled{margin-top:36px;border-top:2px solid var(--accent);border-bottom:1px solid var(--rule-soft);padding:28px 0}
+  .thesis .pulled .pq{font-family:var(--font-display);font-style:italic;font-weight:340;font-size:22px;line-height:1.32;color:var(--paper)}
+  .thesis .principles{margin-top:44px;display:grid;gap:0;border-top:1px solid var(--rule-soft)}
+  .thesis .principles .p{display:grid;grid-template-columns:auto 1fr;gap:18px;padding:20px 0;border-bottom:1px solid var(--rule-soft);align-items:baseline}
+  .thesis .principles .num{font-family:var(--font-mono);font-size:11px;color:var(--accent);letter-spacing:.08em}
+  .thesis .principles .t{font-size:14.5px;color:var(--paper-dim)}
+  .thesis .principles .t b{color:var(--paper);font-weight:600}
+  @media(max-width:860px){.thesis .grid{grid-template-columns:1fr;gap:32px}}
+
+  /* ===================== THE REGISTER (products as a front-page index) ===================== */
+  .register{padding:calc(108px * var(--density)) 0 calc(116px * var(--density));border-bottom:1px solid var(--rule)}
+  .register .hd{display:flex;justify-content:space-between;align-items:flex-end;gap:24px;flex-wrap:wrap;margin-bottom:12px}
+  .register .hd h2{font-family:var(--font-display);font-weight:calc(360 + var(--wght));font-size:clamp(28px,4.4vw,52px);letter-spacing:-.022em;line-height:.98}
+  .register .hd h2 em{font-style:italic;color:var(--accent)}
+  .register .hd p{font-family:var(--font-mono);font-size:11px;letter-spacing:.06em;color:var(--paper-faint);max-width:32ch;text-align:right}
+  .reg-head{display:grid;grid-template-columns:34px 1.4fr 2.4fr 1fr 92px;gap:22px;padding:16px 10px 12px;border-bottom:2px solid var(--rule);margin-top:44px;font-family:var(--font-mono);font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--paper-faint)}
+  .reg-head .r{text-align:right}
+  .row{display:grid;grid-template-columns:34px 1.4fr 2.4fr 1fr 92px;gap:22px;align-items:center;padding:30px 10px;border-bottom:1px solid var(--rule-soft);position:relative;transition:background .25s;color:inherit}
+  .row::before{content:"";position:absolute;left:0;top:0;bottom:0;width:2px;background:var(--accent);transform:scaleY(0);transform-origin:top;transition:transform .3s cubic-bezier(.16,1,.3,1)}
+  .row:hover{background:linear-gradient(90deg,var(--hover),transparent 72%)}
+  .row:hover::before{transform:scaleY(1)}
+  .row .idx{font-family:var(--font-mono);font-size:12px;color:var(--paper-faint)}
+  .row .nm{font-family:var(--font-display);font-size:21px;font-weight:calc(500 + var(--wght));letter-spacing:-.01em;line-height:1.04}
+  .row .nm .gpt{color:var(--paper-dim);font-weight:340}
+  .row .dsc{color:var(--paper-dim);font-size:14px;line-height:1.46;font-family:var(--font-read)}
+  .row .metric{font-family:var(--font-mono);font-size:12px;color:var(--paper)}
+  .row .metric .sub{color:var(--paper-faint);font-size:10px;letter-spacing:.06em;text-transform:uppercase;display:block;margin-top:3px}
+  .row .stat{justify-self:end;display:inline-flex;align-items:center;gap:6px;font-family:var(--font-mono);font-size:10.5px;letter-spacing:.08em}
+  .row .stat.live{color:var(--good)}
+  .row .stat.live .dot{width:6px;height:6px;border-radius:50%;background:var(--good);box-shadow:0 0 0 0 rgba(70,177,120,.5);animation:pulse 2.4s infinite}
+  .row .stat.shipped{color:var(--paper-faint)}
+  .row .stat.shipped .dot{width:6px;height:6px;border-radius:50%;background:var(--paper-faint)}
+  @keyframes pulse{0%{box-shadow:0 0 0 0 rgba(70,177,120,.5)}70%{box-shadow:0 0 0 6px rgba(70,177,120,0)}100%{box-shadow:0 0 0 0 rgba(70,177,120,0)}}
+  a.row:hover .nm{color:var(--paper)}
+  a.row .nm::after{content:" ↗";color:var(--accent);font-size:13px;opacity:0;transition:opacity .2s}
+  a.row:hover .nm::after{opacity:1}
+  @media(max-width:860px){
+    .reg-head{display:none}
+    .row{grid-template-columns:1fr;gap:7px;padding:18px 0 18px 15px}
+    .row .idx{position:absolute;left:0;top:20px}
+    .row .stat{justify-self:start}
+  }
+
+  /* ===================== DOMAINS (dateline chips) ===================== */
+  .domains{padding:80px 0;border-bottom:1px solid var(--rule)}
+  .domains .k{font-family:var(--font-mono);font-size:10.5px;letter-spacing:.18em;text-transform:uppercase;color:var(--paper-faint);margin-bottom:30px}
+  .domains .chips{display:flex;flex-wrap:wrap;gap:12px}
+  .domains .chip{font-family:var(--font-mono);font-size:12px;color:var(--paper-dim);border:1px solid var(--rule);border-radius:calc(2px*var(--radius));padding:10px 16px;transition:.2s}
+  .domains .chip:hover{border-color:var(--accent);color:var(--paper)}
+  .domains .chip b{color:var(--accent);font-weight:500}
+
+  /* ===================== METHOD ===================== */
+  .method{padding:calc(108px * var(--density)) 0;border-bottom:1px solid var(--rule)}
+  .method .hd{display:flex;align-items:baseline;gap:16px;margin-bottom:52px}
+  .method .hd h2{font-family:var(--font-display);font-weight:calc(360 + var(--wght));font-size:clamp(26px,3.6vw,40px);letter-spacing:-.02em;line-height:1}
+  .method .hd .r{height:1px;background:var(--rule);flex:1}
+  .method .hd .k{font-family:var(--font-mono);font-size:10.5px;letter-spacing:.06em;color:var(--paper-faint)}
+  .method .cols{display:grid;grid-template-columns:repeat(3,1fr);gap:0;border-top:1px solid var(--rule)}
+  .method .c{padding:44px 40px 44px 0;border-right:1px solid var(--rule-soft);border-bottom:1px solid var(--rule-soft)}
+  .method .c:last-child{border-right:none}
+  .method .c .ic{font-family:var(--font-mono);font-size:10.5px;color:var(--accent);letter-spacing:.12em;margin-bottom:18px}
+  .method .c h3{font-family:var(--font-display);font-weight:440;font-size:20px;letter-spacing:-.01em;margin-bottom:12px}
+  .method .c p{color:var(--paper-dim);font-size:14px;line-height:1.6}
+  @media(max-width:860px){.method .cols{grid-template-columns:1fr}.method .c{border-right:none;padding-right:0}}
+
+  /* ===================== CTA ===================== */
+  .cta{padding:calc(116px * var(--density)) 0}
+  .cta .panel{border:1px solid var(--rule);border-top:3px double var(--rule);border-radius:calc(3px*var(--radius));overflow:hidden;display:grid;grid-template-columns:1.05fr .95fr;background:linear-gradient(160deg,var(--tint),transparent 55%),var(--ink-2)}
+  .cta .left{padding:60px 54px;border-right:1px solid var(--rule)}
+  .cta .left .k{font-family:var(--font-mono);font-size:10.5px;letter-spacing:.2em;text-transform:uppercase;color:var(--accent);margin-bottom:18px}
+  .cta .left h2{font-family:var(--font-display);font-weight:360;font-size:clamp(28px,3.4vw,42px);line-height:1.06;letter-spacing:-.02em}
+  .cta .left h2 em{font-style:italic;color:var(--accent)}
+  .cta .left p{margin-top:18px;color:var(--paper-dim);font-size:15.5px;line-height:1.62;max-width:42ch}
+  .cta .direct{margin-top:28px;display:grid;gap:12px}
+  .cta .direct a{display:inline-flex;align-items:center;gap:11px;font-family:var(--font-mono);font-size:13px;color:var(--paper);transition:color .2s;width:fit-content}
+  .cta .direct a:hover{color:var(--accent)}
+  .cta .direct .ico{width:32px;height:32px;border:1px solid var(--rule);border-radius:calc(6px*var(--radius));display:grid;place-items:center;color:var(--accent)}
+  form.brief{padding:60px 54px;display:grid;gap:18px}
+  form.brief .fld{display:grid;gap:6px}
+  form.brief label{font-family:var(--font-mono);font-size:10px;letter-spacing:.13em;text-transform:uppercase;color:var(--paper-faint)}
+  form.brief input,form.brief textarea,form.brief select{background:var(--ink);border:1px solid var(--rule);border-radius:calc(5px*var(--radius));padding:11px 13px;color:var(--paper);font-family:var(--font-read);font-size:14.5px;transition:border-color .2s}
+  form.brief input:focus,form.brief textarea:focus,form.brief select:focus{outline:none;border-color:var(--accent)}
+  form.brief textarea{resize:vertical;min-height:80px}
+  form.brief .row2{display:grid;grid-template-columns:1fr 1fr;gap:13px}
+  form.brief button{margin-top:4px;width:100%;justify-content:center}
+  form.brief .note{font-family:var(--font-mono);font-size:10px;color:var(--paper-faint);text-align:center;letter-spacing:.03em}
+  @media(max-width:860px){.cta .panel{grid-template-columns:1fr}.cta .left{border-right:none;border-bottom:1px solid var(--rule);padding:36px 28px}form.brief{padding:36px 28px}}
+
+  /* ===================== FOOTER (the colophon) ===================== */
+  footer{border-top:3px double var(--rule);padding:32px 0}
+  footer .wrap{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:16px}
+  footer .c{font-family:var(--font-mono);font-size:11px;letter-spacing:.04em;color:var(--paper-faint)}
+  footer .c b{color:var(--paper-dim);font-weight:500}
+  footer a:hover{color:var(--accent)}
+
+  /* ===================== PLAYGROUND (shared component) ===================== */
+  .pg-launch{position:fixed;right:22px;bottom:22px;z-index:90;width:50px;height:50px;border-radius:calc(12px*var(--radius));background:var(--ink-2);border:1px solid var(--rule);color:var(--accent);cursor:pointer;display:grid;place-items:center;box-shadow:0 10px 30px rgba(0,0,0,.4);transition:transform .25s,border-color .2s}
+  .pg-launch:hover{transform:translateY(-3px) rotate(-8deg);border-color:var(--accent)}
+  .pg-launch svg{width:21px;height:21px}
+  .pg-panel{position:fixed;right:22px;bottom:84px;z-index:91;width:312px;background:var(--ink-2);border:1px solid var(--rule);border-radius:calc(14px*var(--radius));box-shadow:0 24px 60px rgba(0,0,0,.5);padding:20px;opacity:0;transform:translateY(12px) scale(.97);pointer-events:none;transform-origin:bottom right;transition:opacity .26s cubic-bezier(.16,1,.3,1),transform .26s cubic-bezier(.16,1,.3,1);max-height:80vh;overflow-y:auto}
+  .pg-panel.open{opacity:1;transform:none;pointer-events:auto}
+  .pg-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px}
+  .pg-title{font-family:var(--font-mono);font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--accent)}
+  .pg-reset{font-family:var(--font-mono);font-size:10px;letter-spacing:.06em;color:var(--paper-dim);background:none;border:none;cursor:pointer;text-transform:uppercase}
+  .pg-reset:hover{color:var(--paper)}
+  .pg-grp{margin-bottom:20px}.pg-grp:last-child{margin-bottom:4px}
+  .pg-grp>label{display:block;font-family:var(--font-mono);font-size:10px;letter-spacing:.13em;text-transform:uppercase;color:var(--paper-dim);margin-bottom:11px}
+  .pg-grp>label .v{color:var(--paper-faint);float:right;text-transform:none;letter-spacing:0}
+  .pg-swatches{display:flex;gap:9px;flex-wrap:wrap}
+  .pg-sw{width:26px;height:26px;border-radius:calc(6px*var(--radius));cursor:pointer;border:2px solid transparent;transition:transform .15s,border-color .15s;position:relative}
+  .pg-sw:hover{transform:scale(1.12)}.pg-sw.on{border-color:var(--paper)}
+  .pg-sw.custom{display:grid;place-items:center;background:var(--ink);border:1px solid var(--rule);color:var(--paper-faint);overflow:hidden}
+  .pg-sw.custom input{position:absolute;inset:0;opacity:0;cursor:pointer}
+  .pg-fonts{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  .pg-font{font-family:inherit;font-size:13px;padding:9px 10px;border-radius:calc(6px*var(--radius));border:1px solid var(--rule);background:var(--ink);color:var(--paper-dim);cursor:pointer;transition:.15s;text-align:left;line-height:1.1}
+  .pg-font:hover{border-color:var(--paper-faint);color:var(--paper)}.pg-font.on{border-color:var(--accent);color:var(--paper)}
+  .pg-font .pf-name{font-size:9px;font-family:var(--font-mono);letter-spacing:.04em;color:var(--paper-faint);display:block;margin-top:3px}
+  input[type=range].pg-range{-webkit-appearance:none;appearance:none;width:100%;height:3px;border-radius:3px;background:var(--rule);outline:none;cursor:pointer}
+  input[type=range].pg-range::-webkit-slider-thumb{-webkit-appearance:none;width:16px;height:16px;border-radius:50%;background:var(--accent);cursor:pointer;border:2px solid var(--ink-2)}
+  input[type=range].pg-range::-moz-range-thumb{width:14px;height:14px;border-radius:50%;background:var(--accent);cursor:pointer;border:2px solid var(--ink-2)}
+  @media(max-width:560px){.pg-panel{width:calc(100vw - 44px)}}
+
+  .reveal{opacity:0;transform:translateY(20px);transition:opacity .7s cubic-bezier(.16,1,.3,1),transform .7s cubic-bezier(.16,1,.3,1)}
+  .reveal.in{opacity:1;transform:none}
+  @media(prefers-reduced-motion:reduce){*{animation:none !important;transition:none !important}.reveal{opacity:1;transform:none}.front h1 .ln>span{transform:none}.lede,.front .subhead,.front .byline{opacity:1}}
+</style>
+</head>
+<body>
+
+<!-- ===================== MASTHEAD (one quiet utility line) ===================== -->
+<header class="mast">
+  <div class="wrap">
+    <div class="util">
+      <div class="l">
+        <span>Vol. I · No. 008</span>
+        <span class="hideS">Long Island, N.Y.</span>
+      </div>
+      <div class="r">
+        <a href="#register" class="hideS">Products</a>
+        <a href="#thesis" class="hideS">Thesis</a>
+        <a href="#how" class="hideS">Method</a>
+        <button class="theme-toggle tt" id="themeToggle" type="button" aria-label="Toggle light and dark mode" title="Morning / Night edition">
+          <svg class="sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>
+          <svg class="moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+        </button>
+      </div>
+    </div>
+  </div>
+</header>
+
+<main id="top">
+
+  <!-- ===================== FRONT PAGE ===================== -->
+  <section class="front">
+    <div class="wrap">
+      <h1>
+        <span class="ln"><span>AI for complex,</span></span>
+        <span class="ln"><span>legacy <em>systems.</em></span></span>
+      </h1>
+      <p class="subhead">The hardest data in the world is public — and almost unusable. We rebuild it into software anyone can use.</p>
+      <div class="byline">
+        <span>BY <b style="color:var(--paper-dim)">BRENDAN STANTON</b></span><span class="dot"></span>
+        <span>FOUNDER · FULL-STACK</span><span class="dot"></span>
+        <span>EIGHT PRODUCTS SHIPPED</span>
+      </div>
+
+      <div class="lede">
+        <p class="dropcap"><span class="runin">NYSGPT</span> builds domain-specific AI applications for the systems ordinary software won't touch — the impenetrable government databases, statutory regimes, and industrial records that ordinary tools leave untouched. We turn data nobody could read into software anyone can use.</p>
+        <p>The most consequential systems run on the worst software. Legislative records, customs rulings, energy filings, licensing registries, nuclear references — the data is public, authoritative, and locked behind portals built two decades ago for nobody in particular.</p>
+        <p><b>NYSGPT exists to close that gap.</b> We don't bolt a chatbot onto a problem. We ingest the primary record, ground every answer in a verifiable source, and rebuild the interface from the data up — so a stressed parent, an importer, a researcher, or a regulator gets a real answer instead of a 40-page PDF.</p>
+      </div>
+
+      <div class="cta-row">
+        <a href="#contact" class="btn btn-primary">Book a working session <span class="arr">→</span></a>
+        <a href="#register" class="btn btn-ghost">See the products <span class="arr">→</span></a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== STAT RIBBON ===================== -->
+  <section class="ribbon">
+    <div class="wrap">
+      <div class="cell"><div class="n tnum">8</div><div class="l">Products <b>shipped</b></div></div>
+      <div class="cell"><div class="n tnum">350<span class="u">k+</span></div><div class="l">Records <b>navigable</b></div></div>
+      <div class="cell"><div class="n tnum">5</div><div class="l">Live in <b>production</b></div></div>
+      <div class="cell"><div class="n tnum">1</div><div class="l">Founder · <b>full-stack</b></div></div>
+    </div>
+  </section>
+
+  <!-- ===================== THESIS ===================== -->
+  <section class="thesis" id="thesis">
+    <div class="wrap">
+      <div class="hd"><span class="k">Editorial</span><span class="r"></span></div>
+      <div class="grid">
+        <div>
+          <h2>The hardest data in the world is <em>public</em> — and almost unusable.</h2>
+          <div class="pulled reveal">
+            <div class="pq">"We don't bolt a chatbot onto a problem. We rebuild the interface from the record up."</div>
+          </div>
+          <div class="principles reveal">
+            <div class="p"><span class="num">01</span><span class="t"><b>Grounded, not generated.</b> Every claim traces to a primary source. Fluency without traceability is a liability.</span></div>
+            <div class="p"><span class="num">02</span><span class="t"><b>The data is the product.</b> We rebuild the interface from the record up — search, structure, and AI as one surface.</span></div>
+            <div class="p"><span class="num">03</span><span class="t"><b>Ship to production.</b> Live products with real users, not decks. Five of eight are running right now.</span></div>
+          </div>
+        </div>
+        <div class="body reveal">
+          <p>The most consequential systems run on the worst software. Legislative records, customs rulings, energy filings, licensing registries, nuclear references — the data is public, authoritative, and locked behind portals built two decades ago for nobody in particular.</p>
+          <p><b>NYSGPT closes that gap.</b> We ingest the primary record, ground every answer in a verifiable source, and rebuild the interface from the data up — so the person who actually needs the answer gets one, not a 40-page PDF.</p>
+          <p>Each product below is the same architecture, drawn for a different domain: ingest the hard public record, make the AI accountable to it, and ship the result to people with real problems.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== THE REGISTER (products) ===================== -->
+  <section class="register" id="register">
+    <div class="wrap">
+      <div class="hd">
+        <h2><em>Register</em></h2>
+        <p>EIGHT DOMAIN-SPECIFIC AI PRODUCTS · ONE ARCHITECTURE · BUILT &amp; SHIPPED BY NYSGPT</p>
+      </div>
+      <div class="reg-head">
+        <div>№</div><div>Product</div><div>What it does</div><div>At scale</div><div class="r">Status</div>
+      </div>
+
+      <a class="row" href="https://44b.nysgpt.com" target="_blank" rel="noopener">
+        <div class="idx">01</div>
+        <div class="nm">44B</div>
+        <div class="dsc">A public registry, research library, and incident record for AI — the compliance portal for NY's Article 44-B. "SERFF, for AI."</div>
+        <div class="metric tnum">32k papers<span class="sub">+2,561 incidents</span></div>
+        <div class="stat live"><span class="dot"></span>LIVE</div>
+      </a>
+      <a class="row" href="https://tariffs.nysgpt.com" target="_blank" rel="noopener">
+        <div class="idx">02</div>
+        <div class="nm">Tariffs<span class="gpt">GPT</span></div>
+        <div class="dsc">A self-serve refund engine for importers who paid IEEPA tariffs the Supreme Court invalidated — a real number before any phone call.</div>
+        <div class="metric tnum">220k+ rulings<span class="sub">live tariff schedule</span></div>
+        <div class="stat live"><span class="dot"></span>LIVE</div>
+      </a>
+      <a class="row" href="https://childcare.nysgpt.com/console" target="_blank" rel="noopener">
+        <div class="idx">03</div>
+        <div class="nm">Childcare<span class="gpt">GPT</span></div>
+        <div class="dsc">NY childcare intelligence — every OCFS-regulated facility, county cost data, and an AI-assisted subsidy application form.</div>
+        <div class="metric tnum">16,800 facilities<span class="sub">OCFS-6025 form</span></div>
+        <div class="stat live"><span class="dot"></span>LIVE</div>
+      </a>
+      <a class="row" href="https://solar.nysgpt.com/map/plants-2" target="_blank" rel="noopener">
+        <div class="idx">04</div>
+        <div class="nm">Solar<span class="gpt">GPT</span></div>
+        <div class="dsc">Clean-energy intelligence — solar potential, grid economics, and emissions for every U.S. county, state, and grid region.</div>
+        <div class="metric tnum">3,000+ counties<span class="sub">EIA data pipelines</span></div>
+        <div class="stat live"><span class="dot"></span>LIVE</div>
+      </a>
+      <div class="row">
+        <div class="idx">05</div>
+        <div class="nm">Policy<span class="gpt">GPT</span></div>
+        <div class="dsc">NY legislative &amp; financial intelligence — bills, budgets, lobbying, contracts, and members, with an embedded advocacy layer.</div>
+        <div class="metric tnum">Full NYS record<span class="sub">semantic search</span></div>
+        <div class="stat shipped"><span class="dot"></span>SHIPPED</div>
+      </div>
+      <div class="row">
+        <div class="idx">06</div>
+        <div class="nm">NSR<span class="gpt">gpt</span></div>
+        <div class="dsc">Semantic search and AI chat over the Nuclear Science References database — vector embeddings and a full RAG pipeline.</div>
+        <div class="metric tnum">88,000+ records<span class="sub">pgvector RAG</span></div>
+        <div class="stat shipped"><span class="dot"></span>SHIPPED</div>
+      </div>
+      <div class="row">
+        <div class="idx">07</div>
+        <div class="nm">Insurance<span class="gpt">GPT</span></div>
+        <div class="dsc">An auto-insurance quote &amp; lead engine — rate estimation grounded in filed carrier data, Stripe checkout, multi-role console.</div>
+        <div class="metric tnum">Grounded rates<span class="sub">Stripe + console</span></div>
+        <div class="stat shipped"><span class="dot"></span>SHIPPED</div>
+      </div>
+      <div class="row">
+        <div class="idx">08</div>
+        <div class="nm">Sports<span class="gpt">GPT</span></div>
+        <div class="dsc">High-school sports intelligence for Section XI — team and player stats, standings, choropleth maps, AI-generated highlights.</div>
+        <div class="metric tnum">Section XI<span class="sub">AI highlights</span></div>
+        <div class="stat shipped"><span class="dot"></span>SHIPPED</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== DOMAINS ===================== -->
+  <section class="domains">
+    <div class="wrap">
+      <div class="k">Datelines — domains we've already gone deep on</div>
+      <div class="chips">
+        <span class="chip"><b>Government</b> &amp; legislative</span>
+        <span class="chip"><b>Trade</b> &amp; customs law</span>
+        <span class="chip"><b>Energy</b> &amp; grid economics</span>
+        <span class="chip"><b>Social services</b></span>
+        <span class="chip"><b>Insurance</b> &amp; regulation</span>
+        <span class="chip"><b>Scientific</b> reference</span>
+        <span class="chip"><b>AI governance</b></span>
+        <span class="chip"><b>Public records</b></span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== METHOD ===================== -->
+  <section class="method" id="how">
+    <div class="wrap">
+      <div class="hd"><h2>How we build</h2><span class="r"></span><span class="k">Ingest · Ground · Ship</span></div>
+      <div class="cols">
+        <div class="c reveal">
+          <div class="ic">01 — INGEST</div>
+          <h3>Tame the primary record</h3>
+          <p>We crawl, dedupe, and structure the authoritative source — even when there's no bulk export, no API, or a pagination wall — into clean, queryable Postgres. The hard part nobody else does.</p>
+        </div>
+        <div class="c reveal">
+          <div class="ic">02 — GROUND</div>
+          <h3>Make the AI accountable</h3>
+          <p>Retrieval over the real corpus, structured output, and a visible chain back to the source. The model reasons over primary data, and every answer can be checked.</p>
+        </div>
+        <div class="c reveal">
+          <div class="ic">03 — SHIP</div>
+          <h3>Rebuild the interface</h3>
+          <p>Search, structured exploration, maps, and AI on one surface — designed for the human who actually needs the answer, and pushed to production with real users.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== CTA ===================== -->
+  <section class="cta" id="contact">
+    <div class="wrap">
+      <div class="panel reveal">
+        <div class="left">
+          <div class="k">Letters to the editor</div>
+          <h2>Have a system that's <em>too complex</em> for ordinary software?</h2>
+          <p>That's exactly what we build for. Book a working session and we'll pressure-test what an AI-first rebuild looks like for your data — or send a short brief and we'll come back with a concrete read.</p>
+          <div class="direct">
+            <a href="mailto:Brendan@nysgpt.com?subject=Working%20session%20—%20NYSGPT"><span class="ico">✉</span> Brendan@nysgpt.com</a>
+            <a href="mailto:Brendan@nysgpt.com?subject=Book%20a%20working%20session"><span class="ico">↗</span> Book a working session</a>
+          </div>
+        </div>
+        <form class="brief" onsubmit="return submitBrief(event)">
+          <div class="fld"><label for="a1-name">Your name</label><input id="a1-name" name="name" required placeholder="Jane Rivera" /></div>
+          <div class="row2">
+            <div class="fld"><label for="a1-email">Email</label><input id="a1-email" name="email" type="email" required placeholder="jane@org.gov" /></div>
+            <div class="fld"><label for="a1-org">Organization</label><input id="a1-org" name="org" placeholder="Agency / company" /></div>
+          </div>
+          <div class="fld"><label for="a1-domain">The system / domain</label>
+            <select id="a1-domain" name="domain">
+              <option>Government / legislative</option><option>Trade / customs</option><option>Energy / utilities</option>
+              <option>Social services</option><option>Insurance / regulatory</option><option>Scientific / technical reference</option><option>Other legacy system</option>
+            </select>
+          </div>
+          <div class="fld"><label for="a1-brief">What's locked up in it?</label><textarea id="a1-brief" name="brief" placeholder="The data, who needs it, and why it's hard to use today…"></textarea></div>
+          <button type="submit" class="btn btn-primary">Send the brief <span class="arr">→</span></button>
+          <div class="note">Goes straight to Brendan@nysgpt.com — no funnel, no sales bot.</div>
+        </form>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <div class="c"><b>NYSGPT Register</b> — AI-first software for legacy systems · Long Island, NY</div>
+    <div class="c"><a href="mailto:Brendan@nysgpt.com">Brendan@nysgpt.com</a> · <a href="https://github.com/nyd-user-1" target="_blank" rel="noopener">GitHub</a></div>
+    <div class="c">© 2026 · Built by hand · No. 008</div>
+  </div>
+</footer>
+
+<!-- ===================== PLAYGROUND ===================== -->
+<button class="pg-launch" id="pgLaunch" type="button" aria-label="Open the design playground" title="Play with the design">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="13.5" cy="6.5" r="2.5"/><circle cx="6" cy="11" r="2.5"/><circle cx="17.5" cy="13" r="2.5"/><circle cx="9" cy="18" r="2.5"/>
+    <path d="M13.5 9v3M8 12.5l2.5 1M15 15l-3 1.7"/>
+  </svg>
+</button>
+<div class="pg-panel" id="pgPanel" role="dialog" aria-label="Design playground">
+  <div class="pg-head"><span class="pg-title">◆ Design playground</span><button class="pg-reset" id="pgReset" type="button">Reset</button></div>
+  <div class="pg-grp">
+    <label>Spot color</label>
+    <div class="pg-swatches" id="pgAccent">
+      <span class="pg-sw on" data-c="#e8472a" style="background:#e8472a"></span>
+      <span class="pg-sw" data-c="#2f6df0" style="background:#2f6df0"></span>
+      <span class="pg-sw" data-c="#46b178" style="background:#46b178"></span>
+      <span class="pg-sw" data-c="#d9a235" style="background:#d9a235"></span>
+      <span class="pg-sw" data-c="#c0497f" style="background:#c0497f"></span>
+      <span class="pg-sw" data-c="#7a6aff" style="background:#7a6aff"></span>
+      <label class="pg-sw custom" title="Custom color">+<input type="color" id="pgAccentCustom" value="#e8472a" /></label>
+    </div>
+  </div>
+  <div class="pg-grp">
+    <label>Display font</label>
+    <div class="pg-fonts" id="pgDisplay">
+      <button class="pg-font on" data-f='"Fraunces", serif' style='font-family:"Fraunces",serif'>Fraunces<span class="pf-name">serif</span></button>
+      <button class="pg-font" data-f='"Playfair Display", serif' style='font-family:"Playfair Display",serif'>Playfair<span class="pf-name">serif</span></button>
+      <button class="pg-font" data-f='"Instrument Serif", serif' style='font-family:"Instrument Serif",serif'>Instrument<span class="pf-name">serif</span></button>
+      <button class="pg-font" data-f='"Newsreader", serif' style='font-family:"Newsreader",serif'>Newsreader<span class="pf-name">serif</span></button>
+    </div>
+  </div>
+  <div class="pg-grp">
+    <label>Reading font</label>
+    <div class="pg-fonts" id="pgBody">
+      <button class="pg-font on" data-f='"Newsreader", serif' style='font-family:"Newsreader",serif'>Newsreader<span class="pf-name">serif</span></button>
+      <button class="pg-font" data-f='"Fraunces", serif' style='font-family:"Fraunces",serif'>Fraunces<span class="pf-name">serif</span></button>
+      <button class="pg-font" data-f='"DM Sans", sans-serif' style='font-family:"DM Sans",sans-serif'>DM Sans<span class="pf-name">sans</span></button>
+      <button class="pg-font" data-f='"Familjen Grotesk", sans-serif' style='font-family:"Familjen Grotesk",sans-serif'>Familjen<span class="pf-name">grotesk</span></button>
+    </div>
+  </div>
+  <div class="pg-grp"><label>Corner rounding <span class="v" id="pgRadVal">1.0×</span></label><input type="range" class="pg-range" id="pgRadius" min="0" max="2" step="0.1" value="1" /></div>
+  <div class="pg-grp"><label>Heading weight <span class="v" id="pgWghtVal">0</span></label><input type="range" class="pg-range" id="pgWght" min="-120" max="200" step="10" value="0" /></div>
+  <div class="pg-grp"><label>Density <span class="v" id="pgDensVal">1.0×</span></label><input type="range" class="pg-range" id="pgDensity" min="0.8" max="1.25" step="0.05" value="1" /></div>
+</div>
+
+<script>
+  // theme toggle + persistence (per-page key)
+  (function(){
+    const root=document.documentElement, btn=document.getElementById('themeToggle');
+    btn.addEventListener('click',()=>{
+      const light=root.getAttribute('data-theme')==='light';
+      if(light) root.removeAttribute('data-theme'); else root.setAttribute('data-theme','light');
+      try{localStorage.setItem('nysgpt-theme-a1', light?'dark':'light');}catch(e){}
+    });
+  })();
+
+  // playground (session-only)
+  (function(){
+    const root=document.documentElement, rs=root.style;
+    const panel=document.getElementById('pgPanel'), launch=document.getElementById('pgLaunch');
+    launch.addEventListener('click',e=>{e.stopPropagation();panel.classList.toggle('open')});
+    document.addEventListener('click',e=>{ if(!panel.contains(e.target)&&e.target!==launch&&!launch.contains(e.target)) panel.classList.remove('open'); });
+    function setAccent(c){ rs.setProperty('--accent',c); }
+    const accWrap=document.getElementById('pgAccent');
+    accWrap.querySelectorAll('.pg-sw[data-c]').forEach(sw=>sw.addEventListener('click',()=>{
+      accWrap.querySelectorAll('.pg-sw').forEach(s=>s.classList.remove('on'));sw.classList.add('on');setAccent(sw.dataset.c);
+    }));
+    document.getElementById('pgAccentCustom').addEventListener('input',e=>{
+      accWrap.querySelectorAll('.pg-sw').forEach(s=>s.classList.remove('on'));e.target.closest('.pg-sw').classList.add('on');setAccent(e.target.value);
+    });
+    function fontGroup(id,varName){const wrap=document.getElementById(id);wrap.querySelectorAll('.pg-font').forEach(b=>b.addEventListener('click',()=>{wrap.querySelectorAll('.pg-font').forEach(x=>x.classList.remove('on'));b.classList.add('on');rs.setProperty(varName,b.dataset.f);}));}
+    fontGroup('pgDisplay','--font-display'); fontGroup('pgBody','--font-read');
+    const rad=document.getElementById('pgRadius'),radV=document.getElementById('pgRadVal');
+    rad.addEventListener('input',()=>{rs.setProperty('--radius',rad.value);radV.textContent=parseFloat(rad.value).toFixed(1)+'×'});
+    const wght=document.getElementById('pgWght'),wghtV=document.getElementById('pgWghtVal');
+    wght.addEventListener('input',()=>{rs.setProperty('--wght',wght.value);wghtV.textContent=(wght.value>0?'+':'')+wght.value});
+    const dens=document.getElementById('pgDensity'),densV=document.getElementById('pgDensVal');
+    dens.addEventListener('input',()=>{rs.setProperty('--density',dens.value);densV.textContent=parseFloat(dens.value).toFixed(2)+'×'});
+    document.getElementById('pgReset').addEventListener('click',()=>{
+      ['--accent','--font-display','--font-read','--radius','--wght','--density'].forEach(v=>rs.removeProperty(v));
+      accWrap.querySelectorAll('.pg-sw').forEach((s,i)=>s.classList.toggle('on',i===0));
+      ['pgDisplay','pgBody'].forEach(id=>document.getElementById(id).querySelectorAll('.pg-font').forEach((b,i)=>b.classList.toggle('on',i===0)));
+      rad.value=1;radV.textContent='1.0×';wght.value=0;wghtV.textContent='0';dens.value=1;densV.textContent='1.0×';
+      document.getElementById('pgAccentCustom').value='#e8472a';
+    });
+  })();
+
+  // scroll reveal
+  const io=new IntersectionObserver((es)=>{es.forEach(e=>{if(e.isIntersecting){e.target.classList.add('in');io.unobserve(e.target)}})},{threshold:.14,rootMargin:'0px 0px -8% 0px'});
+  document.querySelectorAll('.reveal').forEach((el,i)=>{el.style.transitionDelay=(i%3*70)+'ms';io.observe(el)});
+
+  // brief -> mailto handoff
+  function submitBrief(e){
+    e.preventDefault();const f=e.target;
+    const body=encodeURIComponent(`Name: ${f.name.value}\nEmail: ${f.email.value}\nOrg: ${f.org.value}\nDomain: ${f.domain.value}\n\nBrief:\n${f.brief.value}`);
+    window.location.href=`mailto:Brendan@nysgpt.com?subject=${encodeURIComponent('Project brief — '+(f.org.value||f.name.value))}&body=${body}`;
+    return false;
+  }
+</script>
+</body>
+</html>
