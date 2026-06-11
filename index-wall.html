@@ -7,25 +7,30 @@
 <meta name="description" content="A contact sheet of the NYSGPT landing-page design gallery — all 22 explorations as live previews on one wall." />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..600;1,9..144,400&family=Spline+Sans+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet" />
 <script>
   (function(){ try{ if(localStorage.getItem('nysgpt-theme-wall')==='light') document.documentElement.setAttribute('data-theme','light'); }catch(e){} })();
 </script>
 <style>
   :root{
-    --bg:#08090b; --bg-2:#0c0e11; --film:#101316; --ink:#ece9e2; --dim:#8b887e; --faint:#54524b;
-    --line:#1c1f25; --line-soft:#15171c; --accent:#ff5a1f;
-    --sprocket:#1a1d22; --frame:#04050700;
-    --mono:"Spline Sans Mono",ui-monospace,monospace; --serif:"Fraunces",Georgia,serif;
+    --bg:#0d1112; --bg-2:#0b0f10; --film:#101516; --ink:#f1f5f5; --dim:#9aa6a8; --faint:#5f6c6f;
+    --line:rgba(255,255,255,.09); --line-soft:rgba(255,255,255,.055); --accent:#63d8d0;
+    --brand-dim:rgba(99,216,208,.4); --brand-faint:rgba(99,216,208,.12);
+    --surface:rgba(255,255,255,.028); --surface-2:rgba(255,255,255,.05);
+    --sprocket:rgba(255,255,255,.06); --frame:transparent;
+    --sans:"Geist",-apple-system,system-ui,sans-serif;
+    --mono:"Geist Mono",ui-monospace,monospace; --serif:"Geist",-apple-system,system-ui,sans-serif;
   }
   :root[data-theme="light"]{
-    --bg:#e7e3d8; --bg-2:#efebe0; --film:#f4f1e7; --ink:#1a1813; --dim:#5c5749; --faint:#9a9484;
-    --line:#d3ccbc; --line-soft:#e1dacb; --accent:#cf3f0a;
-    --sprocket:#d8d1c1;
+    --bg:#fbfcfc; --bg-2:#f4f6f6; --film:#ffffff; --ink:#191f20; --dim:#5d6a6d; --faint:#9aa4a6;
+    --line:rgba(20,30,32,.1); --line-soft:rgba(20,30,32,.06); --accent:#0b8d86;
+    --brand-dim:rgba(11,141,134,.4); --brand-faint:rgba(11,141,134,.08);
+    --surface:rgba(20,30,32,.025); --surface-2:rgba(20,30,32,.045);
+    --sprocket:rgba(20,30,32,.08);
   }
   :root{color-scheme:dark} :root[data-theme="light"]{color-scheme:light}
   *{box-sizing:border-box;margin:0;padding:0}
-  body{background:var(--bg);color:var(--ink);font-family:var(--mono);font-size:13px;line-height:1.5;
+  body{background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:13px;line-height:1.5;
     -webkit-font-smoothing:antialiased;min-height:100vh;
     transition:background .4s ease,color .4s ease}
   /* faint film-grain wash */
@@ -37,34 +42,37 @@
   header{border-bottom:1px solid var(--line);position:sticky;top:0;z-index:20;background:color-mix(in srgb,var(--bg) 88%, transparent);backdrop-filter:blur(12px)}
   header .wrap{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:15px 26px}
   .brand{display:flex;align-items:center;gap:11px}
-  .brand .mk{width:28px;height:28px;border:1.5px solid var(--ink);border-radius:5px;display:grid;place-items:center;font-family:var(--serif);font-weight:600;font-size:13px}
-  .brand .bn{font-size:13px;letter-spacing:.22em}.brand .bn b{color:var(--accent);font-weight:600}
+  .brand .bn{font-family:var(--sans);font-size:16px;font-weight:600;letter-spacing:-.012em;color:var(--ink)}
+  .brand .bn .lc{font-weight:400}
   .brand .div{width:1px;height:18px;background:var(--line);margin:0 5px}
   .brand .mode{font-size:10.5px;letter-spacing:.18em;text-transform:uppercase;color:var(--faint)}
   header .right{display:flex;align-items:center;gap:10px}
 
   /* ---------- view switcher (shared across all four chooser views) ---------- */
-  .views{display:inline-flex;align-items:center;gap:2px;border:1px solid var(--line);border-radius:8px;
-    padding:3px;background:var(--bg)}
-  .views a{font-size:11px;letter-spacing:.04em;color:var(--dim);text-decoration:none;padding:5px 10px;border-radius:5px;
+  .views{position:fixed;top:14px;left:50%;transform:translateX(-50%);z-index:60;
+    display:inline-flex;align-items:center;gap:3px;border:1px solid var(--line);border-radius:999px;
+    padding:4px;background:color-mix(in srgb,var(--bg) 82%, transparent);
+    backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);box-shadow:0 6px 24px -12px rgba(0,0,0,.3)}
+  .views a{font-size:12.5px;font-weight:500;letter-spacing:0;color:var(--dim);text-decoration:none;padding:6px 13px;border-radius:999px;
     transition:background .16s,color .16s;white-space:nowrap}
-  .views a:hover{color:var(--ink);background:var(--line-soft)}
-  .views a.on{background:var(--accent);color:#0a0a0a;font-weight:600;cursor:default}
-  @media(max-width:680px){ .brand .mode,.brand .div{display:none} .views a{padding:5px 8px} }
+  .views a:hover{color:var(--ink);background:var(--surface-2)}
+  .views a.on{background:var(--surface-2);color:var(--ink);font-weight:600;cursor:default}
+  .views .sep{width:1px;height:18px;background:var(--line);margin:0 3px}
+  @media(max-width:680px){ .brand .mode,.brand .div{display:none} .views a{padding:6px 10px} }
 
-  .iconbtn{width:31px;height:31px;border:1px solid var(--line);border-radius:7px;background:transparent;
-    display:grid;place-items:center;cursor:pointer;color:var(--dim);transition:border-color .2s,color .2s}
-  .iconbtn:hover{border-color:var(--accent);color:var(--ink)}
-  .iconbtn svg{width:14px;height:14px}.iconbtn .moon{display:none}
+  .iconbtn{width:30px;height:30px;border:none;border-radius:999px;background:transparent;
+    display:grid;place-items:center;cursor:pointer;color:var(--dim);transition:color .2s,background .2s}
+  .iconbtn:hover{color:var(--ink);background:var(--surface-2)}
+  .iconbtn svg{width:15px;height:15px}.iconbtn .moon{display:none}
   :root[data-theme="light"] .iconbtn .sun{display:none}
   :root[data-theme="light"] .iconbtn .moon{display:block}
   .iconbtn.on{border-color:var(--accent);color:var(--accent)}
 
   /* hero strip */
   .hero{padding:34px 0 22px}
-  .hero h1{font-family:var(--serif);font-weight:330;font-size:clamp(26px,4.2vw,44px);line-height:1.04;letter-spacing:-.02em;max-width:22ch}
-  .hero h1 em{font-style:italic;color:var(--accent)}
-  .hero p{margin-top:13px;max-width:64ch;font-size:13px;color:var(--dim);line-height:1.7}
+  .hero h1{font-family:var(--sans);font-weight:600;font-size:clamp(28px,4.4vw,46px);line-height:1.1;letter-spacing:-.03em;max-width:22ch}
+  .hero h1 em{font-style:normal;color:var(--accent)}
+  .hero p{margin-top:14px;max-width:64ch;font-size:15px;color:var(--dim);line-height:1.6}
 
   /* filter rail (sticky under header) */
   .filters{position:sticky;top:60px;z-index:15;background:color-mix(in srgb,var(--bg) 88%, transparent);backdrop-filter:blur(12px);
@@ -88,10 +96,8 @@
   @media(max-width:760px){.sheet{grid-template-columns:repeat(2,1fr);gap:13px}}
   @media(max-width:460px){.sheet{grid-template-columns:1fr}}
 
-  .subhead{grid-column:1/-1;display:flex;align-items:center;gap:13px;margin:18px 0 -2px;
-    font-size:10.5px;letter-spacing:.18em;text-transform:uppercase;color:var(--faint)}
-  .subhead .key{border:1px solid var(--line);border-radius:3px;padding:1px 5px;color:var(--dim);font-size:9.5px}
-  .subhead .ln{flex:1;height:1px;background:var(--line-soft)}
+  .subhead{grid-column:1/-1;margin:26px 0 4px;
+    font-family:var(--sans);font-size:13px;font-weight:600;letter-spacing:-.01em;color:var(--dim)}
   .subhead.hidden{display:none}
 
   /* a "frame" = sprocketed film cell */
@@ -124,8 +130,8 @@
 
   /* caption strip — looks like a film frame's edge ledger */
   .cap{display:flex;align-items:center;gap:10px;padding:11px 13px}
-  .cap .num{font-size:10px;color:var(--faint);letter-spacing:.08em;flex-shrink:0;font-variant-numeric:tabular-nums}
-  .cap .nm{font-family:var(--serif);font-size:17px;font-weight:430;letter-spacing:-.01em;flex:1;
+  .cap .num{font-family:var(--mono);font-size:10.5px;color:var(--faint);letter-spacing:.04em;flex-shrink:0;font-variant-numeric:tabular-nums}
+  .cap .nm{font-family:var(--sans);font-size:16px;font-weight:600;letter-spacing:-.01em;flex:1;
     white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .cap .sw{display:flex;gap:4px;flex-shrink:0}
   .cap .sw i{width:10px;height:10px;border-radius:2px;box-shadow:0 0 0 1px rgba(255,255,255,.12) inset}
@@ -145,7 +151,7 @@
   <header>
     <div class="wrap">
       <div class="brand">
-        <span class="mk">N</span><span class="bn">NYS<b>GPT</b></span>
+        <span class="bn">NYS<span class="lc">gpt</span></span>
         <span class="div"></span><span class="mode">Proof Sheet</span>
       </div>
       <div class="right">
@@ -155,11 +161,11 @@
           <a href="index-map.html">Map</a>
           <a class="on" href="index-wall.html" aria-current="page">Wall</a>
           <a href="index-grid.html">Grid</a>
-        </nav>
-        <button class="iconbtn" id="themeToggle" type="button" title="Toggle theme" aria-label="Toggle theme">
-          <svg class="sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>
-          <svg class="moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
-        </button>
+          <span class="sep"></span>
+          <button class="iconbtn" id="themeToggle" type="button" title="Toggle theme" aria-label="Toggle theme">
+            <svg class="sun" viewBox="0 0 24 24" fill="none" stroke="#e0a13c" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4" fill="#e0a13c"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>
+            <svg class="moon" viewBox="0 0 24 24" fill="#fdf0c9" stroke="#033882" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+          </button>
       </div>
     </div>
   </header>
@@ -236,7 +242,7 @@ FAMILIES.forEach(fam=>{
   const members=V.filter(v=>v.fam===fam.key);
   const sub=document.createElement("div");
   sub.className="subhead"; sub.dataset.fam=fam.key;
-  sub.innerHTML=`<span class="key">${fam.key}</span><span>${fam.label} family</span><span class="ln"></span><span>${fam.note} · ${members.length}</span>`;
+  sub.innerHTML=`<span>${fam.label}</span>`;
   sheet.appendChild(sub);
 
   members.forEach((v,i)=>{

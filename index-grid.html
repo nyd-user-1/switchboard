@@ -7,28 +7,31 @@
 <meta name="description" content="A gallery of landing-page design explorations for NYSGPT, an AI-first software company building for complex, legacy systems." />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..600;1,9..144,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet" />
 <script>
   // dark is the gallery default; go light only when explicitly chosen.
   (function(){ try{ if(localStorage.getItem('nysgpt-theme-idx')==='light') document.documentElement.setAttribute('data-theme','light'); }catch(e){} })();
 </script>
 <style>
   :root{
-    --bg:#0a0b0f; --bg-2:#111319; --ink:#ece9e2; --dim:#8e8b81; --faint:#56544c;
-    --line:#22242b; --line-soft:#191b21; --accent:#ff5a1f;
+    --bg:#0d1112; --bg-2:#101516; --ink:#f1f5f5; --dim:#9aa6a8; --faint:#5f6c6f;
+    --line:rgba(255,255,255,.09); --line-soft:rgba(255,255,255,.055); --accent:#63d8d0;
+    --brand-dim:rgba(99,216,208,.4); --brand-faint:rgba(99,216,208,.12); --surface-2:rgba(255,255,255,.05);
     --grid-line:rgba(255,255,255,.012); --grid-op:.5;
-    --mono:"JetBrains Mono",ui-monospace,monospace; --serif:"Fraunces",Georgia,serif;
+    --sans:"Geist",-apple-system,system-ui,sans-serif;
+    --mono:"Geist Mono",ui-monospace,monospace; --serif:"Geist",-apple-system,system-ui,sans-serif;
   }
   :root[data-theme="light"]{
-    --bg:#f4f2ea; --bg-2:#fbfaf4; --ink:#1a1813; --dim:#5c5749; --faint:#9a9484;
-    --line:#ddd6c7; --line-soft:#e8e2d4; --accent:#d8420a;
+    --bg:#fbfcfc; --bg-2:#ffffff; --ink:#191f20; --dim:#5d6a6d; --faint:#9aa4a6;
+    --line:rgba(20,30,32,.1); --line-soft:rgba(20,30,32,.06); --accent:#0b8d86;
+    --brand-dim:rgba(11,141,134,.4); --brand-faint:rgba(11,141,134,.08); --surface-2:rgba(20,30,32,.045);
     --grid-line:rgba(0,0,0,.022); --grid-op:.6;
   }
   :root{color-scheme:dark} :root[data-theme="light"]{color-scheme:light}
   html,body{transition:background .4s ease,color .4s ease}
   *{box-sizing:border-box;margin:0;padding:0}
   html{scroll-behavior:smooth}
-  body{background:var(--bg);color:var(--ink);font-family:var(--mono);font-size:14px;line-height:1.5;
+  body{background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:14px;line-height:1.5;
     -webkit-font-smoothing:antialiased;overflow-x:hidden;min-height:100vh}
   body::before{content:"";position:fixed;inset:0;z-index:0;pointer-events:none;opacity:var(--grid-op);
     background-image:repeating-linear-gradient(90deg,var(--grid-line) 0 1px,transparent 1px 90px)}
@@ -37,32 +40,35 @@
   header{border-bottom:1px solid var(--line);padding:22px 0}
   header .wrap{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px}
   .brand{display:flex;align-items:center;gap:11px}
-  .brand .mk{width:28px;height:28px;border:1.5px solid var(--ink);border-radius:5px;display:grid;place-items:center;font-family:var(--serif);font-weight:600;font-size:13px}
-  .brand .bn{font-size:13px;letter-spacing:.2em}.brand .bn b{color:var(--accent);font-weight:500}
+  .brand .bn{font-family:var(--sans);font-size:16px;font-weight:600;letter-spacing:-.012em;color:var(--ink)}
+  .brand .bn .lc{font-weight:400}
   header .right{display:flex;align-items:center;gap:16px}
   header .tagline{font-size:11px;color:var(--faint);letter-spacing:.06em}
 
   /* ---------- view switcher (shared across all four chooser views) ---------- */
-  .views{display:inline-flex;align-items:center;gap:2px;border:1px solid var(--line);border-radius:8px;
-    padding:3px;background:var(--bg)}
-  .views a{font-size:11px;letter-spacing:.04em;color:var(--dim);text-decoration:none;padding:5px 10px;border-radius:5px;
+  .views{position:fixed;top:14px;left:50%;transform:translateX(-50%);z-index:60;
+    display:inline-flex;align-items:center;gap:3px;border:1px solid var(--line);border-radius:999px;
+    padding:4px;background:color-mix(in srgb,var(--bg) 82%, transparent);
+    backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);box-shadow:0 6px 24px -12px rgba(0,0,0,.3)}
+  .views a{font-size:12.5px;font-weight:500;letter-spacing:0;color:var(--dim);text-decoration:none;padding:6px 13px;border-radius:999px;
     transition:background .16s,color .16s;white-space:nowrap}
-  .views a:hover{color:var(--ink);background:var(--line-soft)}
-  .views a.on{background:var(--accent);color:#0a0a0a;font-weight:600;cursor:default}
-  @media(max-width:680px){ header .tagline{display:none} .views a{padding:5px 8px} }
-  .theme-toggle{width:32px;height:32px;border:1px solid var(--line);border-radius:6px;background:transparent;
-    display:grid;place-items:center;cursor:pointer;color:var(--dim);transition:border-color .2s,color .2s;flex-shrink:0}
-  .theme-toggle:hover{border-color:var(--accent);color:var(--ink)}
-  .theme-toggle svg{width:14px;height:14px}.theme-toggle .moon{display:none}
+  .views a:hover{color:var(--ink);background:var(--surface-2)}
+  .views a.on{background:var(--surface-2);color:var(--ink);font-weight:600;cursor:default}
+  .views .sep{width:1px;height:18px;background:var(--line);margin:0 3px}
+  @media(max-width:680px){ .views a{padding:6px 10px} }
+  .theme-toggle{width:30px;height:30px;border:none;border-radius:999px;background:transparent;
+    display:grid;place-items:center;cursor:pointer;color:var(--dim);transition:color .2s,background .2s;flex-shrink:0}
+  .theme-toggle:hover{color:var(--ink);background:var(--surface-2)}
+  .theme-toggle svg{width:15px;height:15px}.theme-toggle .moon{display:none}
   :root[data-theme="light"] .theme-toggle .sun{display:none}
   :root[data-theme="light"] .theme-toggle .moon{display:block}
 
   .hero{padding:64px 0 40px;border-bottom:1px solid var(--line)}
-  .hero .kick{font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:var(--faint);display:inline-flex;align-items:center;gap:10px;margin-bottom:22px}
+  .hero .kick{font-family:var(--mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--faint);display:inline-flex;align-items:center;gap:10px;margin-bottom:22px}
   .hero .kick::before{content:"";width:22px;height:1px;background:var(--accent)}
-  .hero h1{font-family:var(--serif);font-weight:330;font-size:clamp(32px,5.4vw,58px);line-height:1.02;letter-spacing:-.02em;max-width:18ch}
-  .hero h1 em{font-style:italic;color:var(--accent)}
-  .hero p{margin-top:22px;max-width:62ch;font-size:14.5px;line-height:1.7;color:var(--dim)}
+  .hero h1{font-family:var(--sans);font-weight:600;font-size:clamp(34px,5.6vw,58px);line-height:1.08;letter-spacing:-.03em;max-width:18ch}
+  .hero h1 em{font-style:normal;color:var(--accent)}
+  .hero p{margin-top:22px;max-width:62ch;font-size:15px;line-height:1.65;color:var(--dim)}
   .hero p b{color:var(--ink);font-weight:500}
 
   .gallery{padding:48px 0 70px}
@@ -76,20 +82,19 @@
   .card:hover::before{transform:scaleY(1)}
   .card:hover{border-color:var(--ca,var(--accent))}
   .card .top{display:flex;justify-content:space-between;align-items:center;margin-bottom:auto}
-  .card .id{font-size:11px;color:var(--faint);letter-spacing:.1em}
+  .card .id{font-family:var(--mono);font-size:11px;color:var(--faint);letter-spacing:.06em}
   .card .swatch{display:flex;gap:5px}
   .card .swatch i{width:13px;height:13px;border-radius:3px;display:block}
-  .card h2{font-family:var(--serif);font-weight:430;font-size:25px;letter-spacing:-.01em;margin:16px 0 7px}
-  .card h2 .ca{color:var(--ca,var(--accent))}
-  .card .d{font-size:12px;color:var(--dim);line-height:1.5}
+  .card h2{font-family:var(--sans);font-weight:600;font-size:22px;letter-spacing:-.015em;margin:16px 0 7px}
+  .card h2 .ca{color:var(--ink)}
+  .card .d{font-size:13.5px;color:var(--dim);line-height:1.55}
   .card .d code{font-family:var(--mono);font-size:.92em;color:var(--ca,var(--accent));background:var(--line-soft);padding:1px 4px;border-radius:3px}
   .card .go{margin-top:14px;font-size:11px;letter-spacing:.08em;color:var(--ca,var(--accent));display:inline-flex;align-items:center;gap:7px}
   .card .go .ar{transition:transform .25s}.card:hover .go .ar{transform:translateX(4px)}
   .card.span2{grid-column:span 2}
   @media(max-width:680px){.grid{grid-template-columns:1fr}.card.span2{grid-column:span 1}}
 
-  .subhead{grid-column:1/-1;display:flex;align-items:center;gap:14px;margin:14px 0 2px;font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--faint)}
-  .subhead::after{content:"";flex:1;height:1px;background:var(--line)}
+  .subhead{grid-column:1/-1;margin:26px 0 6px;font-family:var(--sans);font-size:13px;font-weight:600;letter-spacing:-.01em;color:var(--dim)}
 
   footer{border-top:1px solid var(--line);padding:26px 0}
   footer .wrap{display:flex;justify-content:space-between;flex-wrap:wrap;gap:10px;font-size:11px;color:var(--faint);letter-spacing:.05em}
@@ -99,27 +104,26 @@
 <body>
   <header>
     <div class="wrap">
-      <div class="brand"><span class="mk">N</span><span class="bn">NYS<b>GPT</b></span></div>
+      <div class="brand"><span class="bn">NYS<span class="lc">gpt</span></span></div>
       <div class="right">
-        <span class="tagline">GRID VIEW · LANDING-PAGE EXPLORATIONS</span>
         <nav class="views" aria-label="Gallery views">
           <a href="index.html">Gallery</a>
           <a href="index-switchboard.html">Switchboard</a>
           <a href="index-map.html">Map</a>
           <a href="index-wall.html">Wall</a>
           <a class="on" href="index-grid.html" aria-current="page">Grid</a>
+          <span class="sep"></span>
+          <button class="theme-toggle" id="themeToggle" type="button" aria-label="Toggle theme" title="Toggle theme">
+            <svg class="sun" viewBox="0 0 24 24" fill="none" stroke="#e0a13c" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4" fill="#e0a13c"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>
+            <svg class="moon" viewBox="0 0 24 24" fill="#fdf0c9" stroke="#033882" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+          </button>
         </nav>
-        <button class="theme-toggle" id="themeToggle" type="button" aria-label="Toggle light and dark mode" title="Toggle theme">
-          <svg class="sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>
-          <svg class="moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
-        </button>
       </div>
     </div>
   </header>
 
   <section class="hero">
     <div class="wrap">
-      <div class="kick">One company · many faces</div>
       <h1>Landing pages for an <em>AI-first</em> software company.</h1>
       <p>NYSGPT builds domain-specific AI applications for complex, legacy, and regulatory systems — eight shipped products. <b>This is a working gallery of design directions for its landing page</b>, each a complete page with light/dark and a live design playground. Pick one to open it full-screen.</p>
     </div>
@@ -130,7 +134,7 @@
       <div class="gh"><span class="t">▸ Directions</span><span class="t">22 explorations · 6 families</span></div>
       <div class="grid">
 
-        <div class="subhead">A · Editorial family — serif + hairline rules / newsprint · 4</div>
+        <div class="subhead">Editorial</div>
 
         <a class="card" href="variant-a.html" style="--ca:#ff5a1f">
           <div class="top"><span class="id">A · 01</span><span class="swatch"><i style="background:#0a0c0f"></i><i style="background:#ece7dd"></i><i style="background:#ff5a1f"></i></span></div>
@@ -160,7 +164,7 @@
           <span class="go">Open <span class="ar">→</span></span>
         </a>
 
-        <div class="subhead">B · Luminous family — glow + motion / atmosphere · 5</div>
+        <div class="subhead">Luminous</div>
 
         <a class="card" href="variant-b.html" style="--ca:#46e3d0">
           <div class="top"><span class="id">B · 05</span><span class="swatch"><i style="background:#06070d"></i><i style="background:#8b7bff"></i><i style="background:#46e3d0"></i></span></div>
@@ -186,7 +190,7 @@
         <a class="card" href="variant-b3-halo.html" style="--ca:#e8c98a">
           <div class="top"><span class="id">B3 · 08</span><span class="swatch"><i style="background:#0a0a0c"></i><i style="background:#e8c98a"></i><i style="background:#b8862e"></i></span></div>
           <h2><span class="ca">Halo</span></h2>
-          <div class="d">One soft lamp in a dark room — a single volumetric spotlight that breathes, near-monochrome, generous quiet. Fraunces serif, the products as a calm restrained ledger. The pragmatic one.</div>
+          <div class="d">One soft lamp in a dark room — a single volumetric spotlight that breathes, near-monochrome, generous quiet. Prata serif, the products as a calm restrained ledger. The pragmatic one.</div>
           <span class="go">Open <span class="ar">→</span></span>
         </a>
 
@@ -197,7 +201,7 @@
           <span class="go">Open <span class="ar">→</span></span>
         </a>
 
-        <div class="subhead">C · Blueprint family — technical drafting / cyanotype · 4</div>
+        <div class="subhead">Blueprint</div>
 
         <a class="card" href="variant-c2-schematic.html" style="--ca:#28e0b0">
           <div class="top"><span class="id">C2 · 10</span><span class="swatch"><i style="background:#071318"></i><i style="background:#46c8ff"></i><i style="background:#28e0b0"></i></span></div>
@@ -227,7 +231,7 @@
           <span class="go">Open <span class="ar">→</span></span>
         </a>
 
-        <div class="subhead">D · Monochrome family — white / black / gray · shadow is the only ink · 3</div>
+        <div class="subhead">Monochrome</div>
 
         <a class="card" href="variant-d1-paper.html" style="--ca:#8a8c92">
           <div class="top"><span class="id">D1 · 14</span><span class="swatch"><i style="background:#e9e9ec"></i><i style="background:#b8bac0"></i><i style="background:#1a1b1f"></i></span></div>
@@ -250,7 +254,7 @@
           <span class="go">Open <span class="ar">→</span></span>
         </a>
 
-        <div class="subhead">E · Interactive family — not a page you scroll · a thing you operate · 3</div>
+        <div class="subhead">Interactive</div>
 
         <a class="card" href="variant-e1-terminal.html" style="--ca:#4fd6a8">
           <div class="top"><span class="id">E1 · 17</span><span class="swatch"><i style="background:#08090c"></i><i style="background:#5cc8ff"></i><i style="background:#4fd6a8"></i></span></div>
@@ -273,7 +277,7 @@
           <span class="go">Open <span class="ar">→</span></span>
         </a>
 
-        <div class="subhead">F · Playful family — game-UI cosplay · actually playable · 3</div>
+        <div class="subhead">Playful</div>
 
         <a class="card" href="variant-f1-roblox.html" style="--ca:#00b06f">
           <div class="top"><span class="id">F1 · 20</span><span class="swatch"><i style="background:#191b1f"></i><i style="background:#3b9dff"></i><i style="background:#00b06f"></i></span></div>

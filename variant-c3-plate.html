@@ -7,7 +7,7 @@
 <meta name="description" content="NYSGPT — AI-first software for complex, legacy, and regulatory systems. Eight products drawn as an exploded assembly plate." />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..600;1,9..144,400&family=IBM+Plex+Mono:wght@300;400;500;600&family=IBM+Plex+Sans:wght@400;500;600&family=Spline+Sans:wght@400;500;600&display=swap" rel="stylesheet" />
+<link href="https://fonts.googleapis.com/css2?family=Prata&family=IBM+Plex+Mono:wght@300;400;500;600&family=IBM+Plex+Sans:wght@400;500;600&family=Spline+Sans:wght@400;500;600&display=swap" rel="stylesheet" />
 <script>
   // PLATE default = LIGHT drafting paper (the inversion). Dark only when chosen.
   (function(){ try{ var t=localStorage.getItem('nysgpt-theme-c3'); if(t==='dark') document.documentElement.setAttribute('data-theme','dark'); }catch(e){} })();
@@ -31,7 +31,7 @@
     --grid-strong:rgba(28,95,168,.13);
     --balloon-bg:#fbfaf4;
     --shadow:rgba(30,50,80,.12);
-    --font-display:"Fraunces", Georgia, serif;
+    --font-display:"Prata", Georgia, serif;
     --font-mono:"IBM Plex Mono", ui-monospace, monospace;
     --font-sans:"IBM Plex Sans", system-ui, sans-serif;
     --maxw:1200px;
@@ -434,7 +434,7 @@
     <label class="pg-sw custom" title="Custom">+<input type="color" id="pgAccentCustom" value="#c0381a" /></label>
   </div></div>
   <div class="pg-grp"><label>Display font</label><div class="pg-fonts" id="pgDisplay">
-    <button class="pg-font on" data-f='"Fraunces", serif' style='font-family:"Fraunces",serif'>Fraunces<span class="pf">serif</span></button>
+    <button class="pg-font on" data-f='"Prata", serif' style='font-family:"Prata",serif'>Prata<span class="pf">serif</span></button>
     <button class="pg-font" data-f='"IBM Plex Sans", sans-serif' style='font-family:"IBM Plex Sans",sans-serif'>Plex<span class="pf">sans</span></button>
     <button class="pg-font" data-f='"IBM Plex Mono", monospace' style='font-family:"IBM Plex Mono",monospace'>Plex M.<span class="pf">mono</span></button>
     <button class="pg-font" data-f='"Spline Sans", sans-serif' style='font-family:"Spline Sans",sans-serif'>Spline<span class="pf">sans</span></button>
@@ -443,7 +443,7 @@
     <button class="pg-font on" data-f='"IBM Plex Sans", sans-serif' style='font-family:"IBM Plex Sans",sans-serif'>Plex<span class="pf">sans</span></button>
     <button class="pg-font" data-f='"Spline Sans", sans-serif' style='font-family:"Spline Sans",sans-serif'>Spline<span class="pf">sans</span></button>
     <button class="pg-font" data-f='"IBM Plex Mono", monospace' style='font-family:"IBM Plex Mono",monospace'>Plex M.<span class="pf">mono</span></button>
-    <button class="pg-font" data-f='"Fraunces", serif' style='font-family:"Fraunces",serif'>Fraunces<span class="pf">serif</span></button>
+    <button class="pg-font" data-f='"Prata", serif' style='font-family:"Prata",serif'>Prata<span class="pf">serif</span></button>
   </div></div>
   <div class="pg-grp"><label>Corner rounding <span class="v" id="pgRadVal">1.0×</span></label><input type="range" class="pg-range" id="pgRadius" min="0" max="4" step="0.2" value="1" /></div>
   <div class="pg-grp"><label>Heading weight <span class="v" id="pgWghtVal">0</span></label><input type="range" class="pg-range" id="pgWght" min="-40" max="240" step="10" value="0" /></div>
