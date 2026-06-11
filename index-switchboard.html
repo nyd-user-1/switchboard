@@ -1,0 +1,590 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>NYSGPT — switchboard</title>
+<meta name="description" content="An operator's directory of the NYSGPT landing-page design gallery — 22 explorations across 6 families, navigated by keyboard with a live preview." />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600&family=Geist+Mono:wght@300;400;500&display=swap" rel="stylesheet" />
+<script>
+  // dark is default; go light only when explicitly chosen. (key shared with the gallery)
+  (function(){ try{ if(localStorage.getItem('nysgpt-theme-sw')==='light') document.documentElement.setAttribute('data-theme','light'); }catch(e){} })();
+</script>
+<style>
+  /* ============================================================
+     The Switchboard, re-dressed in the house portfolio language:
+     same operator layout (rail + live preview, keyboard-driven),
+     now wearing the gallery's tokens — Geist, translucent
+     surfaces, rounded pills, and cyan as the one sparing accent
+     where ink used to do all the work. ========================== */
+  :root{
+    --bg:#0d1112; --bg-2:#0b0f10; --panel:#101516; --ink:#f1f5f5; --dim:#9aa6a8; --faint:#5f6c6f;
+    --line:rgba(255,255,255,.09); --line-soft:rgba(255,255,255,.055);
+    --surface:rgba(255,255,255,.028); --surface-2:rgba(255,255,255,.05);
+    --brand:#63d8d0; --brand-dim:rgba(99,216,208,.4); --brand-faint:rgba(99,216,208,.12);
+    --contrast:#f1f5f5; --on-contrast:#0d1112;
+    --sel:rgba(255,255,255,.05);         /* selection wash stays neutral; the brand hairline carries it */
+    --mono:"Geist Mono",ui-monospace,monospace; --sans:"Geist",-apple-system,system-ui,sans-serif;
+    --r-s:10px; --r-m:16px; --r-l:22px;
+    --rail:392px;
+    color-scheme:dark;
+  }
+  :root[data-theme="light"]{
+    --bg:#fbfcfc; --bg-2:#f4f6f6; --panel:#ffffff; --ink:#191f20; --dim:#5d6a6d; --faint:#9aa4a6;
+    --line:rgba(20,30,32,.1); --line-soft:rgba(20,30,32,.06);
+    --surface:rgba(20,30,32,.025); --surface-2:rgba(20,30,32,.045);
+    --brand:#0b8d86; --brand-dim:rgba(11,141,134,.4); --brand-faint:rgba(11,141,134,.08);
+    --contrast:#191f20; --on-contrast:#fbfcfc;
+    --sel:rgba(20,30,32,.04);
+    color-scheme:light;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%}
+  /* body is the clean grotesque; mono is reserved for operator metadata (ids, counts, keycaps) */
+  body{background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:13px;line-height:1.5;
+    font-weight:400;-webkit-font-smoothing:antialiased;overflow:hidden;
+    transition:background .4s ease,color .4s ease}
+  .app{position:relative;z-index:1;height:100vh;height:100dvh;display:grid;
+    grid-template-rows:auto 1fr auto;}
+  .mono{font-family:var(--mono)}
+
+  /* ---------- top bar ---------- */
+  .topbar{display:flex;align-items:center;justify-content:space-between;gap:14px;
+    padding:14px 22px;border-bottom:1px solid var(--line);background:var(--panel)}
+  .brand{display:flex;align-items:center;gap:11px;flex-shrink:0}
+  .brand .mk{width:28px;height:28px;border:1px solid var(--brand-dim);border-radius:50%;display:grid;place-items:center;
+    background:var(--brand-faint);color:var(--brand);font-family:var(--sans);font-weight:600;font-size:13px}
+  .brand .bn{font-size:13px;letter-spacing:.24em;font-weight:300}.brand .bn b{color:var(--ink);font-weight:600}
+  .brand .div{width:1px;height:20px;background:var(--line);margin:0 4px}
+  .brand .mode{font-size:10.5px;letter-spacing:.18em;text-transform:uppercase;color:var(--faint);font-family:var(--mono)}
+  .topbar .left{display:flex;align-items:center;gap:14px;min-width:0}
+  .topbar .right{display:flex;align-items:center;gap:10px}
+
+  /* ---------- view switcher (the gallery's pill nav) ---------- */
+  .views{display:inline-flex;align-items:center;gap:3px;border:1px solid var(--line);border-radius:999px;
+    padding:4px;background:var(--surface)}
+  .views a{font-family:var(--sans);font-size:12.5px;font-weight:500;color:var(--dim);text-decoration:none;
+    padding:5px 12px;border-radius:999px;transition:background .16s,color .16s;white-space:nowrap}
+  .views a:hover{color:var(--ink);background:var(--surface-2)}
+  .views a.on{background:var(--surface-2);color:var(--ink);cursor:default}
+  @media(max-width:840px){ .topbar .left .mode{display:none} .views a{padding:5px 8px} }
+  .kbdhint{font-size:10.5px;color:var(--faint);letter-spacing:.04em;display:flex;gap:13px;font-family:var(--mono)}
+  .kbdhint b{color:var(--dim);font-weight:500}
+  .kbdhint kbd{font-family:var(--mono);border:1px solid var(--line);border-bottom-width:2px;border-radius:4px;
+    padding:1px 5px;color:var(--dim);font-size:10px}
+  .iconbtn{width:32px;height:32px;border:1px solid var(--line);border-radius:999px;background:transparent;
+    display:grid;place-items:center;cursor:pointer;color:var(--dim);transition:border-color .2s,color .2s,background .2s;flex-shrink:0}
+  .iconbtn:hover{border-color:var(--brand-dim);color:var(--ink);background:var(--surface-2)}
+  .iconbtn svg{width:14px;height:14px}.iconbtn .moon{display:none}
+  :root[data-theme="light"] .iconbtn .sun{display:none}
+  :root[data-theme="light"] .iconbtn .moon{display:block}
+
+  /* ---------- main split ---------- */
+  .main{display:grid;grid-template-columns:var(--rail) 1fr;min-height:0;overflow:hidden}
+
+  /* rail */
+  .rail{border-right:1px solid var(--line);background:var(--panel);display:flex;flex-direction:column;min-height:0;overflow:hidden}
+  .search{padding:13px 16px;border-bottom:1px solid var(--line-soft);position:relative;flex-shrink:0}
+  .search .pre{position:absolute;left:26px;top:50%;transform:translateY(-50%);color:var(--dim);font-weight:500;pointer-events:none;font-family:var(--mono)}
+  .search input{width:100%;background:var(--surface);border:1px solid var(--line);border-radius:var(--r-s);
+    color:var(--ink);font-family:var(--mono);font-size:12.5px;padding:9px 12px 9px 28px;outline:none;
+    transition:border-color .18s,box-shadow .18s}
+  .search input::placeholder{color:var(--faint)}
+  .search input:focus{border-color:var(--brand-dim);box-shadow:0 0 0 3px var(--brand-faint)}
+  .search .count{position:absolute;right:26px;top:50%;transform:translateY(-50%);font-size:10.5px;color:var(--faint);font-family:var(--mono)}
+
+  .list{flex:1;overflow-y:auto;overflow-x:hidden;padding:8px 0 16px;scrollbar-width:thin;scrollbar-color:var(--line) transparent}
+  .list::-webkit-scrollbar{width:9px}.list::-webkit-scrollbar-thumb{background:var(--line);border-radius:5px;border:3px solid var(--panel)}
+
+  .famhead{display:flex;align-items:center;gap:9px;padding:16px 18px 7px;font-family:var(--mono);
+    font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:var(--faint);position:sticky;top:0;
+    background:var(--panel);z-index:2}
+  .famhead .key{border:1px solid var(--line);border-radius:4px;padding:0 4px;font-size:9px;color:var(--dim)}
+  .famhead .ln{flex:1;height:1px;background:var(--line-soft)}
+  .famhead .n{color:var(--faint)}
+
+  .row{display:flex;align-items:center;gap:11px;padding:9px 18px;cursor:pointer;position:relative;
+    text-decoration:none;color:var(--ink);transition:background .14s}   /* never the browser default link blue / underline */
+  /* selection indicator: a crisp brand hairline that animates in, not a colored fill */
+  .row::before{content:"";position:absolute;left:0;top:50%;height:0;width:2px;background:var(--brand);
+    transform:translateY(-50%);transition:height .2s ease}
+  .row .idx{font-size:10px;color:var(--faint);width:26px;flex-shrink:0;letter-spacing:.02em;font-family:var(--mono)}
+  .row .sw{display:flex;gap:3px;flex-shrink:0}
+  .row .sw i{width:9px;height:9px;border-radius:3px;display:block;box-shadow:0 0 0 1px rgba(0,0,0,.25) inset}
+  .row .nm{font-family:var(--sans);font-size:15px;font-weight:400;letter-spacing:-.005em;flex:1;
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis;transition:font-weight .15s}
+  .row .nm mark{background:transparent;color:var(--ink);font-weight:600;text-decoration:underline;text-underline-offset:3px;
+    text-decoration-thickness:1px;text-decoration-color:var(--brand)}
+  .row .ar{font-size:12px;color:var(--faint);opacity:0;transform:translateX(-4px);transition:.18s;flex-shrink:0;font-family:var(--mono)}
+  .row:hover{background:var(--line-soft)}
+  .row.on{background:var(--sel)}
+  .row.on::before{height:60%}
+  .row.on .idx{color:var(--ink)}
+  .row.on .nm{font-weight:600}
+  .row.on .ar{opacity:1;transform:none;color:var(--brand)}
+  .row.hidden{display:none}
+  .famhead.hidden{display:none}
+  .empty{padding:40px 18px;color:var(--faint);font-size:12px;text-align:center;display:none}
+  .empty.show{display:block}
+
+  /* preview stage */
+  .stage{position:relative;min-width:0;display:flex;flex-direction:column;background:var(--bg-2);overflow:hidden}
+  /* the gallery's dot atmosphere, masked to the top of the stage */
+  .stage::before{content:"";position:absolute;inset:0;pointer-events:none;z-index:0;
+    background-image:radial-gradient(var(--brand-dim) 1px, transparent 1px);
+    background-size:26px 26px;opacity:.22;
+    -webkit-mask-image:radial-gradient(480px 320px at 50% 0%, #000 20%, transparent 100%);
+            mask-image:radial-gradient(480px 320px at 50% 0%, #000 20%, transparent 100%)}
+  .stage::after{content:"";position:absolute;inset:0;pointer-events:none;z-index:5;
+    box-shadow:inset 0 0 120px rgba(0,0,0,.28)}
+  :root[data-theme="light"] .stage::after{box-shadow:inset 0 0 110px rgba(0,0,0,.08)}
+
+  .meta{display:flex;align-items:flex-end;justify-content:space-between;gap:20px;padding:30px 36px 22px;flex-shrink:0;z-index:6}
+  .meta .l{min-width:0}
+  .meta .crumb{font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--faint);font-family:var(--mono);
+    display:flex;align-items:center;gap:9px;margin-bottom:13px}
+  .meta .crumb .dot{width:8px;height:8px;border-radius:50%;background:var(--ca)}  /* the only loud color: the design's own swatch */
+  /* the variant name in the portfolio's display voice: confident weight, tight tracking */
+  .meta h1{font-family:var(--sans);font-weight:600;font-size:clamp(30px,4vw,46px);line-height:1.12;letter-spacing:-.035em;color:var(--ink)}
+  .meta h1 .acc{font-weight:600}
+  .meta .desc{margin-top:15px;max-width:58ch;font-size:13.5px;line-height:1.65;color:var(--dim);font-weight:400}
+  .meta .r{flex-shrink:0;text-align:right;display:flex;flex-direction:column;align-items:flex-end;gap:14px}
+  .meta .swbig{display:flex;gap:6px}
+  .meta .swbig i{width:30px;height:30px;border-radius:8px;display:block;box-shadow:0 1px 5px rgba(0,0,0,.4),0 0 0 1px rgba(255,255,255,.06) inset}
+  /* open = the one strong contrast move: solid-contrast pill, like the portfolio's primary button */
+  .openbtn{display:inline-flex;align-items:center;gap:9px;padding:10px 20px;border-radius:999px;
+    background:var(--contrast);color:var(--on-contrast);font-family:var(--sans);font-weight:500;font-size:13px;letter-spacing:.01em;
+    text-decoration:none;border:none;cursor:pointer;transition:transform .16s,opacity .16s;white-space:nowrap}
+  .openbtn:hover{transform:translateY(-2px);opacity:.88}
+  .openbtn .k{font-family:var(--mono);font-size:10px;opacity:.6;border:1px solid currentColor;border-radius:4px;padding:0 4px;margin-left:3px}
+
+  .screen{flex:1;position:relative;margin:0 34px 30px;border:1px solid var(--line);border-radius:var(--r-l);
+    overflow:hidden;min-height:0;background:var(--panel);
+    box-shadow:0 40px 90px -40px rgba(0,0,0,.7), 0 0 0 1px rgba(255,255,255,.02) inset}
+  :root[data-theme="light"] .screen{box-shadow:0 24px 60px -32px rgba(20,30,32,.28)}
+  .screen .chrome{height:34px;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:8px;
+    padding:0 13px;background:var(--surface);flex-shrink:0;position:relative;z-index:3}
+  .screen .chrome .lights{display:flex;gap:6px}
+  .screen .chrome .lights i{width:9px;height:9px;border-radius:50%;background:var(--line)}
+  .screen .chrome .url{flex:1;text-align:center;font-size:11px;color:var(--faint);letter-spacing:.02em;font-family:var(--mono);
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .screen .chrome .url b{color:var(--dim);font-weight:500}
+  /* a quiet "live" signal — the one bit of motion that says this is a real, running page */
+  .screen .chrome .live{display:flex;align-items:center;gap:6px;font-family:var(--mono);font-size:9.5px;
+    letter-spacing:.14em;text-transform:uppercase;color:var(--faint);flex-shrink:0}
+  .screen .chrome .live .pip{width:6px;height:6px;border-radius:50%;background:var(--brand);animation:breathe 2.4s ease-in-out infinite}
+  @keyframes breathe{0%,100%{opacity:.3}50%{opacity:1}}
+  .framewrap{position:relative;flex:1;min-height:0;overflow:hidden}
+  /* iframe is rendered at a fixed logical size then scaled down to a crisp thumbnail.
+     A fixed pixel size + transform:scale keeps the variant's own responsive layout
+     pinned to a desktop viewport, so previews read as the real page, not a squished one. */
+  /* pooled preview iframes stack in the same box; only the active one is opaque */
+  .framewrap iframe{position:absolute;top:0;left:0;border:0;
+    width:1440px;height:900px;transform-origin:top left;background:var(--panel);
+    transition:opacity .26s ease, filter .26s ease}
+  .screen{display:flex;flex-direction:column}
+  .loadbar{position:absolute;top:34px;left:0;right:0;height:2px;background:transparent;z-index:4;overflow:hidden}
+  .loadbar i{position:absolute;inset:0;width:35%;background:var(--brand);
+    animation:slide 1s ease-in-out infinite;opacity:0;transition:opacity .2s}
+  .loadbar.go i{opacity:.9}
+  @keyframes slide{0%{transform:translateX(-100%)}100%{transform:translateX(320%)}}
+  /* dim (not hide) the outgoing frame while the next one loads — avoids a flash of empty panel */
+  .framewrap iframe.stale{filter:brightness(.5) saturate(.7)}
+
+  /* clickable overlay so the whole preview opens the page */
+  .screen .hit{position:absolute;inset:34px 0 0;z-index:4;cursor:pointer}
+  .screen .hit .cue{position:absolute;left:50%;bottom:18px;transform:translateX(-50%) translateY(8px);
+    background:rgba(13,17,18,.82);backdrop-filter:blur(8px);border:1px solid var(--line);font-family:var(--mono);
+    border-radius:999px;padding:7px 15px;font-size:11px;color:var(--ink);letter-spacing:.02em;
+    opacity:0;transition:.2s;pointer-events:none;white-space:nowrap}
+  .screen:hover .hit .cue{opacity:1;transform:translateX(-50%)}
+  :root[data-theme="light"] .screen .hit .cue{background:rgba(255,255,255,.9)}
+
+  /* ---------- bottom strip ---------- */
+  .foot{display:flex;align-items:center;justify-content:space-between;gap:14px;font-family:var(--mono);
+    padding:11px 22px;border-top:1px solid var(--line);background:var(--panel);font-size:11px;color:var(--faint)}
+  .foot b{color:var(--dim);font-weight:500}
+  .foot a{color:var(--faint);text-decoration:none;border-bottom:1px solid transparent;transition:color .2s,border-color .2s}
+  .foot a:hover{color:var(--ink);border-color:var(--brand)}
+  .foot .pos{font-variant-numeric:tabular-nums;letter-spacing:.04em}
+
+  /* ---------- mobile ----------
+     The keyboard+live-preview model is a desktop instrument. On phones we drop the
+     heavy preview pane entirely and make the rail the whole experience: a clean,
+     tappable directory where each row opens its design directly. */
+  @media(max-width:840px){
+    body{overflow:auto;font-size:14px}
+    .app{height:auto;min-height:100dvh;grid-template-rows:auto 1fr auto}
+    .main{grid-template-columns:1fr}
+    .kbdhint{display:none}
+    .stage{display:none}                 /* no live-preview pane on mobile */
+    .rail{border-right:none}
+    .list{overflow:visible}
+    .search{padding:15px 18px}
+    .row{padding:14px 18px;gap:13px}
+    .row .nm{font-size:17px}
+    .row .sw i{width:11px;height:11px}
+    .row .ar{opacity:1;transform:none;color:var(--faint)}   /* always show the open arrow */
+    .row::before{display:none}
+    .famhead{padding:18px 18px 8px}
+    .foot{flex-direction:column;align-items:flex-start;gap:5px;font-size:10px}
+  }
+  @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<div class="app">
+
+  <div class="topbar">
+    <div class="left">
+      <div class="brand">
+        <span class="mk">N</span><span class="bn">NYS<b>GPT</b></span>
+      </div>
+      <nav class="views" aria-label="Gallery views">
+        <a href="index.html">Gallery</a>
+        <a class="on" href="index-switchboard.html" aria-current="page">Switchboard</a>
+        <a href="index-map.html">Map</a>
+        <a href="index-wall.html">Wall</a>
+        <a href="index-grid.html">Grid</a>
+      </nav>
+    </div>
+    <div class="right">
+      <div class="kbdhint">
+        <span><kbd>↑</kbd><kbd>↓</kbd> <b>move</b></span>
+        <span><kbd>↵</kbd> <b>open</b></span>
+        <span><kbd>/</kbd> <b>filter</b></span>
+      </div>
+      <button class="iconbtn" id="themeToggle" type="button" aria-label="Toggle theme" title="Toggle theme">
+        <svg class="sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>
+        <svg class="moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+      </button>
+    </div>
+  </div>
+
+  <div class="main">
+    <!-- RAIL -->
+    <aside class="rail">
+      <div class="search">
+        <span class="pre">/</span>
+        <input id="q" type="text" placeholder="filter 22 designs…" autocomplete="off" spellcheck="false" aria-label="Filter designs" />
+        <span class="count" id="count">22</span>
+      </div>
+      <div class="list" id="list" role="listbox" aria-label="Design directions"></div>
+      <div class="empty" id="empty">no design matches that.</div>
+    </aside>
+
+    <!-- STAGE -->
+    <section class="stage">
+      <div class="meta">
+        <div class="l">
+          <div class="crumb"><span class="dot" id="mDot"></span><span id="mFam">Editorial family</span><span>·</span><span id="mId">A01</span></div>
+          <h1 id="mName">Broadsheet</h1>
+          <p class="desc" id="mDesc"></p>
+        </div>
+        <div class="r">
+          <div class="swbig" id="mSw"></div>
+          <a class="openbtn" id="openBtn" href="#" >Open full page <span class="k">↵</span></a>
+        </div>
+      </div>
+
+      <div class="screen">
+        <div class="chrome">
+          <div class="lights"><i></i><i></i><i></i></div>
+          <div class="url"><b>nysgpt</b><span id="mUrl">/variant-a.html</span></div>
+          <div class="live"><span class="pip"></span>live</div>
+        </div>
+        <div class="loadbar" id="loadbar"><i></i></div>
+        <div class="framewrap" id="frameWrap"><!-- live preview iframes are pooled in by JS --></div>
+        <a class="hit" id="hit" href="#"><span class="cue">Click anywhere to open this design →</span></a>
+      </div>
+    </section>
+  </div>
+
+  <div class="foot">
+    <div><b>22</b> explorations · <b>6</b> families · a working gallery of landing-page directions for an AI-first software company</div>
+    <div class="pos"><span id="posIdx">01</span> / 22 &nbsp;·&nbsp; <a href="mailto:Brendan@nysgpt.com">Brendan@nysgpt.com</a></div>
+  </div>
+</div>
+
+<script>
+/* ============ canonical data ============ */
+const FAMILIES = [
+  {key:"A", label:"Editorial family", note:"serif + hairline rules · newsprint"},
+  {key:"B", label:"Luminous family",  note:"glow · motion · atmosphere"},
+  {key:"C", label:"Blueprint family", note:"technical drafting · cyanotype"},
+  {key:"D", label:"Monochrome family",note:"white / black / gray · shadow is the ink"},
+  {key:"E", label:"Interactive family",note:"not scrolled — operated"},
+  {key:"F", label:"Playful family",   note:"game-UI cosplay · actually playable"},
+];
+const V = [
+  {fam:"A",id:"A01",name:"Broadsheet",file:"variant-a.html",sw:["#0a0c0f","#ece7dd","#ff5a1f"],d:"Editorial engineering terminal — serif + mono, hairline rules, the portfolio as a precise data ledger. Restrained, authoritative."},
+  {fam:"A",id:"A02",name:"Column",file:"variant-a1-column.html",sw:["#0b0b0c","#ece6da","#e8472a"],d:"The portfolio as a newspaper front page — nameplate, a multi-column flowed lede with a drop-cap, products as a ruled register. Night edition + newsprint."},
+  {fam:"A",id:"A03",name:"Dispatch",file:"variant-a2-dispatch.html",sw:["#0c0d0a","#e8e6db","#f0a623"],d:"A newsroom wire terminal — a live typed bulletin, a scrolling amber ticker, products filed as an AP-style wire feed that prints in. Charcoal + telex paper."},
+  {fam:"A",id:"A04",name:"Folio",file:"variant-a3-folio.html",sw:["#0c0a0b","#efe9e0","#b23a48"],d:"A luxe print-magazine spread — an oversized cover headline, an asymmetric editorial grid, pull-quotes and page-folios, products as a contents spread. Claret + cream."},
+  {fam:"B",id:"B05",name:"Aurora",file:"variant-b.html",sw:["#06070d","#8b7bff","#46e3d0"],d:"Luminous & atmospheric — drifting gradient-mesh, glowing accent, lifting cards. Frontier-lab energy, motion-forward."},
+  {fam:"B",id:"B06",name:"Signal",file:"variant-b1-signal.html",sw:["#04080a","#7bd0ff","#46e3c0"],d:"A live phosphor oscilloscope — a real canvas scope sweeps the hero, the 8 products read out as channels with their own traces. Scanlines, graticule, CRT glow."},
+  {fam:"B",id:"B07",name:"Prism",file:"variant-b2-prism.html",sw:["#05060a","#a06bff","#3fd8e8"],d:"White light through black glass — a live canvas prism disperses a beam into a moving spectrum, the headline splits into RGB channels, products lay across the band."},
+  {fam:"B",id:"B08",name:"Halo",file:"variant-b3-halo.html",sw:["#0a0a0c","#e8c98a","#b8862e"],d:"One soft lamp in a dark room — a single volumetric spotlight that breathes, near-monochrome, generous quiet. The pragmatic one."},
+  {fam:"B",id:"B09",name:"Eclipse",file:"variant-b4-eclipse.html",sw:["#040409","#c9a4ff","#7af0d6"],d:"The page hidden in the dark — your cursor is the only light. Move it and the corona reveals the layout; products bloom awake as the torch sweeps over them. The bold one."},
+  {fam:"C",id:"C10",name:"Circuit",file:"variant-c2-schematic.html",sw:["#071318","#46c8ff","#28e0b0"],d:"The portfolio as a live wiring schematic — a CORE bus routing to 8 product nodes, animated signal pulses, hover-to-trace. The most ambitious."},
+  {fam:"C",id:"C11",name:"Datasheet",file:"variant-c1-spec.html",sw:["#10130f","#d8451f","#e8a838"],d:"Pure electronics datasheet — absolute-max ratings, an electrical-characteristics table of the 8 products, revision history. Mono, amber."},
+  {fam:"C",id:"C12",name:"Plate",file:"variant-c3-plate.html",sw:["#f4f2ea","#1c5fa8","#c0381a"],d:"Exploded assembly drawing on white drafting paper — item balloons, leader lines, a parts list. The compositional, light-default one."},
+  {fam:"C",id:"C13",name:"Blueprint",file:"variant-c.html",sw:["#0a1a2f","#ff5a3c","#4cc3ff"],d:"The original all-in-one Blueprint: the portfolio drawn three ways down one page (spec sheet · schematic · exploded plate). A showcase."},
+  {fam:"D",id:"D14",name:"Paper",file:"variant-d1-paper.html",sw:["#e9e9ec","#b8bac0","#1a1b1f"],d:"Soft neumorphic — one off-white surface where objects exist only through shadow: extruded buttons, debossed plates, pressed inputs, an embossed colophon-seal. The gentle one."},
+  {fam:"D",id:"D15",name:"Slab",file:"variant-d2-slab.html",sw:["#ffffff","#000000","#5a5a5a"],d:"Hard brutalist — pure white, pure black, one harsh noon drop-shadow on everything. Oversized slab type; products overlap and z-stack; the proof a giant ghost numeral. The bold one."},
+  {fam:"D",id:"D16",name:"Vitrine",file:"variant-d3-vitrine.html",sw:["#0d0d0f","#c8b890","#f1efea"],d:"Gallery / museum — content in pools of spotlight against a near-black wall, long cast-shadows. Products presented one at a time as exhibits on plinths; proof as wall-text. The expressive one."},
+  {fam:"E",id:"E17",name:"Terminal",file:"variant-e1-terminal.html",sw:["#08090c","#5cc8ff","#4fd6a8"],d:"A working command-line REPL — the products are a corpus you query. ls products, open 44b, query \"tariff refund\", whoami, book session. The page demonstrates the product instead of describing it."},
+  {fam:"E",id:"E18",name:"Canvas",file:"variant-e2-canvas.html",sw:["#0a0b10","#8b9bff","#5ce0c0"],d:"An infinite pan/zoom map — no scroll. The eight products are nodes orbiting a glowing CORE hub, wired by shared-architecture edges. Click a node and the camera flies to it."},
+  {fam:"E",id:"E19",name:"Launcher",file:"variant-e3-launcher.html",sw:["#0b0b0e","#54d6a8","#6e8bff"],d:"The whole page is a ⌘K command-palette. Fuzzy-search the eight products and the actions with live highlighting, arrow-key navigation, and inline drill-down pages — no marketing sections at all."},
+  {fam:"F",id:"F20",name:"Discover",file:"variant-f1-roblox.html",sw:["#191b1f","#3b9dff","#00b06f"],d:"The game-launcher home recreated: the eight products as browsable experiences — gradient tiles, player counts, big Play buttons. Hit play and drop into Data-Block Run, a real click-to-collect toy."},
+  {fam:"F",id:"F21",name:"Quest",file:"variant-f2-blooket.html",sw:["#3a2db5","#22d3c5","#ff5d8f"],d:"A real, playable quiz in the classroom-game UI — candy palette, chunky buttons, our own mascots. Pick a nickname & a blook, choose a mode (incl. Hacker), answer 8 questions on real NYSGPT facts."},
+  {fam:"F",id:"F22",name:"Bank It",file:"variant-f3-outburst.html",sw:["#ff7a3c","#1fc7b6","#ffd23f"],d:"A real, playable party game in the Outburst-Jr. mold — a sunny game-show board. Pick a category, see 20 answers, tap the ten you think made the hidden list. Push-your-luck: bank it & stop while you're ahead."},
+];
+const isMobile = matchMedia("(max-width:840px)").matches;
+
+/* ============ build the rail ============ */
+const listEl = document.getElementById("list");
+const rows = [];
+FAMILIES.forEach(fam=>{
+  const members = V.filter(v=>v.fam===fam.key);
+  const head = document.createElement("div");
+  head.className = "famhead"; head.dataset.fam = fam.key;
+  head.innerHTML = `<span class="key">${fam.key}</span><span>${fam.label}</span><span class="ln"></span><span class="n">${members.length}</span>`;
+  listEl.appendChild(head);
+  members.forEach(v=>{
+    const a = document.createElement("a");
+    a.className = "row"; a.href = v.file; a.dataset.id = v.id;
+    a.innerHTML =
+      `<span class="idx">${v.id}</span>`+
+      `<span class="sw">${v.sw.map(c=>`<i style="background:${c}"></i>`).join("")}</span>`+
+      `<span class="nm" data-name="${v.name}">${v.name}</span>`+
+      `<span class="ar">→</span>`;
+    a._v = v; a._head = head;
+    listEl.appendChild(a);
+    rows.push(a);
+  });
+});
+
+/* ============ preview + selection ============ */
+const frameWrap=document.getElementById("frameWrap");
+const loadbar = document.getElementById("loadbar");
+const openBtn = document.getElementById("openBtn");
+const hit     = document.getElementById("hit");
+const mDot=document.getElementById("mDot"), mFam=document.getElementById("mFam"),
+      mId=document.getElementById("mId"), mName=document.getElementById("mName"),
+      mDesc=document.getElementById("mDesc"), mSw=document.getElementById("mSw"),
+      mUrl=document.getElementById("mUrl"), posIdx=document.getElementById("posIdx"),
+      countEl=document.getElementById("count");
+
+let cur = 0;          // index into `visible`
+let visible = rows.slice();
+
+function fmtName(v){
+  // emphasise the last word of the display name (a subtle weight bump, not a color)
+  const parts = v.name.split(" ");
+  if(parts.length===1) return `<span class="acc">${v.name}</span>`;
+  const last = parts.pop();
+  return parts.join(" ")+' <span class="acc">'+last+'</span>';
+}
+
+/* ---- iframe pool: cache recently-viewed previews so revisits snap in instantly ---- */
+const POOL_MAX = 6;
+const pool = new Map();          // file -> {iframe, loaded}
+let activeFrame = null;
+function scaleOne(ifr){
+  const w = frameWrap.clientWidth, h = frameWrap.clientHeight;
+  if(!w||!h||!ifr) return;
+  // COVER the wrap: larger of the two ratios so the 1440×900 frame always fills.
+  ifr.style.transform = `scale(${Math.max(w/1440, h/900)})`;
+}
+function scaleFrame(){ pool.forEach(e=>scaleOne(e.iframe)); }
+function getFrame(v){
+  if(pool.has(v.file)){
+    const e = pool.get(v.file); pool.delete(v.file); pool.set(v.file, e); // bump LRU
+    return e;
+  }
+  const ifr = document.createElement("iframe");
+  ifr.title = "Live design preview"; ifr.setAttribute("scrolling","no"); ifr.tabIndex = -1; ifr.loading="eager";
+  ifr.style.opacity = "0";
+  const e = {iframe:ifr, loaded:false};
+  ifr.addEventListener("load", ()=>{ e.loaded = true; scaleOne(ifr); });
+  frameWrap.appendChild(ifr);
+  pool.set(v.file, e);
+  ifr.src = v.file;
+  // evict oldest beyond the cap (never evict the active one)
+  while(pool.size > POOL_MAX){
+    const oldestKey = pool.keys().next().value;
+    if(pool.get(oldestKey) === activeFrame){ pool.delete(oldestKey); pool.set(oldestKey, activeFrame); continue; }
+    pool.get(oldestKey).iframe.remove(); pool.delete(oldestKey);
+  }
+  return e;
+}
+
+let loadTimer = null, pendingV = null;
+function showPreview(v){
+  if(isMobile) return;          // no live-preview pane on mobile — the rail IS the experience
+  pendingV = v;
+  // debounce the actual mount/swap so fast ↑↓ scrubbing doesn't fetch every intermediate page
+  clearTimeout(loadTimer);
+  loadTimer = setTimeout(()=>mountPreview(pendingV), 130);
+}
+function mountPreview(v){
+  const e = getFrame(v);
+  const ifr = e.iframe;
+  if(e === activeFrame){ return; }
+  const prev = activeFrame; activeFrame = e;
+  if(e.loaded){
+    // cached & ready → snap in, no loadbar flicker
+    loadbar.classList.remove("go");
+    scaleOne(ifr); ifr.style.opacity = "1";
+    if(prev && prev!==e) prev.iframe.style.opacity = "0";
+  } else {
+    // not ready → keep prev visible (stale), show loadbar, fade in on load
+    loadbar.classList.add("go");
+    if(prev) prev.iframe.classList.add("stale");
+    const onReady = ()=>{
+      if(activeFrame!==e) return;            // user moved on
+      loadbar.classList.remove("go");
+      scaleOne(ifr); ifr.style.opacity = "1";
+      if(prev && prev!==e){ prev.iframe.style.opacity = "0"; prev.iframe.classList.remove("stale"); }
+    };
+    if(e.loaded) onReady(); else ifr.addEventListener("load", onReady, {once:true});
+  }
+}
+
+function select(i, {open=false, push=true}={}){
+  if(i<0||i>=visible.length) return;
+  cur = i;
+  const row = visible[cur]; const v = row._v;
+  rows.forEach(r=>r.classList.remove("on"));
+  row.classList.add("on");
+  row.scrollIntoView({block:"nearest"});
+
+  // meta
+  const fam = FAMILIES.find(f=>f.key===v.fam);
+  mDot.style.background = v.sw[2];
+  document.documentElement.style.setProperty("--ca", v.sw[2]);
+  mFam.textContent = fam.label;
+  mId.textContent = v.id;
+  mName.innerHTML = fmtName(v);
+  mDesc.textContent = v.d;
+  mSw.innerHTML = v.sw.map(c=>`<i style="background:${c}"></i>`).join("");
+  mUrl.textContent = "/"+v.file;
+  openBtn.href = v.file; hit.href = v.file;
+  posIdx.textContent = String(rows.indexOf(row)+1).padStart(2,"0");
+
+  // remember + deep-link (replaceState so we don't spam history while scrubbing)
+  try{ localStorage.setItem("nysgpt-sw-last", v.id); }catch(e){}
+  if(push){ try{ history.replaceState(null,"","#"+v.id); }catch(e){} }
+
+  showPreview(v);
+  if(open) window.location.href = v.file;
+}
+
+/* size the frames responsively */
+addEventListener("resize", scaleFrame);
+const ro = new ResizeObserver(scaleFrame); ro.observe(frameWrap);
+
+/* row interactions */
+rows.forEach((r)=>{
+  r.addEventListener("mouseenter", ()=>{ if(!isMobile){ const i=visible.indexOf(r); if(i>=0&&i!==cur) select(i); } });
+  r.addEventListener("click",(e)=>{
+    // desktop: a normal click opens (it's an <a>). We still set selection first for feedback.
+    const i = visible.indexOf(r); if(i>=0) select(i);
+    // allow default navigation
+  });
+});
+
+/* the preview "open" affordances are plain <a> — default navigation is fine */
+
+/* ============ filter ============ */
+const q = document.getElementById("q");
+const emptyEl = document.getElementById("empty");
+function applyFilter(){
+  const term = q.value.trim().toLowerCase();
+  let shown = [];
+  rows.forEach(r=>{
+    const v = r._v;
+    const hay = (v.name+" "+v.id+" "+v.d+" "+FAMILIES.find(f=>f.key===v.fam).label).toLowerCase();
+    const ok = !term || hay.includes(term);
+    r.classList.toggle("hidden", !ok);
+    // highlight match in name
+    const nmEl = r.querySelector(".nm");
+    const base = nmEl.dataset.name;
+    if(term && base.toLowerCase().includes(term)){
+      const s = base.toLowerCase().indexOf(term);
+      nmEl.innerHTML = base.slice(0,s)+"<mark>"+base.slice(s,s+term.length)+"</mark>"+base.slice(s+term.length);
+    } else { nmEl.textContent = base; }
+    if(ok) shown.push(r);
+  });
+  // hide empty family heads
+  document.querySelectorAll(".famhead").forEach(h=>{
+    const fk = h.dataset.fam;
+    const any = shown.some(r=>r._v.fam===fk);
+    h.classList.toggle("hidden", !any);
+  });
+  // remember which row was focused so we keep it if it's still visible
+  const prevRow = visible === shown ? null : (rows.find(r=>r.classList.contains("on")));
+  visible = shown;
+  countEl.textContent = shown.length;
+  emptyEl.classList.toggle("show", shown.length===0);
+  if(shown.length){
+    const keep = prevRow ? shown.indexOf(prevRow) : -1;
+    select(keep >= 0 ? keep : 0);
+  }
+}
+q.addEventListener("input", applyFilter);
+
+/* ============ keyboard ============ */
+addEventListener("keydown",(e)=>{
+  const typing = document.activeElement===q;
+  if(e.key==="/" && !typing){ e.preventDefault(); q.focus(); q.select(); return; }
+  if(e.key==="Escape"){ if(typing){ q.blur(); } return; }
+  if(typing && (e.key==="ArrowDown"||e.key==="ArrowUp"||e.key==="Enter")){
+    // let arrows drive the list even while filtering
+  } else if(typing){ return; }
+
+  if(e.key==="ArrowDown"||e.key==="j"){ e.preventDefault(); select(Math.min(cur+1, visible.length-1)); }
+  else if(e.key==="ArrowUp"||e.key==="k"){ e.preventDefault(); select(Math.max(cur-1,0)); }
+  else if(e.key==="Home"){ e.preventDefault(); select(0); }
+  else if(e.key==="End"){ e.preventDefault(); select(visible.length-1); }
+  else if(e.key==="Enter"){ e.preventDefault(); if(visible[cur]) window.location.href = visible[cur]._v.file; }
+  else if(/^[1-6]$/.test(e.key) && !typing){
+    // jump to first member of family 1..6
+    const famKey = FAMILIES[(+e.key)-1].key;
+    const i = visible.findIndex(r=>r._v.fam===famKey);
+    if(i>=0) select(i);
+  }
+});
+
+/* ============ theme ============ */
+(function(){
+  const root=document.documentElement, btn=document.getElementById("themeToggle");
+  btn.addEventListener("click",()=>{
+    const light=root.getAttribute("data-theme")==="light";
+    if(light) root.removeAttribute("data-theme"); else root.setAttribute("data-theme","light");
+    try{localStorage.setItem("nysgpt-theme-sw", light?"dark":"light");}catch(e){}
+  });
+})();
+
+/* ============ boot: honor #deep-link, then last-viewed, then default ============ */
+function indexOfId(id){ return visible.findIndex(r=>r._v.id===id); }
+function resolveInitial(){
+  const hashId = (location.hash||"").replace(/^#/,"").toUpperCase();
+  if(hashId){ const i=indexOfId(hashId); if(i>=0) return i; }
+  try{ const last=localStorage.getItem("nysgpt-sw-last"); if(last){ const i=indexOfId(last); if(i>=0) return i; } }catch(e){}
+  return 0;
+}
+// react to back/forward / shared-link hash changes (only if it points elsewhere)
+addEventListener("hashchange",()=>{
+  const hashId=(location.hash||"").replace(/^#/,"").toUpperCase();
+  if(!hashId) return;
+  const i=indexOfId(hashId);
+  if(i>=0 && i!==cur) select(i,{push:false});
+});
+requestAnimationFrame(()=>{ select(resolveInitial(),{push:false}); scaleFrame(); setTimeout(scaleFrame,60); });
+</script>
+</body>
+</html>
