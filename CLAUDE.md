@@ -10,7 +10,7 @@
 
 | File | Name | Direction |
 |------|------|-----------|
-| `index.html` | **Gallery** | Index/chooser; links to all designs, grouped into 3 labeled families (Editorial / Luminous / Blueprint). Has its own light/dark. |
+| `index.html` | **Gallery** | Root index/chooser, rebuilt 2026-06-11 in the `code/resume` portfolio aesthetic (Once UI / magic-portfolio language): Geist type, floating pill nav with live NY clock, dot backdrop, staggered hero reveal, one large featured card (Terminal, scaled live iframe), then 6 hairline-divided family sections (sticky heading left, 2-col design cards right), portfolio-style footer. Dark default + light toggle (key `nysgpt-theme-sw`). Replaced the previous Switchboard rail+live-preview console; other views' nav label renamed Switchboard → Gallery. Old `#A01`-style deep links still resolve (cards keep their `id`s). |
 | `variant-a.html` | **Broadsheet** | (Editorial family) Editorial engineering terminal — Fraunces serif + Spline mono, hairline rules, portfolio as a precise data table. Signal-orange accent. |
 | `variant-a1-column.html` | **Column** | (Editorial family) Newspaper front page — double-rule nameplate + edition/folio lines, a 3-column justified lede with red drop-cap + run-in, products as a ruled "Register" index. Press-red. **Dark = night edition, light = warm newsprint.** Fraunces + Newsreader. |
 | `variant-a2-dispatch.html` | **Dispatch** | (Editorial family) Newsroom wire terminal — a **live typewriter-streamed bulletin** in the hero, a scrolling amber ticker, products filed as an **AP-style wire feed that prints in on scroll**. Mono-forward (IBM Plex Mono). Teletype-amber on charcoal; light = telex paper. The bold/functional one. |
