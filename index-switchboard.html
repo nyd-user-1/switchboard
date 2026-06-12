@@ -32,7 +32,7 @@
     color-scheme:dark;
   }
   :root[data-theme="light"]{
-    --bg:#fbfcfc; --bg-2:#f4f6f6; --panel:#ffffff; --ink:#191f20; --dim:#5d6a6d; --faint:#9aa4a6;
+    --bg:#fbfcfc; --bg-2:#ffffff; --panel:#ffffff; --ink:#191f20; --dim:#5d6a6d; --faint:#9aa4a6;
     --line:rgba(20,30,32,.1); --line-soft:rgba(20,30,32,.06);
     --surface:rgba(20,30,32,.025); --surface-2:rgba(20,30,32,.045);
     --brand:#0b8d86; --brand-dim:rgba(11,141,134,.4); --brand-faint:rgba(11,141,134,.08);
@@ -52,7 +52,7 @@
 
   /* ---------- top bar ---------- */
   .topbar{display:flex;align-items:center;justify-content:space-between;gap:14px;
-    padding:14px 22px;border-bottom:1px solid var(--line);background:var(--panel)}
+    padding:14px 22px;border-bottom:1px solid transparent;background:var(--panel)}
   .brand{display:flex;align-items:center;flex-shrink:0}
   /* the code/resume rendering of the mark: NYS semibold + gpt regular, one ink color (per the badge) */
   .brand .bn{font-family:var(--sans);font-size:16px;font-weight:600;letter-spacing:-.012em;color:var(--ink)}
@@ -96,16 +96,14 @@
   .search input:focus{border-color:var(--brand-dim);box-shadow:0 0 0 3px var(--brand-faint)}
   .search .count{position:absolute;right:26px;top:50%;transform:translateY(-50%);font-size:10.5px;color:var(--faint);font-family:var(--mono)}
 
-  .list{flex:1;overflow-y:auto;overflow-x:hidden;padding:8px 0 16px;scrollbar-width:thin;scrollbar-color:var(--line) transparent}
-  .list::-webkit-scrollbar{width:9px}.list::-webkit-scrollbar-thumb{background:var(--line);border-radius:5px;border:3px solid var(--panel)}
+  .list{flex:1;overflow-y:auto;overflow-x:hidden;padding:8px 0 16px;scrollbar-width:none}
+  .list::-webkit-scrollbar{width:0;height:0;display:none}
 
   /* family group label — the portfolio's clean sans, sentence case (was a legacy mono/uppercase
      terminal label); a hairline carries it across and a quiet mono count closes it */
-  .famhead{display:flex;align-items:center;gap:12px;padding:19px 18px 9px;font-family:var(--sans);
-    font-size:12.5px;font-weight:600;letter-spacing:-.01em;color:var(--dim);position:sticky;top:0;
-    background:var(--panel);z-index:2}
-  .famhead .ln{flex:1;height:1px;background:var(--line-soft)}
-  .famhead .n{color:var(--faint);font-family:var(--mono);font-size:10.5px;font-weight:400}
+  .famhead{padding:22px 18px 10px;font-family:var(--sans);font-size:16px;font-weight:600;
+    letter-spacing:-.015em;color:var(--dim);position:sticky;top:0;background:var(--panel);z-index:2}
+  .famhead .n{color:var(--faint);font-weight:400}
 
   .row{display:flex;align-items:center;gap:11px;padding:9px 18px;cursor:pointer;position:relative;
     text-decoration:none;color:var(--ink);transition:background .14s}   /* never the browser default link blue / underline */
@@ -141,10 +139,10 @@
             mask-image:radial-gradient(480px 320px at 50% 0%, #000 20%, transparent 100%)}
   .stage::after{content:"";position:absolute;inset:0;pointer-events:none;z-index:5;
     box-shadow:inset 0 0 120px rgba(0,0,0,.28)}
-  :root[data-theme="light"] .stage::after{box-shadow:inset 0 0 110px rgba(0,0,0,.08)}
+  :root[data-theme="light"] .stage::after{box-shadow:none}
 
-  .meta{display:flex;align-items:flex-end;justify-content:space-between;gap:20px;padding:30px 36px 22px;flex-shrink:0;z-index:6}
-  .meta .l{min-width:0}
+  .meta{display:flex;padding:30px 36px 22px;flex-shrink:0;z-index:6}
+  .meta .l{display:flex;flex-direction:column;gap:18px;min-width:0}
   .meta .crumb{font-family:var(--sans);font-size:12px;font-weight:500;letter-spacing:.005em;color:var(--dim);
     display:flex;align-items:center;gap:9px;margin-bottom:13px}
   .meta .crumb .dot{width:8px;height:8px;border-radius:50%;background:var(--ca)}  /* the only loud color: the design's own swatch */
@@ -285,13 +283,8 @@
     <section class="stage">
       <div class="meta">
         <div class="l">
-          <div class="crumb"><span class="dot" id="mDot"></span><span id="mFam">Editorial family</span><span>·</span><span id="mId">A01</span></div>
           <h1 id="mName">Broadsheet</h1>
-          <p class="desc" id="mDesc"></p>
-        </div>
-        <div class="r">
           <div class="swbig" id="mSw"></div>
-          <a class="openbtn" id="openBtn" href="#" >Open full page <span class="k">↵</span></a>
         </div>
       </div>
 
@@ -357,13 +350,12 @@ FAMILIES.forEach(fam=>{
   const members = V.filter(v=>v.fam===fam.key);
   const head = document.createElement("div");
   head.className = "famhead"; head.dataset.fam = fam.key;
-  head.innerHTML = `<span>${fam.label}</span><span class="ln"></span><span class="n">${members.length}</span>`;
+  head.innerHTML = `<span>${fam.label} <span class="n">(${members.length})</span></span>`;
   listEl.appendChild(head);
   members.forEach(v=>{
     const a = document.createElement("a");
     a.className = "row"; a.href = v.file; a.dataset.id = v.id;
     a.innerHTML =
-      `<span class="idx">${v.id}</span>`+
       `<span class="sw">${v.sw.map(c=>`<i style="background:${c}"></i>`).join("")}</span>`+
       `<span class="nm" data-name="${v.name}">${v.name}</span>`+
       `<span class="ar">→</span>`;
@@ -376,11 +368,8 @@ FAMILIES.forEach(fam=>{
 /* ============ preview + selection ============ */
 const frameWrap=document.getElementById("frameWrap");
 const loadbar = document.getElementById("loadbar");
-const openBtn = document.getElementById("openBtn");
 const hit     = document.getElementById("hit");
-const mDot=document.getElementById("mDot"), mFam=document.getElementById("mFam"),
-      mId=document.getElementById("mId"), mName=document.getElementById("mName"),
-      mDesc=document.getElementById("mDesc"), mSw=document.getElementById("mSw"),
+const mName=document.getElementById("mName"), mSw=document.getElementById("mSw"),
       mUrl=document.getElementById("mUrl"), posIdx=document.getElementById("posIdx"),
       countEl=document.getElementById("count");
 
@@ -469,16 +458,10 @@ function select(i, {open=false, push=true}={}){
   row.scrollIntoView({block:"nearest"});
 
   // meta
-  const fam = FAMILIES.find(f=>f.key===v.fam);
-  mDot.style.background = v.sw[2];
-  document.documentElement.style.setProperty("--ca", v.sw[2]);
-  mFam.textContent = fam.label;
-  mId.textContent = v.id;
   mName.innerHTML = fmtName(v);
-  mDesc.textContent = v.d;
   mSw.innerHTML = v.sw.map(c=>`<i style="background:${c}"></i>`).join("");
   mUrl.textContent = "/"+v.file;
-  openBtn.href = v.file; hit.href = v.file;
+  hit.href = v.file;
   posIdx.textContent = String(rows.indexOf(row)+1).padStart(2,"0");
 
   // remember + deep-link (replaceState so we don't spam history while scrubbing)
